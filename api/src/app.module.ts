@@ -2,28 +2,35 @@ import { Module } from "@nestjs/common";
 import { TypeOrmModule } from "@nestjs/typeorm";
 import { ConfigModule, ConfigService } from "@nestjs/config";
 import { GraphQLModule } from "@nestjs/graphql";
-import { ApolloDriver, ApolloDriverConfig } from "@nestjs/apollo";
+import { ApolloDriver, type ApolloDriverConfig } from "@nestjs/apollo";
 import { join } from "path";
 import { AppResolver } from "./app.resolver";
 import { UserModule } from "./user/user.module";
+import { AuthModule } from "./auth/auth.module";
 
 @Module({
 	imports: [
 		ConfigModule.forRoot({
 			isGlobal: true,
+			envFilePath: join(__dirname, "..", "..", ".env.api"), // Adicionar esta linha
 		}),
 		TypeOrmModule.forRootAsync({
 			imports: [ConfigModule],
-			useFactory: async (configService: ConfigService) => ({
-				type: "postgres",
-				host: configService.get<string>("DATABASE_HOST"),
-				port: configService.get<number>("DATABASE_PORT"),
-				username: configService.get<string>("DATABASE_USERNAME"),
-				password: configService.get<string>("DATABASE_PASSWORD"),
-				database: configService.get<string>("DATABASE_NAME"),
-				entities: [join(__dirname, "**", "*.entity{.ts,.js}")],
-				synchronize: true,
-			}),
+			useFactory: async (configService: ConfigService) => {
+				const databaseHost =
+					configService.get<string>("DATABASE_HOST_ON_DOCKER") ||
+					configService.get<string>("DATABASE_HOST");
+				return {
+					type: "postgres",
+					host: databaseHost, // <--- Adicione esta linha
+					port: configService.get<number>("DATABASE_PORT"),
+					username: configService.get<string>("DATABASE_USERNAME"),
+					password: configService.get<string>("DATABASE_PASSWORD"),
+					database: configService.get<string>("DATABASE_NAME"),
+					entities: [join(__dirname, "**", "*.entity{.ts,.js}")],
+					synchronize: true,
+				};
+			},
 			inject: [ConfigService],
 		}),
 		GraphQLModule.forRoot<ApolloDriverConfig>({
@@ -34,6 +41,7 @@ import { UserModule } from "./user/user.module";
 			// }
 		}),
 		UserModule,
+		AuthModule,
 	],
 	providers: [AppResolver],
 })

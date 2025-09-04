@@ -19,9 +19,9 @@
 		"test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
 		"test:e2e": "jest --config ./test/jest-e2e.json",
 		"typeorm": "ts-node -r tsconfig-paths/register --project tsconfig.json ./node_modules/typeorm/cli.js",
-		"migration:generate": "npm run typeorm -- migration:generate",
-		"migration:run": "npm run typeorm -- migration:run",
-		"migration:revert": "npm run typeorm -- migration:revert"
+		"migration:generate": "npm run typeorm -- migration:generate -d src/dataSource.ts --outputJs=false",
+		"migration:run": "npm run typeorm -- migration:run -d src/dataSource.ts",
+		"migration:revert": "npm run typeorm -- migration:revert -d src/dataSource.ts"
 	},
 	"dependencies": {
 		"@apollo/server": "^4.11.3",
@@ -30,8 +30,11 @@
 		"@nestjs/config": "^4.0.2",
 		"@nestjs/core": "^11.0.1",
 		"@nestjs/graphql": "^13.1.0",
+		"@nestjs/jwt": "^11.0.0",
+		"@nestjs/passport": "^11.0.5",
 		"@nestjs/platform-express": "^11.0.1",
 		"@nestjs/typeorm": "^11.0.0",
+		"bcrypt": "^6.0.0",
 		"graphql": "^16.11.0",
 		"pg": "^8.14.1",
 		"reflect-metadata": "^0.2.2",
