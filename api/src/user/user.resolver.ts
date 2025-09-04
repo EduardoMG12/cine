@@ -1,14 +1,17 @@
-// src/user/user.resolver.ts
-
 import { Resolver, Query, Args, ID, Mutation } from "@nestjs/graphql";
 import type { UserService } from "./user.service";
 import { User } from "./dto/user.model";
-import { User as UserEntity } from "./user.entity";
-import type { CreateUserInput } from "./dto/create-user.input"; // Você precisará criar esta classe
+import { CreateUserInput } from "./dto/create-user.input";
+import { UpdateUserInput } from "./dto/update-user.input";
+import { RegisterPayload } from "./dto/register.payload";
+import type { AuthService } from "../auth/auth.service";
 
 @Resolver(() => User)
 export class UserResolver {
-	constructor(private readonly userService: UserService) {}
+	constructor(
+		private readonly userService: UserService,
+		private readonly authService: AuthService,
+	) {}
 
 	@Query(() => User)
 	async findOneUser(@Args("id", { type: () => ID }) id: string): Promise<User> {
@@ -20,9 +23,28 @@ export class UserResolver {
 		return this.userService.findAll();
 	}
 
+	@Mutation(() => RegisterPayload)
+	async register(
+		@Args("input", { type: () => CreateUserInput }) input: CreateUserInput,
+	): Promise<RegisterPayload> {
+		const newUser = await this.userService.create(input);
+		const token = await this.authService.generateToken(newUser);
+		return { user: newUser, token };
+	}
+
 	@Mutation(() => User)
-	async createUser(@Args("input") input: CreateUserInput): Promise<User> {
-		// Crie e salve o usuário usando o serviço
-		return this.userService.create(input);
+	async updateUser(
+		@Args("id", { type: () => ID }) id: string,
+		@Args("input", { type: () => UpdateUserInput }) input: UpdateUserInput,
+	): Promise<User> {
+		return this.userService.update(id, input);
+	}
+
+	@Mutation(() => Boolean)
+	async removeUser(
+		@Args("id", { type: () => ID }) id: string,
+	): Promise<boolean> {
+		await this.userService.remove(id);
+		return true;
 	}
 }

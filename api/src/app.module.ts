@@ -12,17 +12,20 @@ import { AuthModule } from "./auth/auth.module";
 	imports: [
 		ConfigModule.forRoot({
 			isGlobal: true,
-			envFilePath: join(__dirname, "..", "..", ".env.api"), // Adicionar esta linha
+			envFilePath: join(__dirname, "..", "..", ".env.api"),
 		}),
 		TypeOrmModule.forRootAsync({
 			imports: [ConfigModule],
 			useFactory: async (configService: ConfigService) => {
-				const databaseHost =
-					configService.get<string>("DATABASE_HOST_ON_DOCKER") ||
-					configService.get<string>("DATABASE_HOST");
+				const isTestEnv = process.env.NODE_ENV === "test";
+				const databaseHost = isTestEnv
+					? configService.get<string>("DATABASE_HOST")
+					: configService.get<string>("DATABASE_HOST_ON_DOCKER");
+
 				return {
 					type: "postgres",
-					host: databaseHost, // <--- Adicione esta linha
+					// host: databaseHost || configService.get<string>("DATABASE_HOST"),
+					host: "localhost",
 					port: configService.get<number>("DATABASE_PORT"),
 					username: configService.get<string>("DATABASE_USERNAME"),
 					password: configService.get<string>("DATABASE_PASSWORD"),
@@ -36,9 +39,6 @@ import { AuthModule } from "./auth/auth.module";
 		GraphQLModule.forRoot<ApolloDriverConfig>({
 			driver: ApolloDriver,
 			autoSchemaFile: join(process.cwd(), "src/schema.gql"),
-			// definitions:{
-			//    skipResolverArgs:true
-			// }
 		}),
 		UserModule,
 		AuthModule,

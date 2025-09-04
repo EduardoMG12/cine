@@ -1,14 +1,13 @@
-// src/user/user.module.ts
-
 import { Module } from "@nestjs/common";
 import { UserResolver } from "./user.resolver";
 import { UserService } from "./user.service";
 import { TypeOrmModule } from "@nestjs/typeorm";
 import { User } from "../entities/user.entity";
+import { AuthModule } from "../auth/auth.module";
 
 @Module({
-	imports: [TypeOrmModule.forFeature([User])], // Importe as entidades aqui
+	imports: [TypeOrmModule.forFeature([User]), AuthModule],
 	providers: [UserResolver, UserService],
-	exports: [UserService], // Exporte o serviço se ele for usado em outros módulos
+	exports: [UserService],
 })
 export class UserModule {}
