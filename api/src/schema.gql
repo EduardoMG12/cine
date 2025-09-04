@@ -1,0 +1,16 @@
+# ------------------------------------------------------
+# THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
+# ------------------------------------------------------
+
+type User {
+  id: ID!
+  username: String!
+  full_name: String!
+  email: String!
+  password_hash: String!
+}
+
+type Query {
+  hello: String!
+  findOneUser: User!
+}
