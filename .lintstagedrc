@@ -1,0 +1,4 @@
+{
+	"*.{js,jsx,ts,tsx}": ["biome format", "biome lint --fix"],
+	"*.{json,md,css,scss}": ["biome format --fix"]
+}
