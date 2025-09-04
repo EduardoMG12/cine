@@ -1,7 +1,4 @@
 {
-	"scripts": {
-		"prepare": "husky"
-	},
 	"devDependencies": {
 		"@biomejs/biome": "^2.2.2",
 		"lint-staged": "^16.1.6"
