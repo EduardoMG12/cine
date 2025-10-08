@@ -1,33 +1,77 @@
 services:
-  api:
+  api_v2:
     build:
-      context: ./api
+      context: ./api_v2
       dockerfile: Dockerfile
-    container_name: nest-api
-    restart: always
+      target: development
+    container_name: cineverse-api
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./api_v2:/app:delegated
+      - go-cache:/go/pkg/mod
+    environment:
+      CINE_PORT: "8080"
+      CINE_DATABASE_URL: "postgres://cineverse:password@postgres:5432/cineverse?sslmode=disable"
+      CINE_REDIS_ADDR: "redis:6379"
+      CINE_REDIS_PASSWORD: ""
+    depends_on:
+      - postgres
+      - redis
+    networks:
+      - cineverse-network
+
+  flutter_app:
+    build:
+      context: ./flutter_app
+      dockerfile: Dockerfile
+    container_name: cineverse-flutter
+    restart: unless-stopped
     ports:
       - "3000:3000"
     volumes:
-      - .:/usr/src/app
-    env_file:
-      - .env.api
-    depends_on:
-      - database
-
-  database:
-    image: postgres:15-alpine
-    container_name: nest-database
-    restart: always
-    env_file:
-      - .env.api
+      - ./flutter_app:/app:delegated
+      - flutter-cache:/opt/flutter/.pub-cache
     environment:
-      POSTGRES_USER: ${DATABASE_USERNAME}
-      POSTGRES_PASSWORD: ${DATABASE_PASSWORD}
-      POSTGRES_DB: ${DATABASE_NAME}
+      FLUTTER_WEB_USE_SKIA: "true"
+    networks:
+      - cineverse-network
+
+  postgres:
+    image: postgres:15-alpine
+    container_name: cineverse-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: cineverse
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: cineverse
     volumes:
       - postgres-data:/var/lib/postgresql/data
+      - ./api_v2/migrations:/docker-entrypoint-initdb.d
     ports:
       - "5432:5432"
+    networks:
+      - cineverse-network
+
+  redis:
+    image: redis:7-alpine
+    container_name: cineverse-redis
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+    volumes:
+      - redis-data:/data
+    ports:
+      - "6379:6379"
+    networks:
+      - cineverse-network
 
 volumes:
   postgres-data:
+  redis-data:
+  go-cache:
+  flutter-cache:
+
+networks:
+  cineverse-network:
+    driver: bridge

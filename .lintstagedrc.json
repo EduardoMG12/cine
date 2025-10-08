@@ -1,0 +1,11 @@
+{
+  "*.{js,jsx,ts,tsx}": ["biome format", "biome lint --fix"],
+  "api_v2/**/*.go": [
+    "gofmt -w",
+    "sh -c 'cd api_v2 && go vet ./...'"
+  ],
+  "flutter_app/**/*.dart": [
+    "flutter format",
+    "sh -c 'cd flutter_app && flutter analyze --no-fatal-infos'"
+  ]
+}
