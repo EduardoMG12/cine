@@ -37,6 +37,30 @@ services:
     networks:
       - cineverse-network
 
+  flutter_android:
+    build:
+      context: ./flutter_app
+      dockerfile: Dockerfile.android
+    container_name: cineverse-flutter-android
+    restart: unless-stopped
+    ports:
+      - "5554:5554"  # Android emulator port
+      - "5555:5555"  # ADB port
+      - "6080:6080"  # noVNC web interface
+    volumes:
+      - ./flutter_app:/app:delegated
+      - flutter-cache:/opt/flutter/.pub-cache
+      - android-sdk:/opt/android-sdk
+      - android-studio:/opt/android-studio
+    environment:
+      DISPLAY: ":1"
+      FLUTTER_WEB_USE_SKIA: "true"
+      ANDROID_HOME: "/opt/android-sdk"
+      ANDROID_SDK_ROOT: "/opt/android-sdk"
+    privileged: true
+    networks:
+      - cineverse-network
+
   postgres:
     image: postgres:15-alpine
     container_name: cineverse-postgres
@@ -70,6 +94,8 @@ volumes:
   redis-data:
   go-cache:
   flutter-cache:
+  android-sdk:
+  android-studio:
 
 networks:
   cineverse-network:

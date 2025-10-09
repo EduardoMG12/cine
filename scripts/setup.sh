@@ -139,6 +139,17 @@ docker-compose up -d flutter_app
 log_info "Aguardando Flutter App inicializar..."
 sleep 10
 
+# Ask user if they want to start Android development environment
+read -p "Deseja iniciar o ambiente de desenvolvimento Android? (y/N): " start_android
+if [[ $start_android =~ ^[Yy]$ ]]; then
+    log_info "Iniciando ambiente Android com Android Studio..."
+    docker-compose up -d flutter_android
+    log_info "Aguardando Android Studio inicializar..."
+    sleep 15
+    log_success "Android Studio disponível em: http://localhost:6080"
+    log_info "Senha do VNC: cineverse"
+fi
+
 log_success "🎉 Ambiente configurado com sucesso!"
 echo ""
 echo "📋 Serviços disponíveis:"
@@ -146,6 +157,9 @@ echo "  • API Go:      http://localhost:8080"
 echo "  • Flutter App: http://localhost:3000"
 echo "  • PostgreSQL:  localhost:5432 (user: cineverse, db: cineverse)"
 echo "  • Redis:       localhost:6379"
+if [[ $start_android =~ ^[Yy]$ ]]; then
+    echo "  • Android Studio: http://localhost:6080 (senha: cineverse)"
+fi
 echo ""
 echo "🔧 Comandos úteis:"
 echo "  • Ver logs:           docker-compose logs -f [service]"

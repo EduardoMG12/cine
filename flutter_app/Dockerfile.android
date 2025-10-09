@@ -1,0 +1,101 @@
+# Dockerfile for Flutter Android Development with Android Studio
+FROM ubuntu:22.04
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    curl \
+    git \
+    unzip \
+    xz-utils \
+    zip \
+    libglu1-mesa \
+    default-jdk \
+    wget \
+    x11vnc \
+    xvfb \
+    fluxbox \
+    wmctrl \
+    supervisor \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install noVNC for web-based VNC access
+RUN mkdir -p /opt/noVNC/utils/websockify && \
+    wget -qO- https://github.com/novnc/noVNC/archive/v1.3.0.tar.gz | tar xz --strip 1 -C /opt/noVNC && \
+    wget -qO- https://github.com/novnc/websockify/archive/v0.10.0.tar.gz | tar xz --strip 1 -C /opt/noVNC/utils/websockify && \
+    ln -s /opt/noVNC/vnc.html /opt/noVNC/index.html
+
+# Set environment variables
+ENV ANDROID_HOME=/opt/android-sdk
+ENV ANDROID_SDK_ROOT=/opt/android-sdk
+ENV PATH=${PATH}:${ANDROID_HOME}/cmdline-tools/latest/bin:${ANDROID_HOME}/platform-tools
+
+# Create directories
+RUN mkdir -p /opt/android-sdk /opt/flutter /app
+
+# Install Flutter
+WORKDIR /opt/flutter
+RUN git clone https://github.com/flutter/flutter.git -b stable . && \
+    flutter doctor
+
+# Install Android SDK Command Line Tools
+WORKDIR /opt/android-sdk
+RUN wget -q https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip && \
+    unzip commandlinetools-linux-9477386_latest.zip && \
+    mkdir -p cmdline-tools/latest && \
+    mv cmdline-tools/* cmdline-tools/latest/ && \
+    rm commandlinetools-linux-9477386_latest.zip
+
+# Accept Android SDK licenses and install required packages
+RUN yes | sdkmanager --licenses
+RUN sdkmanager "platform-tools" "platforms;android-33" "build-tools;33.0.2" \
+    "system-images;android-33;google_apis;x86_64" "emulator"
+
+# Install Android Studio
+WORKDIR /tmp
+RUN wget -q https://redirector.gvt1.com/edgedl/android/studio/ide-zips/2023.1.1.28/android-studio-2023.1.1.28-linux.tar.gz && \
+    tar -xzf android-studio-2023.1.1.28-linux.tar.gz -C /opt/ && \
+    rm android-studio-2023.1.1.28-linux.tar.gz && \
+    ln -s /opt/android-studio/bin/studio.sh /usr/local/bin/android-studio
+
+# Create Android Virtual Device (AVD)
+RUN echo "no" | avdmanager create avd -n "CineVerseEmulator" -k "system-images;android-33;google_apis;x86_64" -d "pixel_4"
+
+# Set up Flutter project
+WORKDIR /app
+RUN if [ ! -f pubspec.yaml ]; then \
+        /opt/flutter/bin/flutter create . --project-name cineverse_app --platforms android,web,ios; \
+    fi
+
+# Copy project files
+COPY . .
+
+# Get Flutter dependencies
+RUN /opt/flutter/bin/flutter pub get
+
+# Set up supervisord configuration
+COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
+
+# Expose ports
+EXPOSE 5554 5555 6080
+
+# Create startup script
+RUN echo '#!/bin/bash\n\
+export DISPLAY=:1\n\
+Xvfb :1 -screen 0 1024x768x16 &\n\
+sleep 2\n\
+fluxbox &\n\
+x11vnc -forever -usepw -create -display :1 &\n\
+cd /opt/noVNC && python3 -m websockify --web . 6080 localhost:5900 &\n\
+sleep 5\n\
+android-studio &\n\
+/opt/flutter/bin/flutter doctor\n\
+echo "Android Studio available at: http://localhost:6080"\n\
+echo "Use password: cineverse"\n\
+tail -f /dev/null\n\
+' > /start.sh && chmod +x /start.sh
+
+# Set VNC password
+RUN mkdir -p ~/.vnc && x11vnc -storepasswd cineverse ~/.vnc/passwd
+
+# Start services
+CMD ["/start.sh"]
