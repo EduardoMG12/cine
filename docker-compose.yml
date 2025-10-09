@@ -31,7 +31,6 @@ services:
     ports:
       - "3000:3000"
     volumes:
-      - ./flutter_app:/app:delegated
       - flutter-cache:/opt/flutter/.pub-cache
     environment:
       FLUTTER_WEB_USE_SKIA: "true"

@@ -31,4 +31,22 @@ COPY . .
 
 EXPOSE 3000
 
-CMD ["flutter", "run", "--hot", "--web-hostname", "0.0.0.0", "--web-port", "3000"]
+FROM ghcr.io/cirruslabs/flutter:3.24.3
+
+WORKDIR /app
+
+# Create a new Flutter project if it doesn't exist
+RUN if [ ! -f pubspec.yaml ]; then \
+        flutter create . --project-name cineverse_app --platforms web,android,ios; \
+    fi
+
+# Copy any existing source code
+COPY . .
+
+# Install dependencies
+RUN flutter pub get
+
+EXPOSE 3000
+
+CMD ["flutter", "run", "--release", "-d", "web-server", "--web-port", "3000", "--web-hostname", "0.0.0.0"]
+
