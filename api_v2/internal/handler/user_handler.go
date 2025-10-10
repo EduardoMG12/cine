@@ -23,11 +23,11 @@ type CreateUserRequest struct {
 }
 
 type UpdateUserRequest struct {
-	Username    *string `json:"username,omitempty" validate:"omitempty,min=3,max=30"`
-	Email       *string `json:"email,omitempty" validate:"omitempty,email"`
-	DisplayName *string `json:"display_name,omitempty" validate:"omitempty,min=1,max=100"`
-	Bio         *string `json:"bio,omitempty" validate:"omitempty,max=500"`
-	AvatarURL   *string `json:"avatar_url,omitempty"`
+	Username         *string `json:"username,omitempty" validate:"omitempty,min=3,max=30"`
+	Email            *string `json:"email,omitempty" validate:"omitempty,email"`
+	DisplayName      *string `json:"display_name,omitempty" validate:"omitempty,min=1,max=100"`
+	Bio              *string `json:"bio,omitempty" validate:"omitempty,max=500"`
+	ProfilePictureURL *string `json:"profile_picture_url,omitempty"`
 }
 
 type ErrorResponse struct {
@@ -65,7 +65,8 @@ func (h *UserHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user, err := h.userService.CreateUser(req.Username, req.Email, req.DisplayName)
+	// TODO: This is temporary - will be replaced with proper auth endpoints
+	user, err := h.userService.Register(req.Username, req.Email, "temp_password", req.DisplayName)
 	if err != nil {
 		slog.Error("Failed to create user", "error", err, "username", req.Username)
 		h.writeErrorResponse(w, http.StatusConflict, "Failed to create user", err.Error())
@@ -125,11 +126,11 @@ func (h *UserHandler) UpdateUser(w http.ResponseWriter, r *http.Request) {
 	if req.Bio != nil {
 		updates["bio"] = *req.Bio
 	}
-	if req.AvatarURL != nil {
-		updates["avatar_url"] = *req.AvatarURL
+	if req.ProfilePictureURL != nil {
+		updates["profile_picture_url"] = *req.ProfilePictureURL
 	}
 
-	user, err := h.userService.UpdateUser(id, updates)
+	user, err := h.userService.UpdateProfile(id, updates)
 	if err != nil {
 		slog.Error("Failed to update user", "error", err, "id", id)
 		h.writeErrorResponse(w, http.StatusBadRequest, "Failed to update user", err.Error())

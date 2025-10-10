@@ -19,7 +19,7 @@ func NewUserService(userRepo domain.UserRepository) domain.UserService {
 	}
 }
 
-func (s *userService) CreateUser(username, email, displayName string) (*domain.User, error) {
+func (s *userService) Register(username, email, password, displayName string) (*domain.User, error) {
 	if err := s.validateUsername(username); err != nil {
 		return nil, err
 	}
@@ -106,8 +106,8 @@ func (s *userService) UpdateUser(id int, updates map[string]interface{}) (*domai
 		user.Bio = &bio
 	}
 
-	if avatarURL, ok := updates["avatar_url"].(string); ok {
-		user.AvatarURL = &avatarURL
+	if avatarURL, ok := updates["profile_picture_url"].(string); ok {
+		user.ProfilePictureURL = &avatarURL
 	}
 
 	if err := s.ValidateUser(user); err != nil {
@@ -187,3 +187,45 @@ func (s *userService) validateDisplayName(displayName string) error {
 
 	return nil
 }
+
+// Login validates credentials and returns user with JWT token
+func (s *userService) Login(email, password string) (*domain.User, string, error) {
+	// TODO: Implement login logic with password validation and JWT generation
+	return nil, "", errors.New("not implemented")
+}
+
+// ConfirmEmail confirms user email with token
+func (s *userService) ConfirmEmail(token string) error {
+	// TODO: Implement email confirmation logic
+	return errors.New("not implemented")
+}
+
+// RequestPasswordReset initiates password reset flow
+func (s *userService) RequestPasswordReset(email string) error {
+	// TODO: Implement password reset request logic
+	return errors.New("not implemented")
+}
+
+// ResetPassword resets password with token
+func (s *userService) ResetPassword(token, newPassword string) error {
+	// TODO: Implement password reset logic
+	return errors.New("not implemented")
+}
+
+// GetUserProfile returns user profile respecting privacy settings
+func (s *userService) GetUserProfile(id int) (*domain.User, error) {
+	// TODO: Implement profile retrieval with privacy checks
+	return s.GetUser(id)
+}
+
+// UpdateProfile updates user profile
+func (s *userService) UpdateProfile(userID int, updates map[string]interface{}) (*domain.User, error) {
+	return s.UpdateUser(userID, updates)
+}
+
+// UpdateSettings updates user settings
+func (s *userService) UpdateSettings(userID int, settings map[string]interface{}) error {
+	return s.userRepo.UpdateSettings(userID, settings)
+}
+
+

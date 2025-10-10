@@ -26,8 +26,8 @@ func NewUserRepository(db *sqlx.DB, redis *redis.Client) domain.UserRepository {
 
 func (r *userRepository) Create(user *domain.User) error {
 	query := `
-		INSERT INTO users (username, email, display_name, bio, avatar_url, created_at, updated_at)
-		VALUES ($1, $2, $3, $4, $5, $6, $7)
+		INSERT INTO users (username, email, password_hash, display_name, bio, profile_picture_url, is_private, email_verified, theme, created_at, updated_at)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
 		RETURNING id
 	`
 
@@ -39,9 +39,13 @@ func (r *userRepository) Create(user *domain.User) error {
 		query,
 		user.Username,
 		user.Email,
+		user.PasswordHash,
 		user.DisplayName,
 		user.Bio,
-		user.AvatarURL,
+		user.ProfilePictureURL,
+		user.IsPrivate,
+		user.EmailVerified,
+		user.Theme,
 		user.CreatedAt,
 		user.UpdatedAt,
 	).Scan(&user.ID)
@@ -141,7 +145,7 @@ func (r *userRepository) Update(user *domain.User) error {
 		user.Email,
 		user.DisplayName,
 		user.Bio,
-		user.AvatarURL,
+		user.ProfilePictureURL,
 		user.UpdatedAt,
 	)
 
@@ -182,6 +186,45 @@ func (r *userRepository) Delete(id int) error {
 
 	r.invalidateUserCache(id)
 
+	return nil
+}
+
+func (r *userRepository) UpdateSettings(userID int, settings map[string]interface{}) error {
+	if len(settings) == 0 {
+		return nil
+	}
+
+	query := "UPDATE users SET updated_at = NOW()"
+	args := []interface{}{}
+	argIndex := 1
+
+	for key, value := range settings {
+		switch key {
+		case "theme":
+			query += fmt.Sprintf(", theme = $%d", argIndex)
+			args = append(args, value)
+			argIndex++
+		}
+	}
+
+	query += fmt.Sprintf(" WHERE id = $%d", argIndex)
+	args = append(args, userID)
+
+	result, err := r.db.Exec(query, args...)
+	if err != nil {
+		return fmt.Errorf("failed to update user settings: %w", err)
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return fmt.Errorf("failed to get rows affected: %w", err)
+	}
+
+	if rowsAffected == 0 {
+		return fmt.Errorf("user not found")
+	}
+
+	r.invalidateUserCache(userID)
 	return nil
 }
 

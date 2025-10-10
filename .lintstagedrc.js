@@ -8,8 +8,8 @@ module.exports = {
 		filenames.forEach((filename) => {
 			commands.push(`gofmt -w "${filename}"`);
 		});
-		// Run go vet in the api_v2 directory
-		commands.push("cd api_v2 && go vet ./...");
+		// Run go vet in the api_v2 directory (using shell to properly change directory)
+		commands.push("sh -c 'cd api_v2 && go vet ./...'");
 		return commands;
 	},
 
