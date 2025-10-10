@@ -19,8 +19,6 @@ services:
     depends_on:
       - postgres
       - redis
-    networks:
-      - cineverse-network
 
   flutter_app:
     build:
@@ -34,8 +32,6 @@ services:
       - flutter-cache:/opt/flutter/.pub-cache
     environment:
       FLUTTER_WEB_USE_SKIA: "true"
-    networks:
-      - cineverse-network
 
   flutter_android:
     build:
@@ -58,8 +54,6 @@ services:
       ANDROID_HOME: "/opt/android-sdk"
       ANDROID_SDK_ROOT: "/opt/android-sdk"
     privileged: true
-    networks:
-      - cineverse-network
 
   postgres:
     image: postgres:15-alpine
@@ -74,8 +68,6 @@ services:
       - ./api_v2/migrations:/docker-entrypoint-initdb.d
     ports:
       - "5432:5432"
-    networks:
-      - cineverse-network
 
   redis:
     image: redis:7-alpine
@@ -86,8 +78,6 @@ services:
       - redis-data:/data
     ports:
       - "6379:6379"
-    networks:
-      - cineverse-network
 
 volumes:
   postgres-data:
@@ -96,7 +86,3 @@ volumes:
   flutter-cache:
   android-sdk:
   android-studio:
-
-networks:
-  cineverse-network:
-    driver: bridge
