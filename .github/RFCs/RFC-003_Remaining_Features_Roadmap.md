@@ -51,17 +51,20 @@ PUT    /users/me/settings           # Atualizar preferências
 ### 🚀 **PRIORIDADE ALTA - Funcionalidades Sociais Core**
 
 #### P1.1 - Sistema de Amizade (RF-03.1)
-**Status:** Não implementado  
+**Status:** 🟡 INFRAESTRUTURA PRONTA  
 **Descrição:** Sistema completo de amizade com pedidos e aprovações  
-**Tempo Estimado:** 1-2 semanas  
-**Dependências:** Sistema de usuários completo
+**Tempo Estimado:** 1 semana (handlers HTTP apenas)  
+**Dependências:** ✅ Completo
 
-**Tarefas:**
-- [ ] Criar entidade `Friendship` no domínio
-- [ ] Implementar repository para amizades
-- [ ] Criar service layer para lógica de amizade
+**Tarefas Concluídas:**
+- [x] Criar entidade `Friendship` no domínio
+- [x] Implementar repository para amizades
+- [x] Criar service layer para lógica de amizade
+- [x] Migração de banco de dados aplicada
+- [x] Sistema de i18n para mensagens multilíngues
+
+**Tarefas Restantes:**
 - [ ] Implementar handlers HTTP
-- [ ] Adicionar sistema de notificações básico
 - [ ] Implementar DTOs para requests/responses
 - [ ] Escrever testes completos
 - [ ] Documentar API no Swagger
@@ -77,17 +80,20 @@ DELETE /users/{id}/friendship       # Remover amizade
 ```
 
 #### P1.2 - Sistema de Seguidores (RF-03.2)
-**Status:** Não implementado  
+**Status:** 🟡 INFRAESTRUTURA PRONTA  
 **Descrição:** Permitir seguir usuários sem amizade mútua  
-**Tempo Estimado:** 1 semana  
-**Dependências:** Sistema de amizade
+**Tempo Estimado:** 1 semana (handlers HTTP apenas)  
+**Dependências:** ✅ Completo
 
-**Tarefas:**
-- [ ] Criar entidade `Follow` no domínio
-- [ ] Implementar repository para follows
-- [ ] Criar service layer com validações
+**Tarefas Concluídas:**
+- [x] Criar entidade `Follow` no domínio
+- [x] Implementar repository para follows
+- [x] Criar service layer com validações
+- [x] Controle de privacidade integrado
+- [x] Migração de banco de dados aplicada
+
+**Tarefas Restantes:**
 - [ ] Implementar handlers HTTP
-- [ ] Adicionar controle de privacidade
 - [ ] Implementar DTOs
 - [ ] Testes automatizados
 - [ ] Documentação Swagger
