@@ -10,6 +10,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/EduardoMG12/cine/api_v2/internal/config"
 	"github.com/EduardoMG12/cine/api_v2/internal/handler"
 	"github.com/EduardoMG12/cine/api_v2/internal/repository"
 	"github.com/EduardoMG12/cine/api_v2/internal/service"
@@ -19,28 +20,36 @@ import (
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
 	"github.com/redis/go-redis/v9"
-	"github.com/spf13/viper"
 )
 
 func main() {
-	config := loadConfig()
+	cfg, err := config.Load()
+	if err != nil {
+		slog.Error("Failed to load configuration", "error", err)
+		os.Exit(1)
+	}
 
 	logger := slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
 		Level: slog.LevelInfo,
 	}))
 	slog.SetDefault(logger)
 
-	db, err := sqlx.Connect("postgres", config.DatabaseURL)
+	db, err := sqlx.Connect("postgres", cfg.Database.URL)
 	if err != nil {
 		slog.Error("Failed to connect to database", "error", err)
 		os.Exit(1)
 	}
 	defer db.Close()
 
+	// Configure database connection pool
+	db.SetMaxOpenConns(cfg.Database.MaxOpenConns)
+	db.SetMaxIdleConns(cfg.Database.MaxIdleConns)
+	db.SetConnMaxLifetime(time.Duration(cfg.Database.ConnMaxLifetime) * time.Second)
+
 	rdb := redis.NewClient(&redis.Options{
-		Addr:     config.RedisAddr,
-		Password: config.RedisPassword,
-		DB:       0,
+		Addr:     cfg.Redis.Addr,
+		Password: cfg.Redis.Password,
+		DB:       cfg.Redis.DB,
 	})
 	defer rdb.Close()
 
@@ -85,13 +94,13 @@ func main() {
 
 	// Server
 	server := &http.Server{
-		Addr:    fmt.Sprintf(":%s", config.Port),
+		Addr:    fmt.Sprintf("%s:%s", cfg.Server.Host, cfg.Server.Port),
 		Handler: r,
 	}
 
 	// Graceful shutdown
 	go func() {
-		slog.Info("Server starting", "port", config.Port)
+		slog.Info("Server starting", "port", cfg.Server.Port)
 		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			slog.Error("Server failed to start", "error", err)
 			os.Exit(1)
@@ -114,37 +123,4 @@ func main() {
 	}
 
 	slog.Info("Server stopped")
-}
-
-type Config struct {
-	Port          string
-	DatabaseURL   string
-	RedisAddr     string
-	RedisPassword string
-}
-
-func loadConfig() *Config {
-	viper.SetConfigName("config")
-	viper.SetConfigType("yaml")
-	viper.AddConfigPath(".")
-	viper.AddConfigPath("./config")
-
-	viper.AutomaticEnv()
-	viper.SetEnvPrefix("CINE")
-
-	viper.SetDefault("PORT", "8080")
-	viper.SetDefault("DATABASE_URL", "postgres://cineverse:password@postgres:5432/cineverse?sslmode=disable")
-	viper.SetDefault("REDIS_ADDR", "redis:6379")
-	viper.SetDefault("REDIS_PASSWORD", "")
-
-	if err := viper.ReadInConfig(); err != nil {
-		slog.Warn("Config file not found, using environment variables and defaults")
-	}
-
-	return &Config{
-		Port:          viper.GetString("PORT"),
-		DatabaseURL:   viper.GetString("DATABASE_URL"),
-		RedisAddr:     viper.GetString("REDIS_ADDR"),
-		RedisPassword: viper.GetString("REDIS_PASSWORD"),
-	}
 }
