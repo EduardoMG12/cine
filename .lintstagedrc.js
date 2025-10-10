@@ -2,16 +2,11 @@ module.exports = {
 	"*.{js,jsx,ts,tsx}": (filenames) =>
 		filenames.map((filename) => `biome format --write "${filename}"`),
 
-	"api_v2/**/*.go": (filenames) => {
-		const commands = [];
-
-		// Format files
-		filenames.forEach((filename) => {
-			commands.push(`gofmt -w "${filename}"`);
-		});
-
-		return commands;
-	},
+	"api_v2/**/*.go": (filenames) =>
+		filenames.flatMap((filename) => [
+			`gofmt -w "${filename}"`,
+			`goimports -w "${filename}"`,
+		]),
 
 	"flutter_app/**/*.dart": (filenames) => {
 		const commands = [];
