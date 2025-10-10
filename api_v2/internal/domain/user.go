@@ -44,5 +44,3 @@ type UserService interface {
 	ValidateUser(user *User) error
 	CreateUser(user *User) error // for creating user entities directly
 }
-
-// Lint test comment
