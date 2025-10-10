@@ -46,6 +46,18 @@ DELETE /users/me/sessions           # Logout completo
 PUT    /users/me/settings           # Atualizar preferências
 ```
 
+#### 🆕 P0.2 - Sistema de Internacionalização (i18n)
+**Status:** ✅ CONCLUÍDO  
+**Descrição:** Sistema completo de múltiplos idiomas implementado  
+**Tempo Real:** 1 dia (2025-10-10)  
+
+**Funcionalidades Implementadas:**
+- [x] Suporte a 3 idiomas: Inglês (EN), Português (PT), Espanhol (ES)
+- [x] Middleware de detecção automática de idioma via header Accept-Language
+- [x] Sistema de traduções para mensagens de erro e resposta
+- [x] Estrutura modular para adicionar novos idiomas facilmente
+- [x] Integração completa com todas as camadas da aplicação
+
 ---
 
 ### 🚀 **PRIORIDADE ALTA - Funcionalidades Sociais Core**
@@ -363,22 +375,31 @@ CREATE TABLE posts (
 - ✅ Docker Compose simplificado (sem networks customizadas)
 - ✅ API funcionando em http://localhost:8080
 
-### **Sprint 2-3 (Semanas 2-3): Sistema Social Básico**
-- 🚀 Sistema de amizade completo
-- 🚀 Sistema de seguidores
-- 🚀 Notificações básicas
+### **✅ Sprint 1.5: Infraestrutura Avançada - CONCLUÍDO**  
+- ✅ Sistema de internacionalização (i18n) completo - EN/PT/ES
+- ✅ Infraestrutura social completa (repositories + services)
+- ✅ Middleware de linguagem automática
+- ✅ Externalização de variáveis de ambiente
+- ✅ Limpeza de código e remoção de comentários desnecessários
+- ✅ Migração de banco para funcionalidades sociais
 
-### **Sprint 4-5 (Semanas 4-5): Posts e Feed**
+### **Sprint 2 (Semana 2): Endpoints Sociais**
+- 🚀 Implementar handlers HTTP para amizade
+- 🚀 Implementar handlers HTTP para seguidores
+- 🚀 Documentação Swagger social
+- 🚀 Testes para funcionalidades sociais
+
+### **Sprint 3-4 (Semanas 3-4): Posts e Feed**
 - ⭐ Sistema de posts
 - ⭐ Feed personalizado
 - ⭐ Controles de privacidade
 
-### **Sprint 6-8 (Semanas 6-8): Match de Filmes**
+### **Sprint 5-7 (Semanas 5-7): Match de Filmes**
 - ⭐ Sistema de matching completo
 - ⭐ WebSocket para real-time
 - ⭐ Algoritmos de sugestão
 
-### **Sprint 9+ (Semanas 9+): Polimento**
+### **Sprint 8+ (Semanas 8+): Polimento**
 - 🎯 Otimizações de performance
 - 🎯 Analytics avançados
 - 🎯 Funcionalidades premium
