@@ -36,9 +36,11 @@ type UserService interface {
 	RequestPasswordReset(email string) error
 	ResetPassword(token, newPassword string) error
 	GetUser(id int) (*User, error)
+	GetUserByEmail(email string) (*User, error)
 	GetUserProfile(id int) (*User, error) // respects privacy settings
 	UpdateProfile(userID int, updates map[string]interface{}) (*User, error)
 	UpdateSettings(userID int, settings map[string]interface{}) error
 	DeleteUser(id int) error
 	ValidateUser(user *User) error
+	CreateUser(user *User) error // for creating user entities directly
 }

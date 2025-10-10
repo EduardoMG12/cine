@@ -228,4 +228,12 @@ func (s *userService) UpdateSettings(userID int, settings map[string]interface{}
 	return s.userRepo.UpdateSettings(userID, settings)
 }
 
+// GetUserByEmail retrieves user by email
+func (s *userService) GetUserByEmail(email string) (*domain.User, error) {
+	return s.userRepo.GetByEmail(email)
+}
 
+// CreateUser creates a new user entity
+func (s *userService) CreateUser(user *domain.User) error {
+	return s.userRepo.Create(user)
+}
