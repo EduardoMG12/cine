@@ -43,7 +43,6 @@ func (r *userSessionRepository) Create(session *domain.UserSession) error {
 		return fmt.Errorf("failed to create user session: %w", err)
 	}
 
-	// Cache session in Redis for fast lookups
 	cacheKey := fmt.Sprintf("session:%s", session.Token)
 	sessionData := fmt.Sprintf("%d:%d", session.UserID, session.ID)
 
@@ -114,7 +113,6 @@ func (r *userSessionRepository) DeleteByToken(token string) error {
 		return fmt.Errorf("failed to delete session by token: %w", err)
 	}
 
-	// Remove from cache
 	cacheKey := fmt.Sprintf("session:%s", token)
 	r.redis.Del(context.Background(), cacheKey)
 
@@ -131,20 +129,17 @@ func (r *userSessionRepository) DeleteByToken(token string) error {
 }
 
 func (r *userSessionRepository) DeleteByUserID(userID int) error {
-	// First get all tokens to remove from cache
 	sessions, err := r.GetByUserID(userID)
 	if err != nil {
 		return err
 	}
 
-	// Remove from cache
 	ctx := context.Background()
 	for _, session := range sessions {
 		cacheKey := fmt.Sprintf("session:%s", session.Token)
 		r.redis.Del(ctx, cacheKey)
 	}
 
-	// Delete from database
 	query := `DELETE FROM user_sessions WHERE user_id = $1`
 	_, err = r.db.Exec(query, userID)
 	if err != nil {

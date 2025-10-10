@@ -45,7 +45,6 @@ func (m *AuthMiddleware) RequireAuth(next http.Handler) http.Handler {
 			return
 		}
 
-		// Validate session exists and is not expired
 		session, err := m.userSessionService.ValidateSession(token)
 		if err != nil {
 			slog.Warn("Session validation failed", "error", err, "user_id", claims.UserID)

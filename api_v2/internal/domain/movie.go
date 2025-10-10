@@ -44,7 +44,6 @@ type MovieService interface {
 	CleanupExpiredCache() error
 }
 
-// TMDb External API Types
 type TMDbService interface {
 	SearchMovies(query string, page int) (*TMDbSearchResponse, error)
 	GetMovieDetails(movieID int) (*TMDbMovie, error)

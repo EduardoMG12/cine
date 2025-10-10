@@ -20,7 +20,6 @@ type Friendship struct {
 	CreatedAt time.Time        `json:"created_at" db:"created_at"`
 	UpdatedAt time.Time        `json:"updated_at" db:"updated_at"`
 
-	// Populated by joins
 	User1 *User `json:"user_1,omitempty"`
 	User2 *User `json:"user_2,omitempty"`
 }
@@ -30,7 +29,6 @@ type Follow struct {
 	FollowingID int       `json:"following_id" db:"following_id"`
 	CreatedAt   time.Time `json:"created_at" db:"created_at"`
 
-	// Populated by joins
 	Follower  *User `json:"follower,omitempty"`
 	Following *User `json:"following,omitempty"`
 }
@@ -55,7 +53,6 @@ type FollowRepository interface {
 }
 
 type SocialService interface {
-	// Friendship operations
 	SendFriendRequest(senderID, receiverID int) error
 	AcceptFriendRequest(userID, requesterID int) error
 	DeclineFriendRequest(userID, requesterID int) error
@@ -65,7 +62,6 @@ type SocialService interface {
 	GetFriendRequests(userID int) ([]*User, error)
 	AreFriends(userID1, userID2 int) (bool, error)
 
-	// Follow operations
 	FollowUser(followerID, followingID int) error
 	UnfollowUser(followerID, followingID int) error
 	GetFollowers(userID int, page int) ([]*User, error)

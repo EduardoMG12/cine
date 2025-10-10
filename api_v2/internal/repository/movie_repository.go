@@ -58,13 +58,11 @@ func (r *movieRepository) Create(movie *domain.Movie) error {
 		return fmt.Errorf("failed to create movie: %w", err)
 	}
 
-	// Cache the movie
 	r.cacheMovie(movie)
 	return nil
 }
 
 func (r *movieRepository) GetByID(id int) (*domain.Movie, error) {
-	// Try cache first
 	cacheKey := fmt.Sprintf("movie:id:%d", id)
 	if movie := r.getMovieFromCache(cacheKey); movie != nil {
 		return movie, nil
@@ -101,13 +99,11 @@ func (r *movieRepository) GetByID(id int) (*domain.Movie, error) {
 		return nil, fmt.Errorf("failed to get movie by ID: %w", err)
 	}
 
-	// Cache for future requests
 	r.cacheMovie(movie)
 	return movie, nil
 }
 
 func (r *movieRepository) GetByExternalID(externalID string) (*domain.Movie, error) {
-	// Try cache first
 	cacheKey := fmt.Sprintf("movie:external:%s", externalID)
 	if movie := r.getMovieFromCache(cacheKey); movie != nil {
 		return movie, nil
@@ -144,7 +140,6 @@ func (r *movieRepository) GetByExternalID(externalID string) (*domain.Movie, err
 		return nil, fmt.Errorf("failed to get movie by external ID: %w", err)
 	}
 
-	// Cache for future requests
 	r.cacheMovie(movie)
 	return movie, nil
 }
@@ -181,14 +176,12 @@ func (r *movieRepository) Update(movie *domain.Movie) error {
 		return fmt.Errorf("failed to update movie: %w", err)
 	}
 
-	// Update cache
 	r.invalidateMovieCache(movie.ID, movie.ExternalAPIID)
 	r.cacheMovie(movie)
 	return nil
 }
 
 func (r *movieRepository) Delete(id int) error {
-	// Get movie first to invalidate cache
 	movie, err := r.GetByID(id)
 	if err != nil {
 		return err

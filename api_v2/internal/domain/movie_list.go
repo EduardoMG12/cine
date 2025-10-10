@@ -12,7 +12,6 @@ type MovieList struct {
 	CreatedAt time.Time `json:"created_at" db:"created_at"`
 	UpdatedAt time.Time `json:"updated_at" db:"updated_at"`
 
-	// Populated by joins
 	User    *User             `json:"user,omitempty"`
 	Entries []*MovieListEntry `json:"entries,omitempty"`
 }
@@ -23,7 +22,6 @@ type MovieListEntry struct {
 	MovieID     int       `json:"movie_id" db:"movie_id"`
 	AddedAt     time.Time `json:"added_at" db:"added_at"`
 
-	// Populated by joins
 	Movie *Movie `json:"movie,omitempty"`
 }
 
@@ -35,7 +33,6 @@ type MovieListRepository interface {
 	Update(list *MovieList) error
 	Delete(id int) error
 
-	// Entry operations
 	AddMovieToList(listID, movieID int) error
 	RemoveMovieFromList(listID, movieID int) error
 	GetListEntries(listID int, limit, offset int) ([]*MovieListEntry, error)
@@ -49,14 +46,12 @@ type MovieListService interface {
 	UpdateList(listID, userID int, name string) (*MovieList, error)
 	DeleteList(listID, userID int) error
 
-	// Default lists operations
 	AddToWantToWatch(userID, movieID int) error
 	AddToWatched(userID, movieID int) error
 	RemoveFromWantToWatch(userID, movieID int) error
 	RemoveFromWatched(userID, movieID int) error
-	MoveToWatched(userID, movieID int) error // moves from want-to-watch to watched
+	MoveToWatched(userID, movieID int) error
 
-	// Custom list operations
 	AddMovieToList(listID, userID, movieID int) error
 	RemoveMovieFromList(listID, userID, movieID int) error
 	GetListMovies(listID int, page int) ([]*MovieListEntry, error)

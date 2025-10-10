@@ -158,13 +158,11 @@ func (r *movieListRepository) Update(list *domain.MovieList) error {
 }
 
 func (r *movieListRepository) Delete(id int) error {
-	// First delete all entries in the list
 	_, err := r.db.Exec("DELETE FROM movie_list_entries WHERE movie_list_id = $1", id)
 	if err != nil {
 		return fmt.Errorf("failed to delete movie list entries: %w", err)
 	}
 
-	// Then delete the list itself
 	_, err = r.db.Exec("DELETE FROM movie_lists WHERE id = $1", id)
 	if err != nil {
 		return fmt.Errorf("failed to delete movie list: %w", err)

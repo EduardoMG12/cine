@@ -2,9 +2,12 @@ package dto
 
 import "time"
 
-// Auth Request DTOs
 type RegisterRequest struct {
-	Username    string `json:"username" validate:"required,min=3,max=30,alphanum"`
+	Us
+}
+
+type SessionResponse struct {
+	me          string `json:"username" validate:"required,min=3,max=30,alphanum"`
 	Email       string `json:"email" validate:"required,email"`
 	Password    string `json:"password" validate:"required,min=8,max=100"`
 	DisplayName string `json:"display_name" validate:"required,min=2,max=100"`
@@ -28,7 +31,6 @@ type ResetPasswordRequest struct {
 	NewPassword string `json:"new_password" validate:"required,min=8,max=100"`
 }
 
-// Auth Response DTOs
 type AuthResponse struct {
 	Token     string      `json:"token"`
 	ExpiresAt time.Time   `json:"expires_at"`
@@ -52,7 +54,6 @@ type MessageResponse struct {
 	Message string `json:"message"`
 }
 
-// User Profile DTOs
 type UpdateProfileRequest struct {
 	DisplayName       *string `json:"display_name,omitempty" validate:"omitempty,min=2,max=100"`
 	Bio               *string `json:"bio,omitempty" validate:"omitempty,max=500"`

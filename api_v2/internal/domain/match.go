@@ -19,7 +19,6 @@ type MatchSession struct {
 	CreatedAt  time.Time          `json:"created_at" db:"created_at"`
 	UpdatedAt  time.Time          `json:"updated_at" db:"updated_at"`
 
-	// Populated by joins
 	Host         *User                      `json:"host,omitempty"`
 	Participants []*MatchSessionParticipant `json:"participants,omitempty"`
 	Interactions []*MatchInteraction        `json:"interactions,omitempty"`
@@ -30,7 +29,6 @@ type MatchSessionParticipant struct {
 	UserID    int       `json:"user_id" db:"user_id"`
 	JoinedAt  time.Time `json:"joined_at" db:"joined_at"`
 
-	// Populated by joins
 	User *User `json:"user,omitempty"`
 }
 
@@ -41,7 +39,6 @@ type MatchInteraction struct {
 	Liked        bool      `json:"liked" db:"liked"`
 	InteractedAt time.Time `json:"interacted_at" db:"interacted_at"`
 
-	// Populated by joins
 	User  *User  `json:"user,omitempty"`
 	Movie *Movie `json:"movie,omitempty"`
 }
@@ -60,13 +57,11 @@ type MatchSessionRepository interface {
 	UpdateStatus(sessionID int, status MatchSessionStatus) error
 	Delete(id int) error
 
-	// Participant operations
 	AddParticipant(sessionID, userID int) error
 	RemoveParticipant(sessionID, userID int) error
 	GetParticipants(sessionID int) ([]*MatchSessionParticipant, error)
 	IsParticipant(sessionID, userID int) (bool, error)
 
-	// Interaction operations
 	CreateInteraction(interaction *MatchInteraction) error
 	GetInteractions(sessionID int) ([]*MatchInteraction, error)
 	GetUserInteractions(sessionID, userID int) ([]*MatchInteraction, error)
