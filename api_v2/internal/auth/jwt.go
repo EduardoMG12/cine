@@ -1,6 +1,8 @@
 package auth
 
 import (
+	"crypto/rand"
+	"encoding/hex"
 	"errors"
 	"time"
 
@@ -79,4 +81,14 @@ func (manager *JWTManager) RefreshToken(tokenString string) (string, error) {
 
 	// Generate new token with same claims but extended expiration
 	return manager.GenerateToken(claims.UserID, claims.Email, claims.SessionID)
+}
+
+// GenerateSecureToken generates a cryptographically secure random token
+func GenerateSecureToken(length int) (string, error) {
+	bytes := make([]byte, length)
+	_, err := rand.Read(bytes)
+	if err != nil {
+		return "", err
+	}
+	return hex.EncodeToString(bytes), nil
 }

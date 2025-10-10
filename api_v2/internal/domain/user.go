@@ -19,6 +19,24 @@ type User struct {
 	UpdatedAt         time.Time `json:"updated_at" db:"updated_at"`
 }
 
+// EmailVerificationToken represents a token for email verification
+type EmailVerificationToken struct {
+	ID        int       `json:"id" db:"id"`
+	UserID    int       `json:"user_id" db:"user_id"`
+	Token     string    `json:"token" db:"token"`
+	ExpiresAt time.Time `json:"expires_at" db:"expires_at"`
+	CreatedAt time.Time `json:"created_at" db:"created_at"`
+}
+
+// PasswordResetToken represents a token for password reset
+type PasswordResetToken struct {
+	ID        int       `json:"id" db:"id"`
+	UserID    int       `json:"user_id" db:"user_id"`
+	Token     string    `json:"token" db:"token"`
+	ExpiresAt time.Time `json:"expires_at" db:"expires_at"`
+	CreatedAt time.Time `json:"created_at" db:"created_at"`
+}
+
 type UserRepository interface {
 	Create(user *User) error
 	GetByID(id int) (*User, error)
@@ -27,6 +45,17 @@ type UserRepository interface {
 	Update(user *User) error
 	Delete(id int) error
 	UpdateSettings(userID int, settings map[string]interface{}) error
+
+	// Email verification
+	CreateEmailVerificationToken(token *EmailVerificationToken) error
+	GetEmailVerificationToken(token string) (*EmailVerificationToken, error)
+	DeleteEmailVerificationToken(token string) error
+	MarkEmailAsVerified(userID int) error
+
+	// Password reset
+	CreatePasswordResetToken(token *PasswordResetToken) error
+	GetPasswordResetToken(token string) (*PasswordResetToken, error)
+	DeletePasswordResetToken(token string) error
 }
 
 type UserService interface {

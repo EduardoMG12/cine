@@ -96,3 +96,17 @@ func GetClientIP(r *http.Request) string {
 	// Fallback to RemoteAddr
 	return r.RemoteAddr
 }
+
+// WriteJSONError writes a standardized JSON error response
+func WriteJSONError(w http.ResponseWriter, status int, code, message string) {
+	response := ErrorResponse{
+		Error:   code,
+		Message: message,
+	}
+	WriteJSON(w, status, response)
+}
+
+// WriteJSONResponse writes a successful JSON response with data
+func WriteJSONResponse(w http.ResponseWriter, status int, data interface{}) {
+	WriteJSON(w, status, data)
+}
