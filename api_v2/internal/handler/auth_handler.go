@@ -199,7 +199,6 @@ func (h *AuthHandler) ConfirmEmail(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// TODO: Implement email confirmation logic
 	err := h.userService.ConfirmEmail(req.Token)
 	if err != nil {
 		slog.Warn("Email confirmation failed", "error", err)
@@ -224,7 +223,6 @@ func (h *AuthHandler) ForgotPassword(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// TODO: Implement password reset request logic
 	err := h.userService.RequestPasswordReset(req.Email)
 	if err != nil {
 		// Don't reveal whether email exists for security
@@ -249,7 +247,6 @@ func (h *AuthHandler) ResetPassword(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// TODO: Implement password reset logic
 	err := h.userService.ResetPassword(req.Token, req.NewPassword)
 	if err != nil {
 		slog.Warn("Password reset failed", "error", err)
