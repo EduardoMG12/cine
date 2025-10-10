@@ -13,8 +13,8 @@ const (
 )
 
 type MatchSession struct {
-	ID         int                `json:"id" db:"id"`
-	HostUserID int                `json:"host_user_id" db:"host_user_id"`
+	ID         string             `json:"id" db:"id"`
+	HostUserID string             `json:"host_user_id" db:"host_user_id"`
 	Status     MatchSessionStatus `json:"status" db:"status"`
 	CreatedAt  time.Time          `json:"created_at" db:"created_at"`
 	UpdatedAt  time.Time          `json:"updated_at" db:"updated_at"`
@@ -25,17 +25,17 @@ type MatchSession struct {
 }
 
 type MatchSessionParticipant struct {
-	SessionID int       `json:"session_id" db:"session_id"`
-	UserID    int       `json:"user_id" db:"user_id"`
+	SessionID string    `json:"session_id" db:"session_id"`
+	UserID    string    `json:"user_id" db:"user_id"`
 	JoinedAt  time.Time `json:"joined_at" db:"joined_at"`
 
 	User *User `json:"user,omitempty"`
 }
 
 type MatchInteraction struct {
-	SessionID    int       `json:"session_id" db:"session_id"`
-	UserID       int       `json:"user_id" db:"user_id"`
-	MovieID      int       `json:"movie_id" db:"movie_id"`
+	SessionID    string    `json:"session_id" db:"session_id"`
+	UserID       string    `json:"user_id" db:"user_id"`
+	MovieID      string    `json:"movie_id" db:"movie_id"`
 	Liked        bool      `json:"liked" db:"liked"`
 	InteractedAt time.Time `json:"interacted_at" db:"interacted_at"`
 
@@ -44,45 +44,42 @@ type MatchInteraction struct {
 }
 
 type MatchResult struct {
-	SessionID int    `json:"session_id"`
-	MovieID   int    `json:"movie_id"`
+	SessionID string `json:"session_id"`
+	MovieID   string `json:"movie_id"`
 	Movie     *Movie `json:"movie,omitempty"`
 }
 
 type MatchSessionRepository interface {
 	Create(session *MatchSession) error
-	GetByID(id int) (*MatchSession, error)
-	GetByHostID(hostID int, limit, offset int) ([]*MatchSession, error)
-	GetByParticipantID(userID int, limit, offset int) ([]*MatchSession, error)
-	UpdateStatus(sessionID int, status MatchSessionStatus) error
-	Delete(id int) error
+	GetByID(id string) (*MatchSession, error)
+	GetByHostID(hostID string, limit, offset int) ([]*MatchSession, error)
+	GetByParticipantID(userID string, limit, offset int) ([]*MatchSession, error)
+	UpdateStatus(sessionID string, status MatchSessionStatus) error
+	Delete(id string) error
 
-	AddParticipant(sessionID, userID int) error
-	RemoveParticipant(sessionID, userID int) error
-	GetParticipants(sessionID int) ([]*MatchSessionParticipant, error)
-	IsParticipant(sessionID, userID int) (bool, error)
+	AddParticipant(sessionID, userID string) error
+	RemoveParticipant(sessionID, userID string) error
+	GetParticipants(sessionID string) ([]*MatchSessionParticipant, error)
+	IsParticipant(sessionID, userID string) (bool, error)
 
 	CreateInteraction(interaction *MatchInteraction) error
-	GetInteractions(sessionID int) ([]*MatchInteraction, error)
-	GetUserInteractions(sessionID, userID int) ([]*MatchInteraction, error)
-	HasUserInteracted(sessionID, userID, movieID int) (bool, error)
+	GetInteractions(sessionID string) ([]*MatchInteraction, error)
+	GetUserInteractions(sessionID, userID string) ([]*MatchInteraction, error)
+	HasUserInteracted(sessionID, userID, movieID string) (bool, error)
 }
 
 type MatchService interface {
-	CreateSession(hostUserID int, participantIDs []int) (*MatchSession, error)
-	JoinSession(sessionID, userID int) error
-	LeaveSession(sessionID, userID int) error
-	GetSession(sessionID int) (*MatchSession, error)
-	GetUserSessions(userID int, page int) ([]*MatchSession, error)
+	CreateSession(hostUserID string, participantIDs []string) (*MatchSession, error)
+	JoinSession(sessionID, userID string) error
+	LeaveSession(sessionID, userID string) error
+	GetSession(sessionID string) (*MatchSession, error)
+	GetUserSessions(userID string, page int) ([]*MatchSession, error)
 
-	// Movie suggestions based on participants' preferences
-	GetSessionSuggestions(sessionID int, limit int) ([]*Movie, error)
+	GetSessionSuggestions(sessionID string, limit int) ([]*Movie, error)
 
-	// Interaction operations
-	RecordInteraction(sessionID, userID, movieID int, liked bool) error
-	CheckForMatches(sessionID int) ([]*MatchResult, error)
+	RecordInteraction(sessionID, userID, movieID string, liked bool) error
+	CheckForMatches(sessionID string) ([]*MatchResult, error)
 
-	// Session management
-	FinishSession(sessionID, userID int) error
-	CancelSession(sessionID, userID int) error
+	FinishSession(sessionID, userID string) error
+	CancelSession(sessionID, userID string) error
 }

@@ -5,8 +5,8 @@ import (
 )
 
 type UserSession struct {
-	ID        int       `json:"id" db:"id"`
-	UserID    int       `json:"user_id" db:"user_id"`
+	ID        string    `json:"id" db:"id"`
+	UserID    string    `json:"user_id" db:"user_id"`
 	Token     string    `json:"token" db:"token"`
 	IPAddress string    `json:"ip_address" db:"ip_address"`
 	UserAgent string    `json:"user_agent" db:"user_agent"`
@@ -17,18 +17,18 @@ type UserSession struct {
 type UserSessionRepository interface {
 	Create(session *UserSession) error
 	GetByToken(token string) (*UserSession, error)
-	GetByUserID(userID int) ([]*UserSession, error)
-	DeleteByID(id int) error
+	GetByUserID(userID string) ([]*UserSession, error)
+	DeleteByID(id string) error
 	DeleteByToken(token string) error
-	DeleteByUserID(userID int) error
+	DeleteByUserID(userID string) error
 	DeleteExpiredSessions() error
 }
 
 type UserSessionService interface {
-	CreateSession(userID int, ipAddress, userAgent string) (*UserSession, error)
+	CreateSession(userID string, ipAddress, userAgent string) (*UserSession, error)
 	ValidateSession(token string) (*UserSession, error)
-	GetUserSessions(userID int) ([]*UserSession, error)
-	RevokeSession(userID, sessionID int) error
-	RevokeAllSessions(userID int) error
+	GetUserSessions(userID string) ([]*UserSession, error)
+	RevokeSession(userID, sessionID string) error
+	RevokeAllSessions(userID string) error
 	CleanupExpiredSessions() error
 }

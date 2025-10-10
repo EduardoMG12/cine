@@ -5,7 +5,7 @@ import (
 )
 
 type Movie struct {
-	ID             int       `json:"id" db:"id"`
+	ID             string    `json:"id" db:"id"`
 	ExternalAPIID  string    `json:"external_api_id" db:"external_api_id"`
 	Title          string    `json:"title" db:"title"`
 	Overview       *string   `json:"overview,omitempty" db:"overview"`
@@ -24,10 +24,10 @@ type Movie struct {
 
 type MovieRepository interface {
 	Create(movie *Movie) error
-	GetByID(id int) (*Movie, error)
+	GetByID(id string) (*Movie, error)
 	GetByExternalID(externalID string) (*Movie, error)
 	Update(movie *Movie) error
-	Delete(id int) error
+	Delete(id string) error
 	Search(query string, limit, offset int) ([]*Movie, error)
 	GetPopular(limit, offset int) ([]*Movie, error)
 	GetByGenre(genre string, limit, offset int) ([]*Movie, error)
@@ -35,7 +35,7 @@ type MovieRepository interface {
 }
 
 type MovieService interface {
-	GetMovie(id int) (*Movie, error)
+	GetMovie(id string) (*Movie, error)
 	GetMovieByExternalID(externalID string) (*Movie, error)
 	SearchMovies(query string, page int) ([]*Movie, error)
 	GetPopularMovies(page int) ([]*Movie, error)

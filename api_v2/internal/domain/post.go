@@ -13,8 +13,8 @@ const (
 )
 
 type Post struct {
-	ID         int            `json:"id" db:"id"`
-	UserID     int            `json:"user_id" db:"user_id"`
+	ID         string         `json:"id" db:"id"`
+	UserID     string         `json:"user_id" db:"user_id"`
 	Content    string         `json:"content" db:"content"`
 	Visibility PostVisibility `json:"visibility" db:"visibility"`
 	CreatedAt  time.Time      `json:"created_at" db:"created_at"`
@@ -25,21 +25,21 @@ type Post struct {
 
 type PostRepository interface {
 	Create(post *Post) error
-	GetByID(id int) (*Post, error)
-	GetByUserID(userID int, limit, offset int) ([]*Post, error)
+	GetByID(id string) (*Post, error)
+	GetByUserID(userID string, limit, offset int) ([]*Post, error)
 	GetPublicFeed(limit, offset int) ([]*Post, error)
-	GetUserFeed(userID int, limit, offset int) ([]*Post, error) // includes friends/following posts
+	GetUserFeed(userID string, limit, offset int) ([]*Post, error) // includes friends/following posts
 	Update(post *Post) error
-	Delete(id int) error
+	Delete(id string) error
 }
 
 type PostService interface {
-	CreatePost(userID int, content string, visibility PostVisibility) (*Post, error)
-	GetPost(postID int, requesterID int) (*Post, error) // respects visibility
-	GetUserPosts(userID int, requesterID int, page int) ([]*Post, error)
+	CreatePost(userID string, content string, visibility PostVisibility) (*Post, error)
+	GetPost(postID string, requesterID string) (*Post, error) // respects visibility
+	GetUserPosts(userID string, requesterID string, page int) ([]*Post, error)
 	GetPublicFeed(page int) ([]*Post, error)
-	GetUserFeed(userID int, page int) ([]*Post, error)
-	UpdatePost(postID, userID int, content string, visibility PostVisibility) (*Post, error)
-	DeletePost(postID, userID int) error
+	GetUserFeed(userID string, page int) ([]*Post, error)
+	UpdatePost(postID, userID string, content string, visibility PostVisibility) (*Post, error)
+	DeletePost(postID, userID string) error
 	ValidatePost(post *Post) error
 }

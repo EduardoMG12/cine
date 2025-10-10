@@ -5,9 +5,9 @@ import (
 )
 
 type Review struct {
-	ID        int       `json:"id" db:"id"`
-	UserID    int       `json:"user_id" db:"user_id"`
-	MovieID   int       `json:"movie_id" db:"movie_id"`
+	ID        string    `json:"id" db:"id"`
+	UserID    string    `json:"user_id" db:"user_id"`
+	MovieID   string    `json:"movie_id" db:"movie_id"`
 	Rating    *int      `json:"rating,omitempty" db:"rating"` // 1-10 scale
 	Content   *string   `json:"content,omitempty" db:"content"`
 	CreatedAt time.Time `json:"created_at" db:"created_at"`
@@ -19,20 +19,20 @@ type Review struct {
 
 type ReviewRepository interface {
 	Create(review *Review) error
-	GetByID(id int) (*Review, error)
-	GetByUserAndMovie(userID, movieID int) (*Review, error)
-	GetByMovieID(movieID int, limit, offset int) ([]*Review, error)
-	GetByUserID(userID int, limit, offset int) ([]*Review, error)
+	GetByID(id string) (*Review, error)
+	GetByUserAndMovie(userID, movieID string) (*Review, error)
+	GetByMovieID(movieID string, limit, offset int) ([]*Review, error)
+	GetByUserID(userID string, limit, offset int) ([]*Review, error)
 	Update(review *Review) error
-	Delete(id int) error
+	Delete(id string) error
 }
 
 type ReviewService interface {
-	CreateReview(userID, movieID int, rating *int, content *string) (*Review, error)
-	GetReview(id int) (*Review, error)
-	GetMovieReviews(movieID int, page int) ([]*Review, error)
-	GetUserReviews(userID int, page int) ([]*Review, error)
-	UpdateReview(reviewID, userID int, rating *int, content *string) (*Review, error)
-	DeleteReview(reviewID, userID int) error
+	CreateReview(userID, movieID string, rating *int, content *string) (*Review, error)
+	GetReview(id string) (*Review, error)
+	GetMovieReviews(movieID string, page int) ([]*Review, error)
+	GetUserReviews(userID string, page int) ([]*Review, error)
+	UpdateReview(reviewID, userID string, rating *int, content *string) (*Review, error)
+	DeleteReview(reviewID, userID string) error
 	ValidateReview(review *Review) error
 }

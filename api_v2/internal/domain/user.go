@@ -5,7 +5,7 @@ import (
 )
 
 type User struct {
-	ID                int       `json:"id" db:"id"`
+	ID                string    `json:"id" db:"id"`
 	Username          string    `json:"username" db:"username"`
 	Email             string    `json:"email" db:"email"`
 	PasswordHash      string    `json:"-" db:"password_hash"`
@@ -21,8 +21,8 @@ type User struct {
 
 // EmailVerificationToken represents a token for email verification
 type EmailVerificationToken struct {
-	ID        int       `json:"id" db:"id"`
-	UserID    int       `json:"user_id" db:"user_id"`
+	ID        string    `json:"id" db:"id"`
+	UserID    string    `json:"user_id" db:"user_id"`
 	Token     string    `json:"token" db:"token"`
 	ExpiresAt time.Time `json:"expires_at" db:"expires_at"`
 	CreatedAt time.Time `json:"created_at" db:"created_at"`
@@ -30,8 +30,8 @@ type EmailVerificationToken struct {
 
 // PasswordResetToken represents a token for password reset
 type PasswordResetToken struct {
-	ID        int       `json:"id" db:"id"`
-	UserID    int       `json:"user_id" db:"user_id"`
+	ID        string    `json:"id" db:"id"`
+	UserID    string    `json:"user_id" db:"user_id"`
 	Token     string    `json:"token" db:"token"`
 	ExpiresAt time.Time `json:"expires_at" db:"expires_at"`
 	CreatedAt time.Time `json:"created_at" db:"created_at"`
@@ -39,18 +39,18 @@ type PasswordResetToken struct {
 
 type UserRepository interface {
 	Create(user *User) error
-	GetByID(id int) (*User, error)
+	GetByID(id string) (*User, error)
 	GetByEmail(email string) (*User, error)
 	GetByUsername(username string) (*User, error)
 	Update(user *User) error
-	Delete(id int) error
-	UpdateSettings(userID int, settings map[string]interface{}) error
+	Delete(id string) error
+	UpdateSettings(userID string, settings map[string]interface{}) error
 
 	// Email verification
 	CreateEmailVerificationToken(token *EmailVerificationToken) error
 	GetEmailVerificationToken(token string) (*EmailVerificationToken, error)
 	DeleteEmailVerificationToken(token string) error
-	MarkEmailAsVerified(userID int) error
+	MarkEmailAsVerified(userID string) error
 
 	// Password reset
 	CreatePasswordResetToken(token *PasswordResetToken) error
@@ -64,12 +64,12 @@ type UserService interface {
 	ConfirmEmail(token string) error
 	RequestPasswordReset(email string) error
 	ResetPassword(token, newPassword string) error
-	GetUser(id int) (*User, error)
+	GetUser(id string) (*User, error)
 	GetUserByEmail(email string) (*User, error)
-	GetUserProfile(id int) (*User, error) // respects privacy settings
-	UpdateProfile(userID int, updates map[string]interface{}) (*User, error)
-	UpdateSettings(userID int, settings map[string]interface{}) error
-	DeleteUser(id int) error
+	GetUserProfile(id string) (*User, error) // respects privacy settings
+	UpdateProfile(userID string, updates map[string]interface{}) (*User, error)
+	UpdateSettings(userID string, settings map[string]interface{}) error
+	DeleteUser(id string) error
 	ValidateUser(user *User) error
 	CreateUser(user *User) error // for creating user entities directly
 }
