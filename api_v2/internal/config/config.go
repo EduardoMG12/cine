@@ -3,6 +3,7 @@ package config
 import (
 	"log/slog"
 
+	"github.com/go-playground/validator/v10"
 	"github.com/spf13/viper"
 )
 
@@ -109,4 +110,9 @@ func setDefaults() {
 	// TMDb defaults
 	viper.SetDefault("tmdb.api_key", "")
 	viper.SetDefault("tmdb.base_url", "https://api.themoviedb.org/3")
+}
+
+// NewValidator creates and returns a new validator instance
+func NewValidator() *validator.Validate {
+	return validator.New()
 }

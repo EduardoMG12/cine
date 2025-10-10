@@ -40,15 +40,25 @@ func (s *Server) Start() error {
 	// Initialize repositories
 	userRepo := repository.NewUserRepository(s.db, s.redis)
 	sessionRepo := repository.NewUserSessionRepository(s.db, s.redis)
+	movieRepo := repository.NewMovieRepository(s.db, s.redis)
+	movieListRepo := repository.NewMovieListRepository(s.db)
 
 	// Initialize auth components
 	jwtManager := auth.NewJWTManager(s.cfg.JWT.Secret, time.Duration(s.cfg.JWT.Expiration)*time.Hour)
 	passwordHasher := auth.NewPasswordHasher()
 
+	// Initialize TMDb service
+	tmdbService := service.NewTMDbService(s.cfg.TMDb.APIKey, s.cfg.TMDb.BaseURL)
+
 	// Initialize services
 	userService := service.NewUserService(userRepo)
 	sessionService := service.NewUserSessionService(sessionRepo, time.Duration(s.cfg.JWT.Expiration)*time.Hour)
 	authService := service.NewAuthService(userRepo, sessionRepo, jwtManager, passwordHasher, s.cfg)
+	movieService := service.NewMovieService(movieRepo, tmdbService)
+	movieListService := service.NewMovieListService(movieListRepo, movieRepo)
+
+	// Initialize validator
+	validator := config.NewValidator()
 
 	// Initialize handlers
 	userHandler := handler.NewUserHandler(userService)
@@ -58,9 +68,11 @@ func (s *Server) Start() error {
 		jwtManager,
 		passwordHasher,
 	)
+	movieHandler := handler.NewMovieHandler(movieService)
+	movieListHandler := handler.NewMovieListHandler(movieListService, validator)
 
 	// Setup router
-	router := NewRouter(userHandler, authHandler)
+	router := NewRouter(userHandler, authHandler, movieHandler, movieListHandler)
 
 	// Create HTTP server
 	s.httpServer = &http.Server{

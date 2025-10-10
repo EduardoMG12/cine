@@ -11,11 +11,11 @@ import (
 )
 
 // Router creates and configures the main router with all routes
-func NewRouter(userHandler *handler.UserHandler, authHandler *handler.AuthHandler) chi.Router {
+func NewRouter(userHandler *handler.UserHandler, authHandler *handler.AuthHandler, movieHandler *handler.MovieHandler, movieListHandler *handler.MovieListHandler) chi.Router {
 	r := chi.NewRouter()
 
 	setupMiddleware(r)
-	setupRoutes(r, userHandler, authHandler)
+	setupRoutes(r, userHandler, authHandler, movieHandler, movieListHandler)
 
 	return r
 }
@@ -36,7 +36,7 @@ func setupMiddleware(r chi.Router) {
 	}))
 }
 
-func setupRoutes(r chi.Router, userHandler *handler.UserHandler, authHandler *handler.AuthHandler) {
+func setupRoutes(r chi.Router, userHandler *handler.UserHandler, authHandler *handler.AuthHandler, movieHandler *handler.MovieHandler, movieListHandler *handler.MovieListHandler) {
 	// Health check
 	r.Get("/health", healthCheckHandler)
 
@@ -48,10 +48,11 @@ func setupRoutes(r chi.Router, userHandler *handler.UserHandler, authHandler *ha
 		// User routes
 		r.Mount("/users", userHandler.Routes())
 
-		// Movie routes (will be added later)
-		r.Route("/movies", func(r chi.Router) {
-			// Will be implemented in next step
-		})
+		// Movie routes
+		r.Mount("/movies", movieHandler.Routes())
+
+		// Movie list routes
+		r.Mount("/movie-lists", movieListHandler.Routes())
 
 		// Match session routes (will be added later)
 		r.Route("/match-sessions", func(r chi.Router) {
