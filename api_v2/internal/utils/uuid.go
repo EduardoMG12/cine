@@ -1,6 +1,8 @@
 package utils
 
 import (
+	"strings"
+
 	"github.com/google/uuid"
 )
 
@@ -18,4 +20,20 @@ func ParseUUID(id string) (uuid.UUID, error) {
 func IsValidUUID(id string) bool {
 	_, err := uuid.Parse(id)
 	return err == nil
+}
+
+// NormalizeUUID ensures UUID is in lowercase format
+func NormalizeUUID(str string) string {
+	return strings.ToLower(strings.TrimSpace(str))
+}
+
+// EmptyUUID returns the zero UUID
+func EmptyUUID() string {
+	return uuid.Nil.String()
+}
+
+// IsEmptyUUID checks if UUID is empty/nil
+func IsEmptyUUID(str string) bool {
+	normalized := NormalizeUUID(str)
+	return normalized == "" || normalized == EmptyUUID()
 }
