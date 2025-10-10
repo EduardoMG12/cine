@@ -4,12 +4,12 @@ module.exports = {
 
 	"api_v2/**/*.go": (filenames) => {
 		const commands = [];
-		// Format each file individually with correct path
+
+		// Format files
 		filenames.forEach((filename) => {
 			commands.push(`gofmt -w "${filename}"`);
 		});
-		// Skip go vet for now due to module resolution issues
-		// TODO: Fix go vet after module setup is complete
+
 		return commands;
 	},
 
