@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/EduardoMG12/cine/api_v2/internal/domain"
+	"github.com/EduardoMG12/cine/api_v2/internal/utils"
 	"github.com/jmoiron/sqlx"
 )
 
@@ -20,24 +21,29 @@ func NewReviewRepository(db *sqlx.DB) domain.ReviewRepository {
 }
 
 func (r *reviewRepository) Create(review *domain.Review) error {
+	// Generate UUID for the review if not set
+	if review.ID == "" {
+		review.ID = utils.GenerateUUID()
+	}
+
 	query := `
-		INSERT INTO reviews (user_id, movie_id, rating, content, created_at, updated_at)
-		VALUES ($1, $2, $3, $4, $5, $6)
-		RETURNING id`
+		INSERT INTO reviews (id, user_id, movie_id, rating, content, created_at, updated_at)
+		VALUES ($1, $2, $3, $4, $5, $6, $7)`
 
 	now := time.Now()
 	review.CreatedAt = now
 	review.UpdatedAt = now
 
-	err := r.db.QueryRow(
+	_, err := r.db.Exec(
 		query,
+		review.ID,
 		review.UserID,
 		review.MovieID,
 		review.Rating,
 		review.Content,
 		review.CreatedAt,
 		review.UpdatedAt,
-	).Scan(&review.ID)
+	)
 
 	if err != nil {
 		return fmt.Errorf("failed to create review: %w", err)
@@ -46,7 +52,11 @@ func (r *reviewRepository) Create(review *domain.Review) error {
 	return nil
 }
 
-func (r *reviewRepository) GetByID(id int) (*domain.Review, error) {
+func (r *reviewRepository) GetByID(id string) (*domain.Review, error) {
+	// Validate UUID format
+	if !utils.IsValidUUID(id) {
+		return nil, fmt.Errorf("invalid UUID format: %s", id)
+	}
 	query := `
 		SELECT r.id, r.user_id, r.movie_id, r.rating, r.content, r.created_at, r.updated_at,
 		       u.id, u.username, u.email, u.display_name, u.bio, u.profile_picture_url, u.is_private, u.created_at,
@@ -82,7 +92,15 @@ func (r *reviewRepository) GetByID(id int) (*domain.Review, error) {
 	return &review, nil
 }
 
-func (r *reviewRepository) GetByUserAndMovie(userID, movieID int) (*domain.Review, error) {
+func (r *reviewRepository) GetByUserAndMovie(userID, movieID string) (*domain.Review, error) {
+	// Validate UUID formats
+	if !utils.IsValidUUID(userID) {
+		return nil, fmt.Errorf("invalid user UUID format: %s", userID)
+	}
+	if !utils.IsValidUUID(movieID) {
+		return nil, fmt.Errorf("invalid movie UUID format: %s", movieID)
+	}
+
 	query := `
 		SELECT id, user_id, movie_id, rating, content, created_at, updated_at
 		FROM reviews
@@ -109,7 +127,11 @@ func (r *reviewRepository) GetByUserAndMovie(userID, movieID int) (*domain.Revie
 	return &review, nil
 }
 
-func (r *reviewRepository) GetByMovieID(movieID int, limit, offset int) ([]*domain.Review, error) {
+func (r *reviewRepository) GetByMovieID(movieID string, limit, offset int) ([]*domain.Review, error) {
+	// Validate UUID format
+	if !utils.IsValidUUID(movieID) {
+		return nil, fmt.Errorf("invalid movie UUID format: %s", movieID)
+	}
 	query := `
 		SELECT r.id, r.user_id, r.movie_id, r.rating, r.content, r.created_at, r.updated_at,
 		       u.id, u.username, u.display_name, u.bio, u.profile_picture_url, u.is_private, u.created_at
@@ -145,7 +167,11 @@ func (r *reviewRepository) GetByMovieID(movieID int, limit, offset int) ([]*doma
 	return reviews, nil
 }
 
-func (r *reviewRepository) GetByUserID(userID int, limit, offset int) ([]*domain.Review, error) {
+func (r *reviewRepository) GetByUserID(userID string, limit, offset int) ([]*domain.Review, error) {
+	// Validate UUID format
+	if !utils.IsValidUUID(userID) {
+		return nil, fmt.Errorf("invalid user UUID format: %s", userID)
+	}
 	query := `
 		SELECT r.id, r.user_id, r.movie_id, r.rating, r.content, r.created_at, r.updated_at,
 		       m.id, m.external_api_id, m.title, m.overview, m.poster_url, m.backdrop_url,
@@ -201,7 +227,12 @@ func (r *reviewRepository) Update(review *domain.Review) error {
 	return nil
 }
 
-func (r *reviewRepository) Delete(id int) error {
+func (r *reviewRepository) Delete(id string) error {
+	// Validate UUID format
+	if !utils.IsValidUUID(id) {
+		return fmt.Errorf("invalid UUID format: %s", id)
+	}
+
 	query := `DELETE FROM reviews WHERE id = $1`
 
 	result, err := r.db.Exec(query, id)

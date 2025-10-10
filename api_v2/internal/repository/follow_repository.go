@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/EduardoMG12/cine/api_v2/internal/domain"
+	"github.com/EduardoMG12/cine/api_v2/internal/utils"
 	"github.com/jmoiron/sqlx"
 )
 
@@ -33,7 +34,15 @@ func (r *followRepository) Create(follow *domain.Follow) error {
 	return err
 }
 
-func (r *followRepository) GetByUsers(followerID, followingID int) (*domain.Follow, error) {
+func (r *followRepository) GetByUsers(followerID, followingID string) (*domain.Follow, error) {
+	// Validate UUID formats
+	if !utils.IsValidUUID(followerID) {
+		return nil, fmt.Errorf("invalid follower UUID format: %s", followerID)
+	}
+	if !utils.IsValidUUID(followingID) {
+		return nil, fmt.Errorf("invalid following UUID format: %s", followingID)
+	}
+
 	query := `
 		SELECT follower_id, following_id, created_at
 		FROM follows
@@ -51,7 +60,11 @@ func (r *followRepository) GetByUsers(followerID, followingID int) (*domain.Foll
 	return &follow, nil
 }
 
-func (r *followRepository) GetFollowers(userID int, limit, offset int) ([]*domain.Follow, error) {
+func (r *followRepository) GetFollowers(userID string, limit, offset int) ([]*domain.Follow, error) {
+	// Validate UUID format
+	if !utils.IsValidUUID(userID) {
+		return nil, fmt.Errorf("invalid UUID format: %s", userID)
+	}
 	query := `
 		SELECT 
 			f.follower_id, f.following_id, f.created_at,
@@ -90,7 +103,11 @@ func (r *followRepository) GetFollowers(userID int, limit, offset int) ([]*domai
 	return follows, nil
 }
 
-func (r *followRepository) GetFollowing(userID int, limit, offset int) ([]*domain.Follow, error) {
+func (r *followRepository) GetFollowing(userID string, limit, offset int) ([]*domain.Follow, error) {
+	// Validate UUID format
+	if !utils.IsValidUUID(userID) {
+		return nil, fmt.Errorf("invalid UUID format: %s", userID)
+	}
 	query := `
 		SELECT 
 			f.follower_id, f.following_id, f.created_at,
@@ -129,7 +146,15 @@ func (r *followRepository) GetFollowing(userID int, limit, offset int) ([]*domai
 	return follows, nil
 }
 
-func (r *followRepository) Delete(followerID, followingID int) error {
+func (r *followRepository) Delete(followerID, followingID string) error {
+	// Validate UUID formats
+	if !utils.IsValidUUID(followerID) {
+		return fmt.Errorf("invalid follower UUID format: %s", followerID)
+	}
+	if !utils.IsValidUUID(followingID) {
+		return fmt.Errorf("invalid following UUID format: %s", followingID)
+	}
+
 	query := `
 		DELETE FROM follows
 		WHERE follower_id = $1 AND following_id = $2`
@@ -145,13 +170,17 @@ func (r *followRepository) Delete(followerID, followingID int) error {
 	}
 
 	if rowsAffected == 0 {
-		return fmt.Errorf("no follow relationship found from user %d to user %d", followerID, followingID)
+		return fmt.Errorf("no follow relationship found from user %s to user %s", followerID, followingID)
 	}
 
 	return nil
 }
 
-func (r *followRepository) GetFollowersCount(userID int) (int, error) {
+func (r *followRepository) GetFollowersCount(userID string) (int, error) {
+	// Validate UUID format
+	if !utils.IsValidUUID(userID) {
+		return 0, fmt.Errorf("invalid UUID format: %s", userID)
+	}
 	query := `SELECT COUNT(*) FROM follows WHERE following_id = $1`
 
 	var count int
@@ -159,7 +188,11 @@ func (r *followRepository) GetFollowersCount(userID int) (int, error) {
 	return count, err
 }
 
-func (r *followRepository) GetFollowingCount(userID int) (int, error) {
+func (r *followRepository) GetFollowingCount(userID string) (int, error) {
+	// Validate UUID format
+	if !utils.IsValidUUID(userID) {
+		return 0, fmt.Errorf("invalid UUID format: %s", userID)
+	}
 	query := `SELECT COUNT(*) FROM follows WHERE follower_id = $1`
 
 	var count int

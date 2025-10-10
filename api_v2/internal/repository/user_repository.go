@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/EduardoMG12/cine/api_v2/internal/domain"
+	"github.com/EduardoMG12/cine/api_v2/internal/utils"
 	"github.com/jmoiron/sqlx"
 	"github.com/redis/go-redis/v9"
 )
@@ -25,18 +26,22 @@ func NewUserRepository(db *sqlx.DB, redis *redis.Client) domain.UserRepository {
 }
 
 func (r *userRepository) Create(user *domain.User) error {
+	if user.ID == "" {
+		user.ID = utils.GenerateUUID()
+	}
+
 	query := `
-		INSERT INTO users (username, email, password_hash, display_name, bio, profile_picture_url, is_private, email_verified, theme, created_at, updated_at)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
-		RETURNING id
+		INSERT INTO users (id, username, email, password_hash, display_name, bio, profile_picture_url, is_private, email_verified, theme, created_at, updated_at)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
 	`
 
 	now := time.Now()
 	user.CreatedAt = now
 	user.UpdatedAt = now
 
-	err := r.db.QueryRow(
+	_, err := r.db.Exec(
 		query,
+		user.ID,
 		user.Username,
 		user.Email,
 		user.PasswordHash,
@@ -48,7 +53,7 @@ func (r *userRepository) Create(user *domain.User) error {
 		user.Theme,
 		user.CreatedAt,
 		user.UpdatedAt,
-	).Scan(&user.ID)
+	)
 
 	if err != nil {
 		return fmt.Errorf("failed to create user: %w", err)
@@ -59,8 +64,12 @@ func (r *userRepository) Create(user *domain.User) error {
 	return nil
 }
 
-func (r *userRepository) GetByID(id int) (*domain.User, error) {
-	cacheKey := fmt.Sprintf("user:%d", id)
+func (r *userRepository) GetByID(id string) (*domain.User, error) {
+	if !utils.IsValidUUID(id) {
+		return nil, fmt.Errorf("invalid UUID format: %s", id)
+	}
+
+	cacheKey := fmt.Sprintf("user:%s", id)
 	cached, err := r.redis.Get(context.Background(), cacheKey).Result()
 	if err == nil {
 		var user domain.User
@@ -167,7 +176,11 @@ func (r *userRepository) Update(user *domain.User) error {
 	return nil
 }
 
-func (r *userRepository) Delete(id int) error {
+func (r *userRepository) Delete(id string) error {
+	if !utils.IsValidUUID(id) {
+		return fmt.Errorf("invalid UUID format: %s", id)
+	}
+
 	query := `DELETE FROM users WHERE id = $1`
 
 	result, err := r.db.Exec(query, id)
@@ -189,7 +202,10 @@ func (r *userRepository) Delete(id int) error {
 	return nil
 }
 
-func (r *userRepository) UpdateSettings(userID int, settings map[string]interface{}) error {
+func (r *userRepository) UpdateSettings(userID string, settings map[string]interface{}) error {
+	if !utils.IsValidUUID(userID) {
+		return fmt.Errorf("invalid UUID format: %s", userID)
+	}
 	if len(settings) == 0 {
 		return nil
 	}
@@ -228,26 +244,32 @@ func (r *userRepository) UpdateSettings(userID int, settings map[string]interfac
 	return nil
 }
 
-func (r *userRepository) invalidateUserCache(id int) {
-	cacheKey := fmt.Sprintf("user:%d", id)
+func (r *userRepository) invalidateUserCache(id string) {
+	cacheKey := fmt.Sprintf("user:%s", id)
 	r.redis.Del(context.Background(), cacheKey)
 }
 
 // CreateEmailVerificationToken creates a new email verification token
 func (r *userRepository) CreateEmailVerificationToken(token *domain.EmailVerificationToken) error {
+	if token.ID == "" {
+		token.ID = utils.GenerateUUID()
+	}
+
 	query := `
-		INSERT INTO email_verification_tokens (user_id, token, expires_at, created_at)
-		VALUES ($1, $2, $3, $4)
-		RETURNING id
+		INSERT INTO email_verification_tokens (id, user_id, token, expires_at, created_at)
+		VALUES ($1, $2, $3, $4, $5)
 	`
 
-	return r.db.QueryRow(
+	_, err := r.db.Exec(
 		query,
+		token.ID,
 		token.UserID,
 		token.Token,
 		token.ExpiresAt,
 		token.CreatedAt,
-	).Scan(&token.ID)
+	)
+
+	return err
 }
 
 // GetEmailVerificationToken retrieves an email verification token
@@ -282,7 +304,10 @@ func (r *userRepository) DeleteEmailVerificationToken(tokenStr string) error {
 }
 
 // MarkEmailAsVerified marks a user's email as verified
-func (r *userRepository) MarkEmailAsVerified(userID int) error {
+func (r *userRepository) MarkEmailAsVerified(userID string) error {
+	if !utils.IsValidUUID(userID) {
+		return fmt.Errorf("invalid UUID format: %s", userID)
+	}
 	query := `UPDATE users SET email_verified = true WHERE id = $1`
 	_, err := r.db.Exec(query, userID)
 	if err == nil {
@@ -293,19 +318,25 @@ func (r *userRepository) MarkEmailAsVerified(userID int) error {
 
 // CreatePasswordResetToken creates a new password reset token
 func (r *userRepository) CreatePasswordResetToken(token *domain.PasswordResetToken) error {
+	if token.ID == "" {
+		token.ID = utils.GenerateUUID()
+	}
+
 	query := `
-		INSERT INTO password_reset_tokens (user_id, token, expires_at, created_at)
-		VALUES ($1, $2, $3, $4)
-		RETURNING id
+		INSERT INTO password_reset_tokens (id, user_id, token, expires_at, created_at)
+		VALUES ($1, $2, $3, $4, $5)
 	`
 
-	return r.db.QueryRow(
+	_, err := r.db.Exec(
 		query,
+		token.ID,
 		token.UserID,
 		token.Token,
 		token.ExpiresAt,
 		token.CreatedAt,
-	).Scan(&token.ID)
+	)
+
+	return err
 }
 
 // GetPasswordResetToken retrieves a password reset token

@@ -6,10 +6,20 @@ import (
 	"time"
 
 	"github.com/EduardoMG12/cine/api_v2/internal/domain"
+	"github.com/EduardoMG12/cine/api_v2/internal/utils"
 	"github.com/jmoiron/sqlx"
 	"github.com/lib/pq"
 	"github.com/redis/go-redis/v9"
 )
+
+// Helper functions for UUID operations
+func generateUUID() string {
+	return utils.GenerateUUID()
+}
+
+func isValidUUID(uuid string) bool {
+	return utils.IsValidUUID(uuid)
+}
 
 type movieRepository struct {
 	db    *sqlx.DB
@@ -24,20 +34,25 @@ func NewMovieRepository(db *sqlx.DB, redis *redis.Client) domain.MovieRepository
 }
 
 func (r *movieRepository) Create(movie *domain.Movie) error {
+	// Generate UUID for the movie if not set
+	if movie.ID == "" {
+		movie.ID = generateUUID()
+	}
+
 	query := `
-		INSERT INTO movies (external_api_id, title, overview, release_date, poster_url, backdrop_url, 
+		INSERT INTO movies (id, external_api_id, title, overview, release_date, poster_url, backdrop_url, 
 		                   genres, runtime, vote_average, vote_count, adult, cache_expires_at, 
 		                   created_at, updated_at)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
-		RETURNING id
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
 	`
 
 	now := time.Now()
 	movie.CreatedAt = now
 	movie.UpdatedAt = now
 
-	err := r.db.QueryRow(
+	_, err := r.db.Exec(
 		query,
+		movie.ID,
 		movie.ExternalAPIID,
 		movie.Title,
 		movie.Overview,
@@ -52,7 +67,7 @@ func (r *movieRepository) Create(movie *domain.Movie) error {
 		movie.CacheExpiresAt,
 		movie.CreatedAt,
 		movie.UpdatedAt,
-	).Scan(&movie.ID)
+	)
 
 	if err != nil {
 		return fmt.Errorf("failed to create movie: %w", err)
@@ -62,8 +77,13 @@ func (r *movieRepository) Create(movie *domain.Movie) error {
 	return nil
 }
 
-func (r *movieRepository) GetByID(id int) (*domain.Movie, error) {
-	cacheKey := fmt.Sprintf("movie:id:%d", id)
+func (r *movieRepository) GetByID(id string) (*domain.Movie, error) {
+	// Validate UUID format
+	if !isValidUUID(id) {
+		return nil, fmt.Errorf("invalid UUID format: %s", id)
+	}
+
+	cacheKey := fmt.Sprintf("movie:id:%s", id)
 	if movie := r.getMovieFromCache(cacheKey); movie != nil {
 		return movie, nil
 	}
@@ -181,7 +201,12 @@ func (r *movieRepository) Update(movie *domain.Movie) error {
 	return nil
 }
 
-func (r *movieRepository) Delete(id int) error {
+func (r *movieRepository) Delete(id string) error {
+	// Validate UUID format
+	if !isValidUUID(id) {
+		return fmt.Errorf("invalid UUID format: %s", id)
+	}
+
 	movie, err := r.GetByID(id)
 	if err != nil {
 		return err
@@ -335,10 +360,10 @@ func (r *movieRepository) getMovieFromCache(key string) *domain.Movie {
 	return &movie
 }
 
-func (r *movieRepository) invalidateMovieCache(movieID int, externalID string) {
+func (r *movieRepository) invalidateMovieCache(movieID string, externalID string) {
 	ctx := context.Background()
 
-	idKey := fmt.Sprintf("movie:id:%d", movieID)
+	idKey := fmt.Sprintf("movie:id:%s", movieID)
 	externalKey := fmt.Sprintf("movie:external:%s", externalID)
 
 	r.redis.Del(ctx, idKey, externalKey)

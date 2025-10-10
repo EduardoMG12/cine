@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/EduardoMG12/cine/api_v2/internal/domain"
+	"github.com/EduardoMG12/cine/api_v2/internal/utils"
 	"github.com/jmoiron/sqlx"
 )
 
@@ -20,23 +21,28 @@ func NewMovieListRepository(db *sqlx.DB) domain.MovieListRepository {
 }
 
 func (r *movieListRepository) Create(list *domain.MovieList) error {
+	// Generate UUID for the list if not set
+	if list.ID == "" {
+		list.ID = utils.GenerateUUID()
+	}
+
 	query := `
-		INSERT INTO movie_lists (user_id, name, is_default, created_at, updated_at)
-		VALUES ($1, $2, $3, $4, $5)
-		RETURNING id`
+		INSERT INTO movie_lists (id, user_id, name, is_default, created_at, updated_at)
+		VALUES ($1, $2, $3, $4, $5, $6)`
 
 	now := time.Now()
 	list.CreatedAt = now
 	list.UpdatedAt = now
 
-	err := r.db.QueryRow(
+	_, err := r.db.Exec(
 		query,
+		list.ID,
 		list.UserID,
 		list.Name,
 		list.IsDefault,
 		list.CreatedAt,
 		list.UpdatedAt,
-	).Scan(&list.ID)
+	)
 
 	if err != nil {
 		return fmt.Errorf("failed to create movie list: %w", err)
@@ -45,7 +51,12 @@ func (r *movieListRepository) Create(list *domain.MovieList) error {
 	return nil
 }
 
-func (r *movieListRepository) GetByID(id int) (*domain.MovieList, error) {
+func (r *movieListRepository) GetByID(id string) (*domain.MovieList, error) {
+	// Validate UUID format
+	if !utils.IsValidUUID(id) {
+		return nil, fmt.Errorf("invalid UUID format: %s", id)
+	}
+
 	query := `
 		SELECT ml.id, ml.user_id, ml.name, ml.is_default, ml.created_at, ml.updated_at,
 		       u.id, u.username, u.email, u.created_at
@@ -72,7 +83,11 @@ func (r *movieListRepository) GetByID(id int) (*domain.MovieList, error) {
 	return &list, nil
 }
 
-func (r *movieListRepository) GetByUserID(userID int) ([]*domain.MovieList, error) {
+func (r *movieListRepository) GetByUserID(userID string) ([]*domain.MovieList, error) {
+	// Validate UUID format
+	if !utils.IsValidUUID(userID) {
+		return nil, fmt.Errorf("invalid UUID format: %s", userID)
+	}
 	query := `
 		SELECT id, user_id, name, is_default, created_at, updated_at
 		FROM movie_lists
@@ -105,7 +120,11 @@ func (r *movieListRepository) GetByUserID(userID int) ([]*domain.MovieList, erro
 	return lists, nil
 }
 
-func (r *movieListRepository) GetDefaultList(userID int, listType string) (*domain.MovieList, error) {
+func (r *movieListRepository) GetDefaultList(userID string, listType string) (*domain.MovieList, error) {
+	// Validate UUID format
+	if !utils.IsValidUUID(userID) {
+		return nil, fmt.Errorf("invalid UUID format: %s", userID)
+	}
 	var listName string
 	switch listType {
 	case "want_to_watch":
@@ -157,7 +176,12 @@ func (r *movieListRepository) Update(list *domain.MovieList) error {
 	return nil
 }
 
-func (r *movieListRepository) Delete(id int) error {
+func (r *movieListRepository) Delete(id string) error {
+	// Validate UUID format
+	if !utils.IsValidUUID(id) {
+		return fmt.Errorf("invalid UUID format: %s", id)
+	}
+
 	_, err := r.db.Exec("DELETE FROM movie_list_entries WHERE movie_list_id = $1", id)
 	if err != nil {
 		return fmt.Errorf("failed to delete movie list entries: %w", err)
@@ -171,7 +195,15 @@ func (r *movieListRepository) Delete(id int) error {
 	return nil
 }
 
-func (r *movieListRepository) AddMovieToList(listID, movieID int) error {
+func (r *movieListRepository) AddMovieToList(listID, movieID string) error {
+	// Validate UUID formats
+	if !utils.IsValidUUID(listID) {
+		return fmt.Errorf("invalid list UUID format: %s", listID)
+	}
+	if !utils.IsValidUUID(movieID) {
+		return fmt.Errorf("invalid movie UUID format: %s", movieID)
+	}
+
 	query := `
 		INSERT INTO movie_list_entries (movie_list_id, movie_id, added_at)
 		VALUES ($1, $2, $3)`
@@ -184,7 +216,15 @@ func (r *movieListRepository) AddMovieToList(listID, movieID int) error {
 	return nil
 }
 
-func (r *movieListRepository) RemoveMovieFromList(listID, movieID int) error {
+func (r *movieListRepository) RemoveMovieFromList(listID, movieID string) error {
+	// Validate UUID formats
+	if !utils.IsValidUUID(listID) {
+		return fmt.Errorf("invalid list UUID format: %s", listID)
+	}
+	if !utils.IsValidUUID(movieID) {
+		return fmt.Errorf("invalid movie UUID format: %s", movieID)
+	}
+
 	query := `DELETE FROM movie_list_entries WHERE movie_list_id = $1 AND movie_id = $2`
 
 	result, err := r.db.Exec(query, listID, movieID)
@@ -204,7 +244,11 @@ func (r *movieListRepository) RemoveMovieFromList(listID, movieID int) error {
 	return nil
 }
 
-func (r *movieListRepository) GetListEntries(listID int, limit, offset int) ([]*domain.MovieListEntry, error) {
+func (r *movieListRepository) GetListEntries(listID string, limit, offset int) ([]*domain.MovieListEntry, error) {
+	// Validate UUID format
+	if !utils.IsValidUUID(listID) {
+		return nil, fmt.Errorf("invalid UUID format: %s", listID)
+	}
 	query := `
 		SELECT mle.id, mle.movie_list_id, mle.movie_id, mle.added_at,
 		       m.id, m.external_api_id, m.title, m.overview, m.poster_url, m.backdrop_url,
@@ -244,7 +288,14 @@ func (r *movieListRepository) GetListEntries(listID int, limit, offset int) ([]*
 	return entries, nil
 }
 
-func (r *movieListRepository) IsMovieInList(listID, movieID int) (bool, error) {
+func (r *movieListRepository) IsMovieInList(listID, movieID string) (bool, error) {
+	// Validate UUID formats
+	if !utils.IsValidUUID(listID) {
+		return false, fmt.Errorf("invalid list UUID format: %s", listID)
+	}
+	if !utils.IsValidUUID(movieID) {
+		return false, fmt.Errorf("invalid movie UUID format: %s", movieID)
+	}
 	query := `SELECT EXISTS(SELECT 1 FROM movie_list_entries WHERE movie_list_id = $1 AND movie_id = $2)`
 
 	var exists bool

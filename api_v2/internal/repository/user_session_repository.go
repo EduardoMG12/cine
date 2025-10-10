@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/EduardoMG12/cine/api_v2/internal/domain"
+	"github.com/EduardoMG12/cine/api_v2/internal/utils"
 	"github.com/jmoiron/sqlx"
 	"github.com/redis/go-redis/v9"
 )
@@ -23,28 +24,33 @@ func NewUserSessionRepository(db *sqlx.DB, redis *redis.Client) domain.UserSessi
 }
 
 func (r *userSessionRepository) Create(session *domain.UserSession) error {
+	// Generate UUID for the session if not set
+	if session.ID == "" {
+		session.ID = utils.GenerateUUID()
+	}
+
 	query := `
-		INSERT INTO user_sessions (user_id, token, ip_address, user_agent, created_at, expires_at)
-		VALUES ($1, $2, $3, $4, $5, $6)
-		RETURNING id
+		INSERT INTO user_sessions (id, user_id, token, ip_address, user_agent, created_at, expires_at)
+		VALUES ($1, $2, $3, $4, $5, $6, $7)
 	`
 
-	err := r.db.QueryRow(
+	_, err := r.db.Exec(
 		query,
+		session.ID,
 		session.UserID,
 		session.Token,
 		session.IPAddress,
 		session.UserAgent,
 		session.CreatedAt,
 		session.ExpiresAt,
-	).Scan(&session.ID)
+	)
 
 	if err != nil {
 		return fmt.Errorf("failed to create user session: %w", err)
 	}
 
 	cacheKey := fmt.Sprintf("session:%s", session.Token)
-	sessionData := fmt.Sprintf("%d:%d", session.UserID, session.ID)
+	sessionData := fmt.Sprintf("%s:%s", session.UserID, session.ID)
 
 	ctx := context.Background()
 	r.redis.Set(ctx, cacheKey, sessionData, time.Until(session.ExpiresAt))
@@ -68,7 +74,12 @@ func (r *userSessionRepository) GetByToken(token string) (*domain.UserSession, e
 	return &session, nil
 }
 
-func (r *userSessionRepository) GetByUserID(userID int) ([]*domain.UserSession, error) {
+func (r *userSessionRepository) GetByUserID(userID string) ([]*domain.UserSession, error) {
+	// Validate UUID format
+	if !utils.IsValidUUID(userID) {
+		return nil, fmt.Errorf("invalid UUID format: %s", userID)
+	}
+
 	query := `
 		SELECT id, user_id, token, ip_address, user_agent, created_at, expires_at
 		FROM user_sessions
@@ -85,7 +96,12 @@ func (r *userSessionRepository) GetByUserID(userID int) ([]*domain.UserSession, 
 	return sessions, nil
 }
 
-func (r *userSessionRepository) DeleteByID(id int) error {
+func (r *userSessionRepository) DeleteByID(id string) error {
+	// Validate UUID format
+	if !utils.IsValidUUID(id) {
+		return fmt.Errorf("invalid UUID format: %s", id)
+	}
+
 	query := `DELETE FROM user_sessions WHERE id = $1`
 
 	result, err := r.db.Exec(query, id)
@@ -128,7 +144,12 @@ func (r *userSessionRepository) DeleteByToken(token string) error {
 	return nil
 }
 
-func (r *userSessionRepository) DeleteByUserID(userID int) error {
+func (r *userSessionRepository) DeleteByUserID(userID string) error {
+	// Validate UUID format
+	if !utils.IsValidUUID(userID) {
+		return fmt.Errorf("invalid UUID format: %s", userID)
+	}
+
 	sessions, err := r.GetByUserID(userID)
 	if err != nil {
 		return err

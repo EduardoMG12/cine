@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/EduardoMG12/cine/api_v2/internal/domain"
+	"github.com/EduardoMG12/cine/api_v2/internal/utils"
 	"github.com/jmoiron/sqlx"
 )
 
@@ -36,7 +37,15 @@ func (r *friendshipRepository) Create(friendship *domain.Friendship) error {
 	return err
 }
 
-func (r *friendshipRepository) GetByUsers(userID1, userID2 int) (*domain.Friendship, error) {
+func (r *friendshipRepository) GetByUsers(userID1, userID2 string) (*domain.Friendship, error) {
+	// Validate UUID formats
+	if !utils.IsValidUUID(userID1) {
+		return nil, fmt.Errorf("invalid user1 UUID format: %s", userID1)
+	}
+	if !utils.IsValidUUID(userID2) {
+		return nil, fmt.Errorf("invalid user2 UUID format: %s", userID2)
+	}
+
 	query := `
 		SELECT user_id_1, user_id_2, status, created_at, updated_at
 		FROM friendships
@@ -55,7 +64,11 @@ func (r *friendshipRepository) GetByUsers(userID1, userID2 int) (*domain.Friends
 	return &friendship, nil
 }
 
-func (r *friendshipRepository) GetUserFriends(userID int) ([]*domain.Friendship, error) {
+func (r *friendshipRepository) GetUserFriends(userID string) ([]*domain.Friendship, error) {
+	// Validate UUID format
+	if !utils.IsValidUUID(userID) {
+		return nil, fmt.Errorf("invalid UUID format: %s", userID)
+	}
 	query := `
 		SELECT 
 			f.user_id_1, f.user_id_2, f.status, f.created_at, f.updated_at,
@@ -100,7 +113,11 @@ func (r *friendshipRepository) GetUserFriends(userID int) ([]*domain.Friendship,
 	return friendships, nil
 }
 
-func (r *friendshipRepository) GetFriendRequests(userID int) ([]*domain.Friendship, error) {
+func (r *friendshipRepository) GetFriendRequests(userID string) ([]*domain.Friendship, error) {
+	// Validate UUID format
+	if !utils.IsValidUUID(userID) {
+		return nil, fmt.Errorf("invalid UUID format: %s", userID)
+	}
 	query := `
 		SELECT 
 			f.user_id_1, f.user_id_2, f.status, f.created_at, f.updated_at,
@@ -140,7 +157,14 @@ func (r *friendshipRepository) GetFriendRequests(userID int) ([]*domain.Friendsh
 	return friendships, nil
 }
 
-func (r *friendshipRepository) UpdateStatus(userID1, userID2 int, status domain.FriendshipStatus) error {
+func (r *friendshipRepository) UpdateStatus(userID1, userID2 string, status domain.FriendshipStatus) error {
+	// Validate UUID formats
+	if !utils.IsValidUUID(userID1) {
+		return fmt.Errorf("invalid user1 UUID format: %s", userID1)
+	}
+	if !utils.IsValidUUID(userID2) {
+		return fmt.Errorf("invalid user2 UUID format: %s", userID2)
+	}
 	query := `
 		UPDATE friendships 
 		SET status = $1, updated_at = $2
@@ -164,7 +188,15 @@ func (r *friendshipRepository) UpdateStatus(userID1, userID2 int, status domain.
 	return nil
 }
 
-func (r *friendshipRepository) Delete(userID1, userID2 int) error {
+func (r *friendshipRepository) Delete(userID1, userID2 string) error {
+	// Validate UUID formats
+	if !utils.IsValidUUID(userID1) {
+		return fmt.Errorf("invalid user1 UUID format: %s", userID1)
+	}
+	if !utils.IsValidUUID(userID2) {
+		return fmt.Errorf("invalid user2 UUID format: %s", userID2)
+	}
+
 	query := `
 		DELETE FROM friendships
 		WHERE (user_id_1 = $1 AND user_id_2 = $2) 
@@ -181,7 +213,7 @@ func (r *friendshipRepository) Delete(userID1, userID2 int) error {
 	}
 
 	if rowsAffected == 0 {
-		return fmt.Errorf("no friendship found between users %d and %d", userID1, userID2)
+		return fmt.Errorf("no friendship found between users %s and %s", userID1, userID2)
 	}
 
 	return nil
