@@ -30,30 +30,6 @@ type MovieSearchResponse struct {
 	TotalCount int             `json:"total_count"`
 }
 
-// Review DTOs
-type CreateReviewRequest struct {
-	MovieID int     `json:"movie_id" validate:"required,min=1"`
-	Rating  int     `json:"rating" validate:"required,min=1,max=10"`
-	Content *string `json:"content,omitempty" validate:"omitempty,max=1000"`
-}
-
-type UpdateReviewRequest struct {
-	Rating  *int    `json:"rating,omitempty" validate:"omitempty,min=1,max=10"`
-	Content *string `json:"content,omitempty" validate:"omitempty,max=1000"`
-}
-
-type ReviewResponse struct {
-	ID        int            `json:"id"`
-	UserID    int            `json:"user_id"`
-	MovieID   int            `json:"movie_id"`
-	Rating    int            `json:"rating"`
-	Content   *string        `json:"content,omitempty"`
-	CreatedAt time.Time      `json:"created_at"`
-	UpdatedAt time.Time      `json:"updated_at"`
-	User      *UserProfile   `json:"user,omitempty"`
-	Movie     *MovieResponse `json:"movie,omitempty"`
-}
-
 // Movie List DTOs
 type CreateListRequest struct {
 	Name        string  `json:"name" validate:"required,min=1,max=100"`

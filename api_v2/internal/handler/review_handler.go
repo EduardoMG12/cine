@@ -46,6 +46,20 @@ func (h *ReviewHandler) Routes(authMiddleware *middleware.AuthMiddleware) chi.Ro
 }
 
 // CreateReview creates a new review for a movie
+// @Summary Create a movie review
+// @Description Create a new review for a movie with rating and/or content
+// @Tags Reviews
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param request body dto.CreateReviewRequest true "Review data"
+// @Success 201 {object} dto.ReviewResponse "Review created successfully"
+// @Failure 400 {object} utils.ErrorResponse "Invalid request data"
+// @Failure 401 {object} utils.ErrorResponse "Unauthorized"
+// @Failure 404 {object} utils.ErrorResponse "Movie not found"
+// @Failure 409 {object} utils.ErrorResponse "Review already exists"
+// @Failure 500 {object} utils.ErrorResponse "Internal server error"
+// @Router /reviews [post]
 func (h *ReviewHandler) CreateReview(w http.ResponseWriter, r *http.Request) {
 	claims, ok := middleware.GetUserClaims(r.Context())
 	if !ok {
@@ -64,7 +78,7 @@ func (h *ReviewHandler) CreateReview(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	review, err := h.reviewService.CreateReview(claims.UserID, req.MovieID, &req.Rating, req.Content)
+	review, err := h.reviewService.CreateReview(claims.UserID, req.MovieID, req.Rating, req.Content)
 	if err != nil {
 		if err.Error() == "user already has a review for this movie" {
 			utils.WriteJSONError(w, http.StatusConflict, "review_exists", err.Error())
@@ -83,6 +97,16 @@ func (h *ReviewHandler) CreateReview(w http.ResponseWriter, r *http.Request) {
 }
 
 // GetReview returns a specific review by ID
+// @Summary Get review by ID
+// @Description Get detailed information about a specific review
+// @Tags Reviews
+// @Produce json
+// @Param id path int true "Review ID"
+// @Success 200 {object} dto.ReviewResponse "Review details"
+// @Failure 400 {object} utils.ErrorResponse "Invalid review ID"
+// @Failure 404 {object} utils.ErrorResponse "Review not found"
+// @Failure 500 {object} utils.ErrorResponse "Internal server error"
+// @Router /reviews/{id} [get]
 func (h *ReviewHandler) GetReview(w http.ResponseWriter, r *http.Request) {
 	reviewIDStr := chi.URLParam(r, "id")
 	reviewID, err := strconv.Atoi(reviewIDStr)
@@ -106,6 +130,17 @@ func (h *ReviewHandler) GetReview(w http.ResponseWriter, r *http.Request) {
 }
 
 // GetMovieReviews returns reviews for a specific movie
+// @Summary Get movie reviews
+// @Description Get all reviews for a specific movie with pagination
+// @Tags Reviews
+// @Produce json
+// @Param movieId path int true "Movie ID"
+// @Param page query int false "Page number" default(1)
+// @Success 200 {array} dto.ReviewResponse "List of movie reviews"
+// @Failure 400 {object} utils.ErrorResponse "Invalid movie ID"
+// @Failure 404 {object} utils.ErrorResponse "Movie not found"
+// @Failure 500 {object} utils.ErrorResponse "Internal server error"
+// @Router /reviews/movie/{movieId} [get]
 func (h *ReviewHandler) GetMovieReviews(w http.ResponseWriter, r *http.Request) {
 	movieIDStr := chi.URLParam(r, "movieId")
 	movieID, err := strconv.Atoi(movieIDStr)
@@ -255,16 +290,9 @@ func (h *ReviewHandler) DeleteReview(w http.ResponseWriter, r *http.Request) {
 
 // Helper function to map domain to response
 func (h *ReviewHandler) mapToResponse(review *domain.Review) *dto.ReviewResponse {
-	var rating int
-	if review.Rating != nil {
-		rating = *review.Rating
-	}
-
 	response := &dto.ReviewResponse{
 		ID:        review.ID,
-		UserID:    review.UserID,
-		MovieID:   review.MovieID,
-		Rating:    rating,
+		Rating:    review.Rating,
 		Content:   review.Content,
 		CreatedAt: review.CreatedAt,
 		UpdatedAt: review.UpdatedAt,
@@ -283,7 +311,7 @@ func (h *ReviewHandler) mapToResponse(review *domain.Review) *dto.ReviewResponse
 	}
 
 	if review.Movie != nil {
-		response.Movie = &dto.MovieResponse{
+		response.Movie = &dto.ReviewMovieResponse{
 			ID:          review.Movie.ID,
 			ExternalID:  review.Movie.ExternalAPIID,
 			Title:       review.Movie.Title,

@@ -12,8 +12,9 @@ import (
 )
 
 type UserHandler struct {
-	userService domain.UserService
-	validator   *validator.Validate
+	userService        domain.UserService
+	userSessionService domain.UserSessionService
+	validator          *validator.Validate
 }
 
 type CreateUserRequest struct {
@@ -23,11 +24,18 @@ type CreateUserRequest struct {
 }
 
 type UpdateUserRequest struct {
-	Username         *string `json:"username,omitempty" validate:"omitempty,min=3,max=30"`
-	Email            *string `json:"email,omitempty" validate:"omitempty,email"`
-	DisplayName      *string `json:"display_name,omitempty" validate:"omitempty,min=1,max=100"`
-	Bio              *string `json:"bio,omitempty" validate:"omitempty,max=500"`
+	Username          *string `json:"username,omitempty" validate:"omitempty,min=3,max=30"`
+	Email             *string `json:"email,omitempty" validate:"omitempty,email"`
+	DisplayName       *string `json:"display_name,omitempty" validate:"omitempty,min=1,max=100"`
+	Bio               *string `json:"bio,omitempty" validate:"omitempty,max=500"`
 	ProfilePictureURL *string `json:"profile_picture_url,omitempty"`
+}
+
+type UserSettingsRequest struct {
+	Theme              *string `json:"theme,omitempty" validate:"omitempty,oneof=light dark"`
+	EmailNotifications *bool   `json:"email_notifications,omitempty"`
+	PushNotifications  *bool   `json:"push_notifications,omitempty"`
+	PrivateProfile     *bool   `json:"private_profile,omitempty"`
 }
 
 type ErrorResponse struct {
@@ -35,10 +43,11 @@ type ErrorResponse struct {
 	Message string `json:"message,omitempty"`
 }
 
-func NewUserHandler(userService domain.UserService) *UserHandler {
+func NewUserHandler(userService domain.UserService, userSessionService domain.UserSessionService) *UserHandler {
 	return &UserHandler{
-		userService: userService,
-		validator:   validator.New(),
+		userService:        userService,
+		userSessionService: userSessionService,
+		validator:          validator.New(),
 	}
 }
 
@@ -49,6 +58,14 @@ func (h *UserHandler) Routes() chi.Router {
 	r.Get("/{id}", h.GetUser)
 	r.Put("/{id}", h.UpdateUser)
 	r.Delete("/{id}", h.DeleteUser)
+
+	// Session management endpoints
+	r.Get("/me/sessions", h.GetMySessions)
+	r.Delete("/me/sessions/{sessionId}", h.RevokeSession)
+	r.Delete("/me/sessions", h.RevokeAllSessions)
+
+	// User settings endpoint
+	r.Put("/me/settings", h.UpdateUserSettings)
 
 	return r
 }
@@ -173,4 +190,143 @@ func (h *UserHandler) writeErrorResponse(w http.ResponseWriter, statusCode int, 
 	}
 
 	h.writeJSONResponse(w, statusCode, response)
+}
+
+// GetMySessions returns all active sessions for the authenticated user
+// @Summary Get user sessions
+// @Description Retrieve all active sessions for the authenticated user
+// @Tags users,sessions
+// @Accept json
+// @Produce json
+// @Security ApiKeyAuth
+// @Success 200 {array} domain.UserSession
+// @Failure 401 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
+// @Router /users/me/sessions [get]
+func (h *UserHandler) GetMySessions(w http.ResponseWriter, r *http.Request) {
+	// TODO: Get user ID from JWT token in middleware
+	// For now, using a mock user ID
+	userID := 1 // This should come from the JWT middleware context
+
+	sessions, err := h.userSessionService.GetUserSessions(userID)
+	if err != nil {
+		slog.Error("Failed to get user sessions", "error", err, "userID", userID)
+		h.writeErrorResponse(w, http.StatusInternalServerError, "Failed to retrieve sessions", err.Error())
+		return
+	}
+
+	h.writeJSONResponse(w, http.StatusOK, sessions)
+}
+
+// RevokeSession revokes a specific session for the authenticated user
+// @Summary Revoke specific session
+// @Description Revoke a specific session by session ID
+// @Tags users,sessions
+// @Accept json
+// @Produce json
+// @Security ApiKeyAuth
+// @Param sessionId path int true "Session ID"
+// @Success 204
+// @Failure 400 {object} ErrorResponse
+// @Failure 401 {object} ErrorResponse
+// @Failure 404 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
+// @Router /users/me/sessions/{sessionId} [delete]
+func (h *UserHandler) RevokeSession(w http.ResponseWriter, r *http.Request) {
+	// TODO: Get user ID from JWT token in middleware
+	userID := 1 // This should come from the JWT middleware context
+
+	sessionIDStr := chi.URLParam(r, "sessionId")
+	sessionID, err := strconv.Atoi(sessionIDStr)
+	if err != nil {
+		h.writeErrorResponse(w, http.StatusBadRequest, "Invalid session ID", "Session ID must be a number")
+		return
+	}
+
+	err = h.userSessionService.RevokeSession(userID, sessionID)
+	if err != nil {
+		slog.Error("Failed to revoke session", "error", err, "userID", userID, "sessionID", sessionID)
+		h.writeErrorResponse(w, http.StatusNotFound, "Session not found", err.Error())
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
+}
+
+// RevokeAllSessions revokes all sessions for the authenticated user (logout everywhere)
+// @Summary Revoke all sessions
+// @Description Revoke all sessions for the authenticated user (logout from all devices)
+// @Tags users,sessions
+// @Accept json
+// @Produce json
+// @Security ApiKeyAuth
+// @Success 204
+// @Failure 401 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
+// @Router /users/me/sessions [delete]
+func (h *UserHandler) RevokeAllSessions(w http.ResponseWriter, r *http.Request) {
+	// TODO: Get user ID from JWT token in middleware
+	userID := 1 // This should come from the JWT middleware context
+
+	err := h.userSessionService.RevokeAllSessions(userID)
+	if err != nil {
+		slog.Error("Failed to revoke all sessions", "error", err, "userID", userID)
+		h.writeErrorResponse(w, http.StatusInternalServerError, "Failed to revoke sessions", err.Error())
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
+}
+
+// UpdateUserSettings updates user preferences and settings
+// @Summary Update user settings
+// @Description Update user preferences like theme, notifications, privacy settings
+// @Tags users,settings
+// @Accept json
+// @Produce json
+// @Security ApiKeyAuth
+// @Param settings body UserSettingsRequest true "User settings to update"
+// @Success 200 {object} domain.User
+// @Failure 400 {object} ErrorResponse
+// @Failure 401 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
+// @Router /users/me/settings [put]
+func (h *UserHandler) UpdateUserSettings(w http.ResponseWriter, r *http.Request) {
+	// TODO: Get user ID from JWT token in middleware
+	userID := 1 // This should come from the JWT middleware context
+
+	var req UserSettingsRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		h.writeErrorResponse(w, http.StatusBadRequest, "Invalid JSON", err.Error())
+		return
+	}
+
+	if err := h.validator.Struct(req); err != nil {
+		h.writeErrorResponse(w, http.StatusBadRequest, "Validation failed", err.Error())
+		return
+	}
+
+	// Build the updates map for settings
+	updates := make(map[string]interface{})
+	if req.Theme != nil {
+		updates["theme"] = *req.Theme
+	}
+	if req.EmailNotifications != nil {
+		updates["email_notifications"] = *req.EmailNotifications
+	}
+	if req.PushNotifications != nil {
+		updates["push_notifications"] = *req.PushNotifications
+	}
+	if req.PrivateProfile != nil {
+		updates["private_profile"] = *req.PrivateProfile
+	}
+
+	user, err := h.userService.UpdateProfile(userID, updates)
+	if err != nil {
+		slog.Error("Failed to update user settings", "error", err, "userID", userID)
+		h.writeErrorResponse(w, http.StatusInternalServerError, "Failed to update settings", err.Error())
+		return
+	}
+
+	h.writeJSONResponse(w, http.StatusOK, user)
 }

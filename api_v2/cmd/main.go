@@ -1,3 +1,23 @@
+// @title CineVerse API
+// @version 2.0
+// @description A comprehensive social network platform for movie enthusiasts
+// @termsOfService http://cineverse.com/terms/
+
+// @contact.name CineVerse API Support
+// @contact.url http://www.cineverse.com/support
+// @contact.email support@cineverse.com
+
+// @license.name MIT
+// @license.url https://opensource.org/licenses/MIT
+
+// @host localhost:8080
+// @BasePath /api/v1
+
+// @securityDefinitions.apikey BearerAuth
+// @in header
+// @name Authorization
+// @description Type "Bearer" followed by a space and JWT token.
+
 package main
 
 import (
@@ -20,6 +40,9 @@ import (
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
 	"github.com/redis/go-redis/v9"
+	httpSwagger "github.com/swaggo/http-swagger"
+
+	_ "github.com/EduardoMG12/cine/api_v2/docs"
 )
 
 func main() {
@@ -60,10 +83,12 @@ func main() {
 	}
 
 	userRepo := repository.NewUserRepository(db, rdb)
+	userSessionRepo := repository.NewUserSessionRepository(db, rdb)
 
 	userService := service.NewUserService(userRepo)
+	userSessionService := service.NewUserSessionService(userSessionRepo, 24*time.Hour) // 24 hour session duration
 
-	userHandler := handler.NewUserHandler(userService)
+	userHandler := handler.NewUserHandler(userService, userSessionService)
 
 	r := chi.NewRouter()
 
@@ -86,6 +111,11 @@ func main() {
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte("CineVerse API OK - Hot Reload Working!"))
 	})
+
+	// Swagger documentation
+	r.Get("/swagger/*", httpSwagger.Handler(
+		httpSwagger.URL("http://localhost:8080/swagger/doc.json"),
+	))
 
 	// API routes
 	r.Route("/api/v1", func(r chi.Router) {

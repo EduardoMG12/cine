@@ -1,13 +1,15 @@
-# RFC-002: Remaining Features Implementation for CineVerse API
+# RFC-002: Funcionalidades Pendentes da API CineVerse
 
-**Author:** Development Team  
-**Status:** Draft  
-**Created:** 2025-10-10  
-**Version:** 2.0
+**Autor:** AI Assistant (baseado na análise do RFC-001)
+**Status:** Proposta
+**Data de Criação:** 2025-10-10
+**Versão:** 1.0
 
 ---
 
-This RFC defines the remaining features to be implemented for the CineVerse API based on the current implementation status. After completing the core authentication, movie management, and review systems, we need to implement social features, movie matching, notifications, and enhance the existing infrastructure.
+## 1. Resumo (Abstract)
+
+Este documento especifica as funcionalidades ainda não implementadas da API CineVerse (RFC-001), priorizando-as por impacto e complexidade. Baseado na análise do código atual, identifica o que falta para completar a especificação original.
 
 ## 2. Status Atual da Implementação
 

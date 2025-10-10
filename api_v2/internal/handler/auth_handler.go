@@ -47,6 +47,18 @@ func (h *AuthHandler) Routes() chi.Router {
 	return r
 }
 
+// Register creates a new user account
+// @Summary Register a new user
+// @Description Create a new user account with email verification
+// @Tags Authentication
+// @Accept json
+// @Produce json
+// @Param request body dto.RegisterRequest true "Registration data"
+// @Success 201 {object} dto.AuthResponse "User created successfully"
+// @Failure 400 {object} utils.ErrorResponse "Invalid request data"
+// @Failure 409 {object} utils.ErrorResponse "User already exists"
+// @Failure 500 {object} utils.ErrorResponse "Internal server error"
+// @Router /auth/register [post]
 func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 	var req dto.RegisterRequest
 	if err := utils.ParseJSON(r, &req); err != nil {
@@ -116,6 +128,18 @@ func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+// Login authenticates a user and returns JWT token
+// @Summary User login
+// @Description Authenticate user credentials and return access token
+// @Tags Authentication
+// @Accept json
+// @Produce json
+// @Param request body dto.LoginRequest true "Login credentials"
+// @Success 200 {object} dto.AuthResponse "Login successful"
+// @Failure 400 {object} utils.ErrorResponse "Invalid credentials"
+// @Failure 401 {object} utils.ErrorResponse "Authentication failed"
+// @Failure 500 {object} utils.ErrorResponse "Internal server error"
+// @Router /auth/login [post]
 func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 	var req dto.LoginRequest
 	if err := utils.ParseJSON(r, &req); err != nil {
@@ -187,6 +211,17 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 	utils.WriteJSON(w, http.StatusOK, authResponse)
 }
 
+// ConfirmEmail verifies user's email address
+// @Summary Confirm email address
+// @Description Verify user's email address using confirmation token
+// @Tags Authentication
+// @Accept json
+// @Produce json
+// @Param request body dto.ConfirmEmailRequest true "Email confirmation token"
+// @Success 200 {object} dto.MessageResponse "Email confirmed successfully"
+// @Failure 400 {object} utils.ErrorResponse "Invalid or expired token"
+// @Failure 500 {object} utils.ErrorResponse "Internal server error"
+// @Router /auth/confirm-email [post]
 func (h *AuthHandler) ConfirmEmail(w http.ResponseWriter, r *http.Request) {
 	var req dto.ConfirmEmailRequest
 	if err := utils.ParseJSON(r, &req); err != nil {
@@ -211,6 +246,17 @@ func (h *AuthHandler) ConfirmEmail(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+// ForgotPassword initiates password reset process
+// @Summary Request password reset
+// @Description Send password reset link to user's email
+// @Tags Authentication
+// @Accept json
+// @Produce json
+// @Param request body dto.ForgotPasswordRequest true "User email for password reset"
+// @Success 200 {object} dto.MessageResponse "Password reset email sent"
+// @Failure 400 {object} utils.ErrorResponse "Invalid request"
+// @Failure 500 {object} utils.ErrorResponse "Internal server error"
+// @Router /auth/forgot-password [post]
 func (h *AuthHandler) ForgotPassword(w http.ResponseWriter, r *http.Request) {
 	var req dto.ForgotPasswordRequest
 	if err := utils.ParseJSON(r, &req); err != nil {
@@ -235,6 +281,17 @@ func (h *AuthHandler) ForgotPassword(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+// ResetPassword resets user password with token
+// @Summary Reset user password
+// @Description Reset user password using reset token from email
+// @Tags Authentication
+// @Accept json
+// @Produce json
+// @Param request body dto.ResetPasswordRequest true "Password reset token and new password"
+// @Success 200 {object} dto.MessageResponse "Password reset successfully"
+// @Failure 400 {object} utils.ErrorResponse "Invalid or expired token"
+// @Failure 500 {object} utils.ErrorResponse "Internal server error"
+// @Router /auth/reset-password [post]
 func (h *AuthHandler) ResetPassword(w http.ResponseWriter, r *http.Request) {
 	var req dto.ResetPasswordRequest
 	if err := utils.ParseJSON(r, &req); err != nil {
