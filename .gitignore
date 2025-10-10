@@ -7,14 +7,40 @@
 *.launch
 .settings/
 *.sublime-workspace
+*.swp
+*.swo
+*~
 
 # Environment Files
 .env
 .env.*
 !.env.example
+config.yaml
+config.yml
 
-# Dependency Directories
-node_modules/
+# ===================
+# Go (Backend API v2)
+# ===================
+# Binaries for programs and plugins
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Test binary, built with `go test -c`
+*.test
+
+# Output of the go coverage tool
+*.out
+*.coverage
+
+# Go workspace file
+go.work
+go.work.sum
+
+# Dependency directories
+vendor/
 
 # Build & Compilation Output
 /api/dist
@@ -24,39 +50,190 @@ node_modules/
 /out/
 /tmp/
 /api_v2/tmp
-/flutter_app/build/
+/api_v2/bin/
+/api_v2/build/
 
-# Log Files
-logs/
-*.log
+# Air live reload
+.air.toml
+tmp/
+
+# ===================
+# Flutter (Frontend)
+# ===================
+/flutter_app/.dart_tool/
+/flutter_app/.flutter-plugins
+/flutter_app/.flutter-plugins-dependencies
+/flutter_app/.packages
+/flutter_app/.pub-cache/
+/flutter_app/.pub/
+/flutter_app/build/
+/flutter_app/.fvm/
+
+# Flutter/Dart/Pub related
+**/doc/api/
+**/ios/Flutter/.last_build_id
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+.pub-cache/
+.pub/
+pubspec.lock
+
+# Flutter build outputs
+/flutter_app/build/
+**/build/
+
+# Generated files
+*.g.dart
+*.freezed.dart
+*.chopper.dart
+*.mocks.dart
+
+# iOS
+/flutter_app/ios/Flutter/Generated.xcconfig
+/flutter_app/ios/Flutter/flutter_export_environment.sh
+/flutter_app/ios/Flutter/ephemeral/
+/flutter_app/ios/Pods/
+/flutter_app/ios/.symlinks/
+/flutter_app/ios/Flutter/app.flx
+/flutter_app/ios/Flutter/app.zip
+/flutter_app/ios/Flutter/flutter_assets/
+
+# Android
+/flutter_app/android/app/debug
+/flutter_app/android/app/profile
+/flutter_app/android/app/release
+/flutter_app/android/.gradle/
+/flutter_app/android/captures/
+/flutter_app/android/gradlew
+/flutter_app/android/gradlew.bat
+/flutter_app/android/local.properties
+/flutter_app/android/**/GeneratedPluginRegistrant.java
+/flutter_app/android/**/GeneratedPluginRegistrant.kt
+/flutter_app/android/key.properties
+
+# Linux
+/flutter_app/linux/flutter/generated_plugin_registrant.cc
+/flutter_app/linux/flutter/generated_plugin_registrant.h
+/flutter_app/linux/flutter/generated_plugins.cmake
+
+# macOS
+/flutter_app/macos/Flutter/GeneratedPluginRegistrant.swift
+/flutter_app/macos/Flutter/ephemeral/
+
+# Windows
+/flutter_app/windows/flutter/generated_plugin_registrant.cc
+/flutter_app/windows/flutter/generated_plugin_registrant.h
+/flutter_app/windows/flutter/generated_plugins.cmake
+
+# ===================
+# Node.js (Legacy API)
+# ===================
+node_modules/
 npm-debug.log*
-pnpm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+pnpm-debug.log*
 lerna-debug.log*
 
+# ===================
+# Database & Infrastructure
+# ===================
+# PostgreSQL
+*.sql.backup
+*.dump
+
+# Database migration backups
+/migrations/backup/
+
+# Docker
+.dockerignore.bak
+docker-compose.override.yml
+docker-compose.local.yml
+
+# ===================
+# Log Files
+# ===================
+logs/
+*.log
+supervisord.log
+supervisord.pid
+
+# ===================
 # OS-specific
+# ===================
+# macOS
 .DS_Store
+.AppleDouble
+.LSOverride
+Icon
+._*
+.DocumentRevisions-V100
+.fseventsd
+.Spotlight-V100
+.TemporaryItems
+.Trashes
+.VolumeIcon.icns
+.com.apple.timemachine.donotpresent
 
-# Test & Coverage Reports
-/coverage/
-/.nyc_output/
+# Linux
+*~
+.directory
+.Trash-*
 
+# Windows
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# ===================
 # Runtime Data
+# ===================
 pids/
 *.pid
 *.seed
 *.pid.lock
 
-# Diagnostic Reports
-report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
+# ===================
+# Test & Coverage Reports
+# ===================
+/coverage/
+/.nyc_output/
+coverage.out
+*.cover
+*.py,cover
+.coverage
+.coverage.*
+htmlcov/
 
-# Flutter
-/flutter_app/.dart_tool/
-/flutter_app/ios/
-/flutter_app/linux/
-/flutter_app/macos/
-/flutter_app/windows/
-/flutter_app/.fvm/
+# ===================
+# Temporary Files
+# ===================
+tmp/
+temp/
+*.tmp
+*.temp
+*.swp
+*.swo
 
+# ===================
+# Project Specific
+# ===================
+# Exclude sensitive instructions
 /.github/instructions
+
+# VNC/Android Studio logs
+/flutter_app/supervisord.log
+/flutter_app/supervisord.pid
+
+# Development certificates
+*.pem
+*.key
+*.crt
+
+# Build artifacts
+/scripts/*.log
