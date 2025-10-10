@@ -259,42 +259,71 @@ CREATE TABLE password_reset_tokens (
     created_at TIMESTAMP DEFAULT NOW()
 );
 
--- Posts table (for future use)
-CREATE TABLE posts (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    content TEXT NOT NULL,
-    visibility VARCHAR(20) NOT NULL CHECK (visibility IN ('public', 'private', 'friends')),
-    created_at TIMESTAMP DEFAULT NOW(),
-    updated_at TIMESTAMP DEFAULT NOW()
-);
+-- Posts table (update existing or create)
+DO $$
+BEGIN
+    IF EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'posts') THEN
+        -- Update existing posts table
+        ALTER TABLE posts DROP CONSTRAINT IF EXISTS posts_pkey CASCADE;
+        ALTER TABLE posts ADD COLUMN id_new UUID DEFAULT uuid_generate_v4();
+        ALTER TABLE posts ADD COLUMN user_id_new UUID;
+        UPDATE posts SET id_new = uuid_generate_v4();
+        
+        -- Drop and recreate with proper structure
+        DROP TABLE posts CASCADE;
+    END IF;
+    
+    CREATE TABLE posts (
+        id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+        user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        content TEXT NOT NULL,
+        visibility VARCHAR(20) NOT NULL CHECK (visibility IN ('public', 'private', 'friends')),
+        created_at TIMESTAMP DEFAULT NOW(),
+        updated_at TIMESTAMP DEFAULT NOW()
+    );
+END $$;
 
--- Match sessions table (for future use)
-CREATE TABLE match_sessions (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    host_user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    status VARCHAR(20) NOT NULL CHECK (status IN ('active', 'finished', 'canceled')),
-    created_at TIMESTAMP DEFAULT NOW(),
-    updated_at TIMESTAMP DEFAULT NOW()
-);
+-- Match sessions table (create if not exists)
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'match_sessions') THEN
+        CREATE TABLE match_sessions (
+            id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+            host_user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+            status VARCHAR(20) NOT NULL CHECK (status IN ('active', 'finished', 'canceled')),
+            created_at TIMESTAMP DEFAULT NOW(),
+            updated_at TIMESTAMP DEFAULT NOW()
+        );
+    END IF;
+END $$;
 
--- Match session participants table
-CREATE TABLE match_session_participants (
-    session_id UUID NOT NULL REFERENCES match_sessions(id) ON DELETE CASCADE,
-    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    joined_at TIMESTAMP DEFAULT NOW(),
-    PRIMARY KEY (session_id, user_id)
-);
+-- Match session participants table (create if not exists)
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'match_session_participants') THEN
+        CREATE TABLE match_session_participants (
+            session_id UUID NOT NULL REFERENCES match_sessions(id) ON DELETE CASCADE,
+            user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+            joined_at TIMESTAMP DEFAULT NOW(),
+            PRIMARY KEY (session_id, user_id)
+        );
+    END IF;
+END $$;
 
--- Match interactions table
-CREATE TABLE match_interactions (
-    session_id UUID NOT NULL REFERENCES match_sessions(id) ON DELETE CASCADE,
-    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    movie_id UUID NOT NULL REFERENCES movies(id) ON DELETE CASCADE,
-    liked BOOLEAN NOT NULL,
-    interacted_at TIMESTAMP DEFAULT NOW(),
-    PRIMARY KEY (session_id, user_id, movie_id)
-);
+-- Match interactions table (create if not exists)
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'match_interactions') THEN
+        CREATE TABLE match_interactions (
+            session_id UUID NOT NULL REFERENCES match_sessions(id) ON DELETE CASCADE,
+            user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+            movie_id UUID NOT NULL REFERENCES movies(id) ON DELETE CASCADE,
+            liked BOOLEAN NOT NULL,
+            interacted_at TIMESTAMP DEFAULT NOW(),
+            PRIMARY KEY (session_id, user_id, movie_id)
+        );
+    END IF;
+END $$;
 
 -- =====================================
 -- Create indexes for performance
