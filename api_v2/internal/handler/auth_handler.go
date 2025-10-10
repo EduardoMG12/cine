@@ -6,8 +6,10 @@ import (
 	"time"
 
 	"github.com/EduardoMG12/cine/api_v2/internal/auth"
+	"github.com/EduardoMG12/cine/api_v2/internal/config"
 	"github.com/EduardoMG12/cine/api_v2/internal/domain"
 	"github.com/EduardoMG12/cine/api_v2/internal/dto"
+	"github.com/EduardoMG12/cine/api_v2/internal/i18n"
 	"github.com/EduardoMG12/cine/api_v2/internal/middleware"
 	"github.com/EduardoMG12/cine/api_v2/internal/utils"
 	"github.com/go-chi/chi/v5"
@@ -18,6 +20,7 @@ type AuthHandler struct {
 	userSessionService domain.UserSessionService
 	jwtManager         *auth.JWTManager
 	passwordHasher     *auth.PasswordHasher
+	config             *config.Config
 }
 
 func NewAuthHandler(
@@ -25,12 +28,14 @@ func NewAuthHandler(
 	userSessionService domain.UserSessionService,
 	jwtManager *auth.JWTManager,
 	passwordHasher *auth.PasswordHasher,
+	config *config.Config,
 ) *AuthHandler {
 	return &AuthHandler{
 		userService:        userService,
 		userSessionService: userSessionService,
 		jwtManager:         jwtManager,
 		passwordHasher:     passwordHasher,
+		config:             config,
 	}
 }
 
@@ -60,14 +65,18 @@ func (h *AuthHandler) Routes() chi.Router {
 // @Failure 500 {object} utils.ErrorResponse "Internal server error"
 // @Router /auth/register [post]
 func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
+	lang := middleware.GetLanguageFromContext(r.Context())
+
 	var req dto.RegisterRequest
 	if err := utils.ParseJSON(r, &req); err != nil {
-		utils.WriteError(w, http.StatusBadRequest, err, "Invalid request body")
+		utils.WriteErrorResponse(w, r.Context(), http.StatusBadRequest, "INVALID_REQUEST_BODY", nil)
 		return
 	}
 
 	if err := utils.ValidateStruct(req); err != nil {
-		utils.WriteValidationError(w, err)
+		utils.WriteErrorResponse(w, r.Context(), http.StatusBadRequest, "VALIDATION_ERROR", map[string]interface{}{
+			"details": err.Error(),
+		})
 		return
 	}
 
@@ -75,7 +84,7 @@ func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 	hashedPassword, err := h.passwordHasher.GenerateHash(req.Password)
 	if err != nil {
 		slog.Error("Failed to hash password", "error", err)
-		utils.WriteError(w, http.StatusInternalServerError, err, "Internal server error")
+		utils.WriteErrorResponse(w, r.Context(), http.StatusInternalServerError, "INTERNAL_ERROR", nil)
 		return
 	}
 
@@ -87,21 +96,21 @@ func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 		DisplayName:   req.DisplayName,
 		IsPrivate:     false,
 		EmailVerified: false, // Will be verified via email
-		Theme:         "light",
+		Theme:         h.config.Application.DefaultTheme,
 		CreatedAt:     time.Now(),
 		UpdatedAt:     time.Now(),
 	}
 
 	err = h.userService.ValidateUser(user)
 	if err != nil {
-		utils.WriteError(w, http.StatusBadRequest, err, "Invalid user data")
+		utils.WriteErrorResponse(w, r.Context(), http.StatusBadRequest, "INVALID_USER_DATA", nil)
 		return
 	}
 
 	// Save user
 	if err := h.userService.CreateUser(user); err != nil {
 		slog.Error("Failed to create user", "error", err, "email", req.Email)
-		utils.WriteError(w, http.StatusConflict, err, "Failed to create user")
+		utils.WriteErrorResponse(w, r.Context(), http.StatusConflict, "USER_ALREADY_EXISTS", nil)
 		return
 	}
 
@@ -122,9 +131,9 @@ func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 		CreatedAt:         user.CreatedAt,
 	}
 
-	utils.WriteJSON(w, http.StatusCreated, map[string]interface{}{
+	utils.WriteJSONResponse(w, r.Context(), http.StatusCreated, map[string]interface{}{
 		"user":    userProfile,
-		"message": "Registration successful. Please check your email to verify your account.",
+		"message": i18n.T(lang, "REGISTRATION_SUCCESS"),
 	})
 }
 
@@ -143,12 +152,14 @@ func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 	var req dto.LoginRequest
 	if err := utils.ParseJSON(r, &req); err != nil {
-		utils.WriteError(w, http.StatusBadRequest, err, "Invalid request body")
+		utils.WriteErrorResponse(w, r.Context(), http.StatusBadRequest, "INVALID_REQUEST_BODY", nil)
 		return
 	}
 
 	if err := utils.ValidateStruct(req); err != nil {
-		utils.WriteValidationError(w, err)
+		utils.WriteErrorResponse(w, r.Context(), http.StatusBadRequest, "VALIDATION_ERROR", map[string]interface{}{
+			"details": err.Error(),
+		})
 		return
 	}
 
@@ -156,14 +167,14 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 	user, err := h.userService.GetUserByEmail(req.Email)
 	if err != nil {
 		slog.Warn("Login attempt with invalid email", "email", req.Email)
-		utils.WriteError(w, http.StatusUnauthorized, err, "Invalid credentials")
+		utils.WriteErrorResponse(w, r.Context(), http.StatusUnauthorized, "INVALID_CREDENTIALS", nil)
 		return
 	}
 
 	// Verify password
 	if err := h.passwordHasher.ComparePasswordAndHash(req.Password, user.PasswordHash); err != nil {
 		slog.Warn("Login attempt with invalid password", "user_id", user.ID, "email", req.Email)
-		utils.WriteError(w, http.StatusUnauthorized, err, "Invalid credentials")
+		utils.WriteErrorResponse(w, r.Context(), http.StatusUnauthorized, "INVALID_CREDENTIALS", nil)
 		return
 	}
 
@@ -174,7 +185,7 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 	session, err := h.userSessionService.CreateSession(user.ID, clientIP, userAgent)
 	if err != nil {
 		slog.Error("Failed to create session", "error", err, "user_id", user.ID)
-		utils.WriteError(w, http.StatusInternalServerError, err, "Failed to create session")
+		utils.WriteErrorResponse(w, r.Context(), http.StatusInternalServerError, "SESSION_CREATE_FAILED", nil)
 		return
 	}
 
@@ -182,7 +193,7 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 	token, err := h.jwtManager.GenerateToken(user.ID, user.Email, session.ID)
 	if err != nil {
 		slog.Error("Failed to generate token", "error", err, "user_id", user.ID)
-		utils.WriteError(w, http.StatusInternalServerError, err, "Failed to generate token")
+		utils.WriteErrorResponse(w, r.Context(), http.StatusInternalServerError, "TOKEN_GENERATION_FAILED", nil)
 		return
 	}
 
@@ -208,7 +219,7 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 		User:      userProfile,
 	}
 
-	utils.WriteJSON(w, http.StatusOK, authResponse)
+	utils.WriteJSONResponse(w, r.Context(), http.StatusOK, authResponse)
 }
 
 // ConfirmEmail verifies user's email address
@@ -223,26 +234,30 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 // @Failure 500 {object} utils.ErrorResponse "Internal server error"
 // @Router /auth/confirm-email [post]
 func (h *AuthHandler) ConfirmEmail(w http.ResponseWriter, r *http.Request) {
+	lang := middleware.GetLanguageFromContext(r.Context())
+
 	var req dto.ConfirmEmailRequest
 	if err := utils.ParseJSON(r, &req); err != nil {
-		utils.WriteError(w, http.StatusBadRequest, err, "Invalid request body")
+		utils.WriteErrorResponse(w, r.Context(), http.StatusBadRequest, "INVALID_REQUEST_BODY", nil)
 		return
 	}
 
 	if err := utils.ValidateStruct(req); err != nil {
-		utils.WriteValidationError(w, err)
+		utils.WriteErrorResponse(w, r.Context(), http.StatusBadRequest, "VALIDATION_ERROR", map[string]interface{}{
+			"details": err.Error(),
+		})
 		return
 	}
 
 	err := h.userService.ConfirmEmail(req.Token)
 	if err != nil {
 		slog.Warn("Email confirmation failed", "error", err)
-		utils.WriteError(w, http.StatusBadRequest, err, "Invalid or expired confirmation token")
+		utils.WriteErrorResponse(w, r.Context(), http.StatusBadRequest, "INVALID_TOKEN", nil)
 		return
 	}
 
-	utils.WriteJSON(w, http.StatusOK, dto.MessageResponse{
-		Message: "Email confirmed successfully",
+	utils.WriteJSONResponse(w, r.Context(), http.StatusOK, dto.MessageResponse{
+		Message: i18n.T(lang, "EMAIL_CONFIRMED"),
 	})
 }
 
@@ -258,14 +273,18 @@ func (h *AuthHandler) ConfirmEmail(w http.ResponseWriter, r *http.Request) {
 // @Failure 500 {object} utils.ErrorResponse "Internal server error"
 // @Router /auth/forgot-password [post]
 func (h *AuthHandler) ForgotPassword(w http.ResponseWriter, r *http.Request) {
+	lang := middleware.GetLanguageFromContext(r.Context())
+
 	var req dto.ForgotPasswordRequest
 	if err := utils.ParseJSON(r, &req); err != nil {
-		utils.WriteError(w, http.StatusBadRequest, err, "Invalid request body")
+		utils.WriteErrorResponse(w, r.Context(), http.StatusBadRequest, "INVALID_REQUEST_BODY", nil)
 		return
 	}
 
 	if err := utils.ValidateStruct(req); err != nil {
-		utils.WriteValidationError(w, err)
+		utils.WriteErrorResponse(w, r.Context(), http.StatusBadRequest, "VALIDATION_ERROR", map[string]interface{}{
+			"details": err.Error(),
+		})
 		return
 	}
 
@@ -276,8 +295,8 @@ func (h *AuthHandler) ForgotPassword(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Always return success to prevent email enumeration
-	utils.WriteJSON(w, http.StatusOK, dto.MessageResponse{
-		Message: "If the email exists, a password reset link has been sent",
+	utils.WriteJSONResponse(w, r.Context(), http.StatusOK, dto.MessageResponse{
+		Message: i18n.T(lang, "PASSWORD_RESET_SENT"),
 	})
 }
 
@@ -293,26 +312,30 @@ func (h *AuthHandler) ForgotPassword(w http.ResponseWriter, r *http.Request) {
 // @Failure 500 {object} utils.ErrorResponse "Internal server error"
 // @Router /auth/reset-password [post]
 func (h *AuthHandler) ResetPassword(w http.ResponseWriter, r *http.Request) {
+	lang := middleware.GetLanguageFromContext(r.Context())
+
 	var req dto.ResetPasswordRequest
 	if err := utils.ParseJSON(r, &req); err != nil {
-		utils.WriteError(w, http.StatusBadRequest, err, "Invalid request body")
+		utils.WriteErrorResponse(w, r.Context(), http.StatusBadRequest, "INVALID_REQUEST_BODY", nil)
 		return
 	}
 
 	if err := utils.ValidateStruct(req); err != nil {
-		utils.WriteValidationError(w, err)
+		utils.WriteErrorResponse(w, r.Context(), http.StatusBadRequest, "VALIDATION_ERROR", map[string]interface{}{
+			"details": err.Error(),
+		})
 		return
 	}
 
 	err := h.userService.ResetPassword(req.Token, req.NewPassword)
 	if err != nil {
 		slog.Warn("Password reset failed", "error", err)
-		utils.WriteError(w, http.StatusBadRequest, err, "Invalid or expired reset token")
+		utils.WriteErrorResponse(w, r.Context(), http.StatusBadRequest, "INVALID_TOKEN", nil)
 		return
 	}
 
-	utils.WriteJSON(w, http.StatusOK, dto.MessageResponse{
-		Message: "Password reset successfully",
+	utils.WriteJSONResponse(w, r.Context(), http.StatusOK, dto.MessageResponse{
+		Message: i18n.T(lang, "PASSWORD_RESET_SUCCESS"),
 	})
 }
 

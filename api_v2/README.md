@@ -48,6 +48,13 @@ CineVerse is a comprehensive social network platform for movie enthusiasts built
 - Email confirmation for new registrations
 - Password reset via secure email links
 
+### 🌍 Internationalization (i18n)
+- Multi-language support (English, Portuguese, Spanish)
+- Automatic language detection from Accept-Language header
+- Localized error messages and API responses
+- Support for query parameter language override (`?lang=pt`)
+- Embedded translation files for easy deployment
+
 ## 🏗️ Architecture
 
 The API follows Clean Architecture principles with clear separation of concerns:
@@ -61,6 +68,7 @@ api_v2/
 │   ├── domain/            # Business entities and interfaces
 │   ├── dto/               # Data Transfer Objects
 │   ├── handler/           # HTTP request handlers
+│   ├── i18n/              # Internationalization system
 │   ├── middleware/        # HTTP middleware
 │   ├── repository/        # Data access layer
 │   ├── service/           # Business logic layer
@@ -85,22 +93,53 @@ api_v2/
 
 ### Prerequisites
 
-- Go 1.21 or higher
-- PostgreSQL 15+
-- Redis 7+
-- SMTP server credentials
-- TMDb API key
+- Docker and Docker Compose
+- TMDb API key (get from [themoviedb.org](https://www.themoviedb.org/settings/api))
+- SMTP server credentials (optional, for email features)
 
-### Installation
+### Quick Start with Docker (Recommended)
 
 1. **Clone the repository**
 ```bash
 git clone https://github.com/EduardoMG12/cine.git
-cd cine/api_v2
+cd cine
 ```
+
+2. **Set up environment variables**
+```bash
+cp api_v2/.env.example api_v2/.env
+# Edit api_v2/.env with your TMDb API key and other configuration
+```
+
+3. **Start all services with Docker**
+```bash
+docker-compose up -d
+```
+
+This will start:
+- PostgreSQL database on port 5432
+- Redis cache on port 6379
+- CineVerse API on port 8080
+
+4. **Run database migrations**
+```bash
+docker-compose exec api_v2 migrate -path migrations -database "postgres://cineverse:cineverse123@postgres:5432/cineverse?sslmode=disable" up
+```
+
+The API will be available at `http://localhost:8080`
+
+### Manual Installation (Alternative)
+
+If you prefer to run without Docker:
+
+1. **Prerequisites**
+   - Go 1.21 or higher
+   - PostgreSQL 15+
+   - Redis 7+
 
 2. **Install dependencies**
 ```bash
+cd api_v2
 go mod download
 ```
 
@@ -124,7 +163,52 @@ migrate -path migrations -database "postgres://username:password@localhost:5432/
 go run cmd/main.go
 ```
 
-The API will be available at `http://localhost:8080`
+## 🌍 Internationalization
+
+The API supports multiple languages with automatic detection and localized responses.
+
+### Supported Languages
+
+- **English** (`en`) - Default
+- **Portuguese** (`pt`) - Português
+- **Spanish** (`es`) - Español
+
+### Language Detection
+
+The API automatically detects the preferred language using:
+
+1. **Query Parameter** (highest priority): `?lang=pt`
+2. **Accept-Language Header**: `Accept-Language: pt-BR,pt;q=0.9,en;q=0.8`
+
+### Localized Features
+
+- **Error Messages**: All validation and system errors
+- **Success Messages**: Confirmation and info responses  
+- **API Responses**: Standardized multilingual responses
+- **Authentication**: Login, registration, and password reset messages
+
+### Example Usage
+
+```bash
+# Request in Portuguese
+curl -H "Accept-Language: pt-BR" http://localhost:8080/api/v1/users/me
+
+# Or using query parameter
+curl http://localhost:8080/api/v1/users/me?lang=pt
+
+# Response with localized error (Portuguese)
+{
+    "error": "Token de autenticação inválido",
+    "message": "Por favor, faça login novamente",
+    "code": "INVALID_TOKEN"
+}
+```
+
+### Adding New Languages
+
+1. Create translation file in `internal/i18n/locales/{language}.json`
+2. Add language code to `SUPPORTED_LANGUAGES` environment variable
+3. Update translation keys as needed
 
 ## 📚 API Documentation
 
@@ -193,38 +277,58 @@ POST   /api/v1/movie-lists/move-to-watched # Move to watched
 
 ### Environment Variables
 
+All configuration is handled through environment variables. Copy `.env.example` to `.env` and update the values:
+
 ```bash
 # Server Configuration
 SERVER_HOST=0.0.0.0
 SERVER_PORT=8080
+API_VERSION=v1
 
 # Database Configuration
-DATABASE_URL=postgres://username:password@localhost:5432/cineverse?sslmode=disable
+DATABASE_URL=postgres://cineverse:cineverse123@postgres:5432/cineverse?sslmode=disable
 DATABASE_MAX_OPEN_CONNS=25
 DATABASE_MAX_IDLE_CONNS=5
 DATABASE_CONN_MAX_LIFETIME=300
 
 # Redis Configuration
-REDIS_ADDR=localhost:6379
+REDIS_ADDR=redis:6379
 REDIS_PASSWORD=
 REDIS_DB=0
+REDIS_TTL_HOURS=24
 
-# JWT Configuration
-JWT_SECRET=your-super-secret-jwt-key-change-in-production
-JWT_EXPIRATION=24
+# JWT Configuration  
+JWT_SECRET=your-super-secret-jwt-key-change-in-production-min-32-chars
+JWT_EXPIRATION_HOURS=24
 
-# Email Configuration
+# Email Configuration (Optional - required for registration/password reset)
 EMAIL_SMTP_HOST=smtp.gmail.com
 EMAIL_SMTP_PORT=587
 EMAIL_SMTP_USERNAME=your-email@gmail.com
 EMAIL_SMTP_PASSWORD=your-app-password
 EMAIL_FROM_EMAIL=noreply@cineverse.com
 EMAIL_FROM_NAME=CineVerse
+EMAIL_TEMPLATE_DIR=templates/emails
 
-# TMDb Configuration
-TMDB_API_KEY=your-tmdb-api-key
+# TMDb API Configuration (Required)
+TMDB_API_KEY=your-tmdb-api-key-from-themoviedb-org
 TMDB_BASE_URL=https://api.themoviedb.org/3
+TMDB_CACHE_TTL_HOURS=24
+
+# Security Configuration
+BCRYPT_COST=12
+RATE_LIMIT_REQUESTS=100
+RATE_LIMIT_WINDOW_MINUTES=15
+
+# Internationalization
+DEFAULT_LANGUAGE=en
+SUPPORTED_LANGUAGES=en,pt,es
+
+# Environment
+ENVIRONMENT=development
 ```
+
+> **Important**: Never commit the `.env` file to version control. It contains sensitive information like API keys and database credentials.
 
 ### Configuration File (config.yaml)
 

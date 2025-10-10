@@ -32,6 +32,7 @@ import (
 
 	"github.com/EduardoMG12/cine/api_v2/internal/config"
 	"github.com/EduardoMG12/cine/api_v2/internal/handler"
+	customMiddleware "github.com/EduardoMG12/cine/api_v2/internal/middleware"
 	"github.com/EduardoMG12/cine/api_v2/internal/repository"
 	"github.com/EduardoMG12/cine/api_v2/internal/service"
 	"github.com/go-chi/chi/v5"
@@ -84,17 +85,23 @@ func main() {
 
 	userRepo := repository.NewUserRepository(db, rdb)
 	userSessionRepo := repository.NewUserSessionRepository(db, rdb)
+	friendshipRepo := repository.NewFriendshipRepository(db)
+	followRepo := repository.NewFollowRepository(db)
 
 	userService := service.NewUserService(userRepo)
-	userSessionService := service.NewUserSessionService(userSessionRepo, 24*time.Hour) // 24 hour session duration
+	sessionDuration := time.Duration(cfg.Application.SessionDurationHours) * time.Hour
+	userSessionService := service.NewUserSessionService(userSessionRepo, sessionDuration)
+	socialService := service.NewSocialService(friendshipRepo, followRepo, userRepo)
 
 	userHandler := handler.NewUserHandler(userService, userSessionService)
+	socialHandler := handler.NewSocialHandler(socialService)
 
 	r := chi.NewRouter()
 
 	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
 	r.Use(middleware.Timeout(60 * time.Second))
+	r.Use(customMiddleware.LanguageMiddleware)
 
 	// CORS
 	r.Use(cors.Handler(cors.Options{
@@ -113,13 +120,21 @@ func main() {
 	})
 
 	// Swagger documentation
-	r.Get("/swagger/*", httpSwagger.Handler(
-		httpSwagger.URL("http://localhost:8080/swagger/doc.json"),
-	))
+	if cfg.Application.EnableSwagger {
+		r.Get("/swagger/*", httpSwagger.Handler(
+			httpSwagger.URL(cfg.Application.SwaggerURL),
+		))
+	}
 
 	// API routes
 	r.Route("/api/v1", func(r chi.Router) {
 		r.Mount("/users", userHandler.Routes())
+
+		// Protected social routes
+		r.Group(func(r chi.Router) {
+			r.Use(customMiddleware.AuthMiddleware)
+			r.Mount("/social", socialHandler.Routes())
+		})
 	})
 
 	// Server

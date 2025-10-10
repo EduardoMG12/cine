@@ -7,6 +7,7 @@ import (
 	"strconv"
 
 	"github.com/EduardoMG12/cine/api_v2/internal/domain"
+	"github.com/EduardoMG12/cine/api_v2/internal/utils"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-playground/validator/v10"
 )
@@ -73,12 +74,12 @@ func (h *UserHandler) Routes() chi.Router {
 func (h *UserHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
 	var req CreateUserRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		h.writeErrorResponse(w, http.StatusBadRequest, "Invalid JSON", err.Error())
+		utils.WriteErrorResponse(w, r, http.StatusBadRequest, "error.invalid_json", err.Error())
 		return
 	}
 
 	if err := h.validator.Struct(req); err != nil {
-		h.writeErrorResponse(w, http.StatusBadRequest, "Validation failed", err.Error())
+		utils.WriteErrorResponse(w, r, http.StatusBadRequest, "error.validation_failed", err.Error())
 		return
 	}
 
@@ -86,7 +87,7 @@ func (h *UserHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
 	user, err := h.userService.Register(req.Username, req.Email, "temp_password", req.DisplayName)
 	if err != nil {
 		slog.Error("Failed to create user", "error", err, "username", req.Username)
-		h.writeErrorResponse(w, http.StatusConflict, "Failed to create user", err.Error())
+		utils.WriteErrorResponse(w, r, http.StatusConflict, "error.failed_to_create_user", err.Error())
 		return
 	}
 

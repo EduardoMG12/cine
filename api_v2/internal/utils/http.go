@@ -106,7 +106,7 @@ func WriteJSONError(w http.ResponseWriter, status int, code, message string) {
 	WriteJSON(w, status, response)
 }
 
-// WriteJSONResponse writes a successful JSON response with data
-func WriteJSONResponse(w http.ResponseWriter, status int, data interface{}) {
+// WriteJSONResponseOld writes a successful JSON response with data (deprecated - use WriteJSONResponse from response.go)
+func WriteJSONResponseOld(w http.ResponseWriter, status int, data interface{}) {
 	WriteJSON(w, status, data)
 }
