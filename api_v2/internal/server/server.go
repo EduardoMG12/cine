@@ -42,6 +42,7 @@ func (s *Server) Start() error {
 	sessionRepo := repository.NewUserSessionRepository(s.db, s.redis)
 	movieRepo := repository.NewMovieRepository(s.db, s.redis)
 	movieListRepo := repository.NewMovieListRepository(s.db)
+	reviewRepo := repository.NewReviewRepository(s.db)
 
 	// Initialize auth components
 	jwtManager := auth.NewJWTManager(s.cfg.JWT.Secret, time.Duration(s.cfg.JWT.Expiration)*time.Hour)
@@ -56,6 +57,7 @@ func (s *Server) Start() error {
 	authService := service.NewAuthService(userRepo, sessionRepo, jwtManager, passwordHasher, s.cfg)
 	movieService := service.NewMovieService(movieRepo, tmdbService)
 	movieListService := service.NewMovieListService(movieListRepo, movieRepo)
+	reviewService := service.NewReviewService(reviewRepo, movieRepo, userRepo)
 
 	// Initialize validator
 	validator := config.NewValidator()
@@ -69,10 +71,11 @@ func (s *Server) Start() error {
 		passwordHasher,
 	)
 	movieHandler := handler.NewMovieHandler(movieService)
-	movieListHandler := handler.NewMovieListHandler(movieListService, validator)
+	movieListHandler := handler.NewMovieListHandler(movieListService, movieService, validator)
+	reviewHandler := handler.NewReviewHandler(reviewService, validator)
 
 	// Setup router
-	router := NewRouter(userHandler, authHandler, movieHandler, movieListHandler)
+	router := NewRouter(userHandler, authHandler, movieHandler, movieListHandler, reviewHandler)
 
 	// Create HTTP server
 	s.httpServer = &http.Server{

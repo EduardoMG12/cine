@@ -14,12 +14,14 @@ import (
 
 type MovieListHandler struct {
 	movieListService domain.MovieListService
+	movieService     domain.MovieService
 	validator        *validator.Validate
 }
 
-func NewMovieListHandler(movieListService domain.MovieListService, validator *validator.Validate) *MovieListHandler {
+func NewMovieListHandler(movieListService domain.MovieListService, movieService domain.MovieService, validator *validator.Validate) *MovieListHandler {
 	return &MovieListHandler{
 		movieListService: movieListService,
+		movieService:     movieService,
 		validator:        validator,
 	}
 }
@@ -53,7 +55,7 @@ func (h *MovieListHandler) Routes() chi.Router {
 func (h *MovieListHandler) CreateList(w http.ResponseWriter, r *http.Request) {
 	userID := r.Context().Value("user_id").(int)
 
-	var req dto.CreateMovieListRequest
+	var req dto.CreateListRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		utils.WriteJSONError(w, http.StatusBadRequest, "invalid_request", "Invalid request body")
 		return
@@ -126,7 +128,7 @@ func (h *MovieListHandler) UpdateList(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var req dto.UpdateMovieListRequest
+	var req dto.UpdateListRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		utils.WriteJSONError(w, http.StatusBadRequest, "error", "Invalid request body")
 		return
@@ -137,7 +139,11 @@ func (h *MovieListHandler) UpdateList(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	list, err := h.movieListService.UpdateList(listID, userID, req.Name)
+	var name string
+	if req.Name != nil {
+		name = *req.Name
+	}
+	list, err := h.movieListService.UpdateList(listID, userID, name)
 	if err != nil {
 		if err.Error() == "movie list not found" {
 			utils.WriteJSONError(w, http.StatusNotFound, "error", "Movie list not found")
@@ -187,7 +193,7 @@ func (h *MovieListHandler) DeleteList(w http.ResponseWriter, r *http.Request) {
 func (h *MovieListHandler) AddToWantToWatch(w http.ResponseWriter, r *http.Request) {
 	userID := r.Context().Value("user_id").(int)
 
-	var req dto.DefaultListRequest
+	var req dto.AddMovieToListRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		utils.WriteJSONError(w, http.StatusBadRequest, "error", "Invalid request body")
 		return
@@ -215,7 +221,7 @@ func (h *MovieListHandler) AddToWantToWatch(w http.ResponseWriter, r *http.Reque
 func (h *MovieListHandler) AddToWatched(w http.ResponseWriter, r *http.Request) {
 	userID := r.Context().Value("user_id").(int)
 
-	var req dto.DefaultListRequest
+	var req dto.AddMovieToListRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		utils.WriteJSONError(w, http.StatusBadRequest, "error", "Invalid request body")
 		return
@@ -294,7 +300,14 @@ func (h *MovieListHandler) MoveToWatched(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	err := h.movieListService.MoveToWatched(userID, req.MovieID)
+	// First, find the movie by external ID
+	movie, err := h.movieService.GetMovieByExternalID(req.MovieExternalID)
+	if err != nil {
+		utils.WriteJSONError(w, http.StatusNotFound, "error", "Movie not found")
+		return
+	}
+
+	err = h.movieListService.MoveToWatched(userID, movie.ID)
 	if err != nil {
 		utils.WriteJSONError(w, http.StatusBadRequest, "error", err.Error())
 		return
@@ -408,7 +421,7 @@ func (h *MovieListHandler) GetListMovies(w http.ResponseWriter, r *http.Request)
 			AddedAt: entry.AddedAt,
 		}
 		if entry.Movie != nil {
-			response[i].Movie = &dto.MovieListMovieResponse{
+			response[i].Movie = dto.MovieResponse{
 				ID:          entry.Movie.ID,
 				ExternalID:  entry.Movie.ExternalAPIID,
 				Title:       entry.Movie.Title,
@@ -431,32 +444,25 @@ func (h *MovieListHandler) GetListMovies(w http.ResponseWriter, r *http.Request)
 // Helper function to map domain to response
 func (h *MovieListHandler) mapToResponse(list *domain.MovieList) *dto.MovieListResponse {
 	response := &dto.MovieListResponse{
-		ID:        list.ID,
-		Name:      list.Name,
-		IsDefault: list.IsDefault,
-		CreatedAt: list.CreatedAt,
-		UpdatedAt: list.UpdatedAt,
-	}
-
-	if list.User != nil {
-		response.User = &dto.UserProfile{
-			ID:          list.User.ID,
-			Username:    list.User.Username,
-			Email:       list.User.Email,
-			DisplayName: list.User.DisplayName,
-			CreatedAt:   list.User.CreatedAt,
-		}
+		ID:          list.ID,
+		UserID:      list.UserID,
+		Name:        list.Name,
+		Description: nil,   // Domain doesn't have Description field
+		IsPublic:    false, // Domain doesn't have IsPublic field, defaulting to false
+		MovieCount:  len(list.Entries),
+		CreatedAt:   list.CreatedAt,
+		UpdatedAt:   list.UpdatedAt,
 	}
 
 	if list.Entries != nil {
-		response.Entries = make([]*dto.MovieListEntryResponse, len(list.Entries))
+		response.Movies = make([]dto.MovieListEntryResponse, len(list.Entries))
 		for i, entry := range list.Entries {
-			response.Entries[i] = &dto.MovieListEntryResponse{
+			response.Movies[i] = dto.MovieListEntryResponse{
 				ID:      entry.ID,
 				AddedAt: entry.AddedAt,
 			}
 			if entry.Movie != nil {
-				response.Entries[i].Movie = &dto.MovieListMovieResponse{
+				movieResponse := dto.MovieResponse{
 					ID:          entry.Movie.ID,
 					ExternalID:  entry.Movie.ExternalAPIID,
 					Title:       entry.Movie.Title,
@@ -470,6 +476,7 @@ func (h *MovieListHandler) mapToResponse(list *domain.MovieList) *dto.MovieListR
 					VoteCount:   entry.Movie.VoteCount,
 					Adult:       entry.Movie.Adult,
 				}
+				response.Movies[i].Movie = movieResponse
 			}
 		}
 	}

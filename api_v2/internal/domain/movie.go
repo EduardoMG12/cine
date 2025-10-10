@@ -43,3 +43,44 @@ type MovieService interface {
 	RefreshMovieCache(externalID string) (*Movie, error)
 	CleanupExpiredCache() error
 }
+
+// TMDb External API Types
+type TMDbService interface {
+	SearchMovies(query string, page int) (*TMDbSearchResponse, error)
+	GetMovieDetails(movieID int) (*TMDbMovie, error)
+	GetPopularMovies(page int) (*TMDbSearchResponse, error)
+	GetGenres() ([]*TMDbGenre, error)
+	DiscoverMovies(genreID int, page int) (*TMDbSearchResponse, error)
+	TMDbMovieToDomain(tmdbMovie *TMDbMovie, genres []*TMDbGenre) *Movie
+}
+
+type TMDbSearchResponse struct {
+	Page         int         `json:"page"`
+	Results      []TMDbMovie `json:"results"`
+	TotalPages   int         `json:"total_pages"`
+	TotalResults int         `json:"total_results"`
+}
+
+type TMDbMovie struct {
+	ID               int         `json:"id"`
+	Title            string      `json:"title"`
+	OriginalTitle    string      `json:"original_title"`
+	Overview         string      `json:"overview"`
+	ReleaseDate      string      `json:"release_date"`
+	PosterPath       *string     `json:"poster_path"`
+	BackdropPath     *string     `json:"backdrop_path"`
+	GenreIDs         []int       `json:"genre_ids"`
+	Genres           []TMDbGenre `json:"genres,omitempty"` // For detailed movie response
+	Runtime          *int        `json:"runtime,omitempty"`
+	VoteAverage      float64     `json:"vote_average"`
+	VoteCount        int         `json:"vote_count"`
+	Adult            bool        `json:"adult"`
+	Popularity       float64     `json:"popularity"`
+	Video            bool        `json:"video"`
+	OriginalLanguage string      `json:"original_language"`
+}
+
+type TMDbGenre struct {
+	ID   int    `json:"id"`
+	Name string `json:"name"`
+}
