@@ -3,7 +3,10 @@ package dto
 import "time"
 
 type RegisterRequest struct {
-	Us
+	Username    string `json:"username" validate:"required,min=3,max=30,alphanum"`
+	Email       string `json:"email" validate:"required,email"`
+	Password    string `json:"password" validate:"required,min=6"`
+	DisplayName string `json:"display_name" validate:"required,min=2,max=100"`
 }
 
 type SessionResponse struct {
@@ -38,7 +41,7 @@ type AuthResponse struct {
 }
 
 type UserProfile struct {
-	ID                int       `json:"id"`
+	ID                string    `json:"id"`
 	Username          string    `json:"username"`
 	Email             string    `json:"email"`
 	DisplayName       string    `json:"display_name"`

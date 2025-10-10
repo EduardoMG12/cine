@@ -213,11 +213,11 @@ func (s *AuthService) ResetPassword(req *dto.ResetPasswordRequest) error {
 	return nil
 }
 
-func (s *AuthService) Logout(sessionID int) error {
+func (s *AuthService) Logout(sessionID string) error {
 	return s.sessionRepo.DeleteByID(sessionID)
 }
 
-func (s *AuthService) LogoutAllSessions(userID int) error {
+func (s *AuthService) LogoutAllSessions(userID string) error {
 	return s.sessionRepo.DeleteByUserID(userID)
 }
 

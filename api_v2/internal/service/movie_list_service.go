@@ -19,7 +19,7 @@ func NewMovieListService(movieListRepo domain.MovieListRepository, movieRepo dom
 	}
 }
 
-func (s *movieListService) CreateList(userID int, name string) (*domain.MovieList, error) {
+func (s *movieListService) CreateList(userID string, name string) (*domain.MovieList, error) {
 	if name == "" {
 		return nil, errors.New("list name cannot be empty")
 	}
@@ -37,7 +37,7 @@ func (s *movieListService) CreateList(userID int, name string) (*domain.MovieLis
 	return list, nil
 }
 
-func (s *movieListService) GetUserLists(userID int) ([]*domain.MovieList, error) {
+func (s *movieListService) GetUserLists(userID string) ([]*domain.MovieList, error) {
 	lists, err := s.movieListRepo.GetByUserID(userID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get user lists: %w", err)
@@ -46,7 +46,7 @@ func (s *movieListService) GetUserLists(userID int) ([]*domain.MovieList, error)
 	return lists, nil
 }
 
-func (s *movieListService) GetList(listID int) (*domain.MovieList, error) {
+func (s *movieListService) GetList(listID string) (*domain.MovieList, error) {
 	list, err := s.movieListRepo.GetByID(listID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get movie list: %w", err)
@@ -55,7 +55,7 @@ func (s *movieListService) GetList(listID int) (*domain.MovieList, error) {
 	return list, nil
 }
 
-func (s *movieListService) UpdateList(listID, userID int, name string) (*domain.MovieList, error) {
+func (s *movieListService) UpdateList(listID, userID string, name string) (*domain.MovieList, error) {
 	if name == "" {
 		return nil, errors.New("list name cannot be empty")
 	}
@@ -83,7 +83,7 @@ func (s *movieListService) UpdateList(listID, userID int, name string) (*domain.
 	return list, nil
 }
 
-func (s *movieListService) DeleteList(listID, userID int) error {
+func (s *movieListService) DeleteList(listID, userID string) error {
 	list, err := s.movieListRepo.GetByID(listID)
 	if err != nil {
 		return fmt.Errorf("failed to get movie list: %w", err)
@@ -106,7 +106,7 @@ func (s *movieListService) DeleteList(listID, userID int) error {
 	return nil
 }
 
-func (s *movieListService) AddToWantToWatch(userID, movieID int) error {
+func (s *movieListService) AddToWantToWatch(userID, movieID string) error {
 	// Ensure movie exists
 	if _, err := s.movieRepo.GetByID(movieID); err != nil {
 		return fmt.Errorf("movie not found: %w", err)
@@ -142,7 +142,7 @@ func (s *movieListService) AddToWantToWatch(userID, movieID int) error {
 	return nil
 }
 
-func (s *movieListService) AddToWatched(userID, movieID int) error {
+func (s *movieListService) AddToWatched(userID, movieID string) error {
 	// Ensure movie exists
 	if _, err := s.movieRepo.GetByID(movieID); err != nil {
 		return fmt.Errorf("movie not found: %w", err)
@@ -178,7 +178,7 @@ func (s *movieListService) AddToWatched(userID, movieID int) error {
 	return nil
 }
 
-func (s *movieListService) RemoveFromWantToWatch(userID, movieID int) error {
+func (s *movieListService) RemoveFromWantToWatch(userID, movieID string) error {
 	list, err := s.movieListRepo.GetDefaultList(userID, "want_to_watch")
 	if err != nil {
 		return fmt.Errorf("want-to-watch list not found: %w", err)
@@ -191,7 +191,7 @@ func (s *movieListService) RemoveFromWantToWatch(userID, movieID int) error {
 	return nil
 }
 
-func (s *movieListService) RemoveFromWatched(userID, movieID int) error {
+func (s *movieListService) RemoveFromWatched(userID, movieID string) error {
 	list, err := s.movieListRepo.GetDefaultList(userID, "watched")
 	if err != nil {
 		return fmt.Errorf("watched list not found: %w", err)
@@ -204,7 +204,7 @@ func (s *movieListService) RemoveFromWatched(userID, movieID int) error {
 	return nil
 }
 
-func (s *movieListService) MoveToWatched(userID, movieID int) error {
+func (s *movieListService) MoveToWatched(userID, movieID string) error {
 	// Remove from want-to-watch list (ignore error if not in list)
 	wantToWatchList, err := s.movieListRepo.GetDefaultList(userID, "want_to_watch")
 	if err == nil {
@@ -215,7 +215,7 @@ func (s *movieListService) MoveToWatched(userID, movieID int) error {
 	return s.AddToWatched(userID, movieID)
 }
 
-func (s *movieListService) AddMovieToList(listID, userID, movieID int) error {
+func (s *movieListService) AddMovieToList(listID, userID, movieID string) error {
 	// Check if list exists and user owns it
 	list, err := s.movieListRepo.GetByID(listID)
 	if err != nil {
@@ -247,7 +247,7 @@ func (s *movieListService) AddMovieToList(listID, userID, movieID int) error {
 	return nil
 }
 
-func (s *movieListService) RemoveMovieFromList(listID, userID, movieID int) error {
+func (s *movieListService) RemoveMovieFromList(listID, userID, movieID string) error {
 	// Check if list exists and user owns it
 	list, err := s.movieListRepo.GetByID(listID)
 	if err != nil {
@@ -265,7 +265,7 @@ func (s *movieListService) RemoveMovieFromList(listID, userID, movieID int) erro
 	return nil
 }
 
-func (s *movieListService) GetListMovies(listID int, page int) ([]*domain.MovieListEntry, error) {
+func (s *movieListService) GetListMovies(listID string, page int) ([]*domain.MovieListEntry, error) {
 	if page < 1 {
 		page = 1
 	}

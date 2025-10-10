@@ -26,7 +26,7 @@ func NewMovieService(movieRepo domain.MovieRepository, tmdbService domain.TMDbSe
 	}
 }
 
-func (s *MovieService) GetMovie(id int) (*domain.Movie, error) {
+func (s *MovieService) GetMovie(id string) (*domain.Movie, error) {
 	movie, err := s.movieRepo.GetByID(id)
 	if err != nil {
 		return nil, ErrMovieNotFound

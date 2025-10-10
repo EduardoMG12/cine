@@ -21,7 +21,7 @@ func NewReviewService(reviewRepo domain.ReviewRepository, movieRepo domain.Movie
 	}
 }
 
-func (s *reviewService) CreateReview(userID, movieID int, rating *int, content *string) (*domain.Review, error) {
+func (s *reviewService) CreateReview(userID, movieID string, rating *int, content *string) (*domain.Review, error) {
 	// Check if user exists
 	if _, err := s.userRepo.GetByID(userID); err != nil {
 		return nil, fmt.Errorf("user not found: %w", err)
@@ -68,7 +68,7 @@ func (s *reviewService) CreateReview(userID, movieID int, rating *int, content *
 	return createdReview, nil
 }
 
-func (s *reviewService) GetReview(id int) (*domain.Review, error) {
+func (s *reviewService) GetReview(id string) (*domain.Review, error) {
 	review, err := s.reviewRepo.GetByID(id)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get review: %w", err)
@@ -77,7 +77,7 @@ func (s *reviewService) GetReview(id int) (*domain.Review, error) {
 	return review, nil
 }
 
-func (s *reviewService) GetMovieReviews(movieID int, page int) ([]*domain.Review, error) {
+func (s *reviewService) GetMovieReviews(movieID string, page int) ([]*domain.Review, error) {
 	if page < 1 {
 		page = 1
 	}
@@ -98,7 +98,7 @@ func (s *reviewService) GetMovieReviews(movieID int, page int) ([]*domain.Review
 	return reviews, nil
 }
 
-func (s *reviewService) GetUserReviews(userID int, page int) ([]*domain.Review, error) {
+func (s *reviewService) GetUserReviews(userID string, page int) ([]*domain.Review, error) {
 	if page < 1 {
 		page = 1
 	}
@@ -119,7 +119,7 @@ func (s *reviewService) GetUserReviews(userID int, page int) ([]*domain.Review, 
 	return reviews, nil
 }
 
-func (s *reviewService) UpdateReview(reviewID, userID int, rating *int, content *string) (*domain.Review, error) {
+func (s *reviewService) UpdateReview(reviewID, userID string, rating *int, content *string) (*domain.Review, error) {
 	// Get existing review
 	review, err := s.reviewRepo.GetByID(reviewID)
 	if err != nil {
@@ -158,7 +158,7 @@ func (s *reviewService) UpdateReview(reviewID, userID int, rating *int, content 
 	return updatedReview, nil
 }
 
-func (s *reviewService) DeleteReview(reviewID, userID int) error {
+func (s *reviewService) DeleteReview(reviewID, userID string) error {
 	// Get existing review
 	review, err := s.reviewRepo.GetByID(reviewID)
 	if err != nil {

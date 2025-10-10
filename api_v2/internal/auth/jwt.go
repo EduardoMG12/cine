@@ -20,9 +20,9 @@ type JWTManager struct {
 }
 
 type Claims struct {
-	UserID    int    `json:"user_id"`
+	UserID    string `json:"user_id"`
 	Email     string `json:"email"`
-	SessionID int    `json:"session_id"`
+	SessionID string `json:"session_id"`
 	jwt.RegisteredClaims
 }
 
@@ -33,7 +33,7 @@ func NewJWTManager(secretKey string, tokenDuration time.Duration) *JWTManager {
 	}
 }
 
-func (manager *JWTManager) GenerateToken(userID int, email string, sessionID int) (string, error) {
+func (manager *JWTManager) GenerateToken(userID string, email string, sessionID string) (string, error) {
 	claims := Claims{
 		UserID:    userID,
 		Email:     email,

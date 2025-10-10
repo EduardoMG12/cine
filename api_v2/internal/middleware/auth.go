@@ -117,10 +117,10 @@ func GetUserSession(ctx context.Context) (*domain.UserSession, bool) {
 	return session, ok
 }
 
-func GetUserID(ctx context.Context) (int, bool) {
+func GetUserID(ctx context.Context) (string, bool) {
 	claims, ok := GetUserClaims(ctx)
 	if !ok {
-		return 0, false
+		return "", false
 	}
 	return claims.UserID, true
 }
