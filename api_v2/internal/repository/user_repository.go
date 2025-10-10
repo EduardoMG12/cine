@@ -70,7 +70,7 @@ func (r *userRepository) GetByID(id int) (*domain.User, error) {
 	}
 
 	query := `
-		SELECT id, username, email, display_name, bio, avatar_url, created_at, updated_at
+		SELECT id, username, email, display_name, bio, profile_picture_url, created_at, updated_at
 		FROM users
 		WHERE id = $1
 	`
@@ -93,7 +93,7 @@ func (r *userRepository) GetByID(id int) (*domain.User, error) {
 
 func (r *userRepository) GetByEmail(email string) (*domain.User, error) {
 	query := `
-		SELECT id, username, email, display_name, bio, avatar_url, created_at, updated_at
+		SELECT id, username, email, display_name, bio, profile_picture_url, created_at, updated_at
 		FROM users
 		WHERE email = $1
 	`
@@ -112,7 +112,7 @@ func (r *userRepository) GetByEmail(email string) (*domain.User, error) {
 
 func (r *userRepository) GetByUsername(username string) (*domain.User, error) {
 	query := `
-		SELECT id, username, email, display_name, bio, avatar_url, created_at, updated_at
+		SELECT id, username, email, display_name, bio, profile_picture_url, created_at, updated_at
 		FROM users
 		WHERE username = $1
 	`
@@ -132,7 +132,7 @@ func (r *userRepository) GetByUsername(username string) (*domain.User, error) {
 func (r *userRepository) Update(user *domain.User) error {
 	query := `
 		UPDATE users 
-		SET username = $2, email = $3, display_name = $4, bio = $5, avatar_url = $6, updated_at = $7
+		SET username = $2, email = $3, display_name = $4, bio = $5, profile_picture_url = $6, updated_at = $7
 		WHERE id = $1
 	`
 
