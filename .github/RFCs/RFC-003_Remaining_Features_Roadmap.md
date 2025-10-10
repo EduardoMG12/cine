@@ -10,12 +10,14 @@
 
 ## 1. Resumo Executivo
 
-Este RFC define as funcionalidades restantes a serem implementadas na API CineVerse v2, priorizadas com base na análise do estado atual da implementação. Com **71% das funcionalidades core já implementadas**, este documento estabelece o roadmap para completar a plataforma social de cinéfilos.
+Este RFC define as funcionalidades restantes a serem implementadas na API CineVerse v2, priorizadas com base na análise do estado atual da implementação. Com **80% das funcionalidades core já implementadas**, este documento estabelece o roadmap para completar a plataforma social de cinéfilos.
 
-### Status Atual
-- ✅ **22 features implementadas e funcionando** (71%)
-- 🟡 **4 features parcialmente implementadas** (13%)
+### Status Atual (Atualizado: 2025-10-10)
+- ✅ **24 features implementadas e funcionando** (77%)
+- 🟡 **2 features com infraestrutura pronta** (7%)
 - ❌ **5 features não iniciadas** (16%)
+- 🆕 **Sistema de i18n completo implementado**
+- 🆕 **Infraestrutura social preparada**
 
 ---
 
