@@ -59,11 +59,6 @@ type UserRepository interface {
 }
 
 type UserService interface {
-	Register(username, email, password, displayName string) (*User, error)
-	Login(email, password string) (*User, string, error) // returns user, JWT token, error
-	ConfirmEmail(token string) error
-	RequestPasswordReset(email string) error
-	ResetPassword(token, newPassword string) error
 	GetUser(id string) (*User, error)
 	GetUserByEmail(email string) (*User, error)
 	GetUserProfile(id string) (*User, error) // respects privacy settings
@@ -72,4 +67,7 @@ type UserService interface {
 	DeleteUser(id string) error
 	ValidateUser(user *User) error
 	CreateUser(user *User) error // for creating user entities directly
+	ConfirmEmail(token string) error
+	RequestPasswordReset(email string) error
+	ResetPassword(token, newPassword string) error
 }

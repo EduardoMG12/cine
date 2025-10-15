@@ -53,7 +53,7 @@ func (h *MovieListHandler) Routes() chi.Router {
 
 // CreateList creates a new custom movie list
 func (h *MovieListHandler) CreateList(w http.ResponseWriter, r *http.Request) {
-	userID := r.Context().Value("user_id").(int)
+	userID := r.Context().Value("user_id").(string)
 
 	var req dto.CreateListRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -73,12 +73,12 @@ func (h *MovieListHandler) CreateList(w http.ResponseWriter, r *http.Request) {
 	}
 
 	response := h.mapToResponse(list)
-	utils.WriteJSONResponse(w, http.StatusCreated, response)
+	utils.WriteJSONResponse(w, r, http.StatusCreated, response)
 }
 
 // GetUserLists returns all lists for the authenticated user
 func (h *MovieListHandler) GetUserLists(w http.ResponseWriter, r *http.Request) {
-	userID := r.Context().Value("user_id").(int)
+	userID := r.Context().Value("user_id").(string)
 
 	lists, err := h.movieListService.GetUserLists(userID)
 	if err != nil {
@@ -91,19 +91,18 @@ func (h *MovieListHandler) GetUserLists(w http.ResponseWriter, r *http.Request) 
 		response[i] = h.mapToResponse(list)
 	}
 
-	utils.WriteJSONResponse(w, http.StatusOK, response)
+	utils.WriteJSONResponse(w, r, http.StatusOK, response)
 }
 
 // GetList returns a specific movie list by ID
 func (h *MovieListHandler) GetList(w http.ResponseWriter, r *http.Request) {
 	listIDStr := chi.URLParam(r, "id")
-	listID, err := strconv.Atoi(listIDStr)
-	if err != nil {
+	if listIDStr == "" {
 		utils.WriteJSONError(w, http.StatusBadRequest, "error", "Invalid list ID")
 		return
 	}
 
-	list, err := h.movieListService.GetList(listID)
+	list, err := h.movieListService.GetList(listIDStr)
 	if err != nil {
 		if err.Error() == "movie list not found" {
 			utils.WriteJSONError(w, http.StatusNotFound, "error", "Movie list not found")
@@ -114,16 +113,15 @@ func (h *MovieListHandler) GetList(w http.ResponseWriter, r *http.Request) {
 	}
 
 	response := h.mapToResponse(list)
-	utils.WriteJSONResponse(w, http.StatusOK, response)
+	utils.WriteJSONResponse(w, r, http.StatusOK, response)
 }
 
 // UpdateList updates a movie list
 func (h *MovieListHandler) UpdateList(w http.ResponseWriter, r *http.Request) {
-	userID := r.Context().Value("user_id").(int)
+	userID := r.Context().Value("user_id").(string)
 
 	listIDStr := chi.URLParam(r, "id")
-	listID, err := strconv.Atoi(listIDStr)
-	if err != nil {
+	if listIDStr == "" {
 		utils.WriteJSONError(w, http.StatusBadRequest, "error", "Invalid list ID")
 		return
 	}
@@ -143,7 +141,7 @@ func (h *MovieListHandler) UpdateList(w http.ResponseWriter, r *http.Request) {
 	if req.Name != nil {
 		name = *req.Name
 	}
-	list, err := h.movieListService.UpdateList(listID, userID, name)
+	list, err := h.movieListService.UpdateList(listIDStr, userID, name)
 	if err != nil {
 		if err.Error() == "movie list not found" {
 			utils.WriteJSONError(w, http.StatusNotFound, "error", "Movie list not found")
@@ -158,21 +156,20 @@ func (h *MovieListHandler) UpdateList(w http.ResponseWriter, r *http.Request) {
 	}
 
 	response := h.mapToResponse(list)
-	utils.WriteJSONResponse(w, http.StatusOK, response)
+	utils.WriteJSONResponse(w, r, http.StatusOK, response)
 }
 
 // DeleteList deletes a movie list
 func (h *MovieListHandler) DeleteList(w http.ResponseWriter, r *http.Request) {
-	userID := r.Context().Value("user_id").(int)
+	userID := r.Context().Value("user_id").(string)
 
 	listIDStr := chi.URLParam(r, "id")
-	listID, err := strconv.Atoi(listIDStr)
-	if err != nil {
+	if listIDStr == "" {
 		utils.WriteJSONError(w, http.StatusBadRequest, "error", "Invalid list ID")
 		return
 	}
 
-	err = h.movieListService.DeleteList(listID, userID)
+	err := h.movieListService.DeleteList(listIDStr, userID)
 	if err != nil {
 		if err.Error() == "movie list not found" {
 			utils.WriteJSONError(w, http.StatusNotFound, "error", "Movie list not found")
@@ -186,12 +183,12 @@ func (h *MovieListHandler) DeleteList(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	utils.WriteJSONResponse(w, http.StatusOK, map[string]string{"message": "List deleted successfully"})
+	utils.WriteJSONResponse(w, r, http.StatusOK, map[string]string{"message": "List deleted successfully"})
 }
 
 // AddToWantToWatch adds a movie to the want-to-watch list
 func (h *MovieListHandler) AddToWantToWatch(w http.ResponseWriter, r *http.Request) {
-	userID := r.Context().Value("user_id").(int)
+	userID := r.Context().Value("user_id").(string)
 
 	var req dto.AddMovieToListRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -214,12 +211,12 @@ func (h *MovieListHandler) AddToWantToWatch(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	utils.WriteJSONResponse(w, http.StatusOK, map[string]string{"message": "Movie added to want-to-watch list"})
+	utils.WriteJSONResponse(w, r, http.StatusOK, map[string]string{"message": "Movie added to want-to-watch list"})
 }
 
 // AddToWatched adds a movie to the watched list
 func (h *MovieListHandler) AddToWatched(w http.ResponseWriter, r *http.Request) {
-	userID := r.Context().Value("user_id").(int)
+	userID := r.Context().Value("user_id").(string)
 
 	var req dto.AddMovieToListRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -242,52 +239,50 @@ func (h *MovieListHandler) AddToWatched(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	utils.WriteJSONResponse(w, http.StatusOK, map[string]string{"message": "Movie added to watched list"})
+	utils.WriteJSONResponse(w, r, http.StatusOK, map[string]string{"message": "Movie added to watched list"})
 }
 
 // RemoveFromWantToWatch removes a movie from the want-to-watch list
 func (h *MovieListHandler) RemoveFromWantToWatch(w http.ResponseWriter, r *http.Request) {
-	userID := r.Context().Value("user_id").(int)
+	userID := r.Context().Value("user_id").(string)
 
 	movieIDStr := chi.URLParam(r, "movieId")
-	movieID, err := strconv.Atoi(movieIDStr)
-	if err != nil {
+	if movieIDStr == "" {
 		utils.WriteJSONError(w, http.StatusBadRequest, "error", "Invalid movie ID")
 		return
 	}
 
-	err = h.movieListService.RemoveFromWantToWatch(userID, movieID)
+	err := h.movieListService.RemoveFromWantToWatch(userID, movieIDStr)
 	if err != nil {
 		utils.WriteJSONError(w, http.StatusBadRequest, "error", err.Error())
 		return
 	}
 
-	utils.WriteJSONResponse(w, http.StatusOK, map[string]string{"message": "Movie removed from want-to-watch list"})
+	utils.WriteJSONResponse(w, r, http.StatusOK, map[string]string{"message": "Movie removed from want-to-watch list"})
 }
 
 // RemoveFromWatched removes a movie from the watched list
 func (h *MovieListHandler) RemoveFromWatched(w http.ResponseWriter, r *http.Request) {
-	userID := r.Context().Value("user_id").(int)
+	userID := r.Context().Value("user_id").(string)
 
 	movieIDStr := chi.URLParam(r, "movieId")
-	movieID, err := strconv.Atoi(movieIDStr)
-	if err != nil {
+	if movieIDStr == "" {
 		utils.WriteJSONError(w, http.StatusBadRequest, "error", "Invalid movie ID")
 		return
 	}
 
-	err = h.movieListService.RemoveFromWatched(userID, movieID)
+	err := h.movieListService.RemoveFromWatched(userID, movieIDStr)
 	if err != nil {
 		utils.WriteJSONError(w, http.StatusBadRequest, "error", err.Error())
 		return
 	}
 
-	utils.WriteJSONResponse(w, http.StatusOK, map[string]string{"message": "Movie removed from watched list"})
+	utils.WriteJSONResponse(w, r, http.StatusOK, map[string]string{"message": "Movie removed from watched list"})
 }
 
 // MoveToWatched moves a movie from want-to-watch to watched
 func (h *MovieListHandler) MoveToWatched(w http.ResponseWriter, r *http.Request) {
-	userID := r.Context().Value("user_id").(int)
+	userID := r.Context().Value("user_id").(string)
 
 	var req dto.MoveToWatchedRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -313,16 +308,15 @@ func (h *MovieListHandler) MoveToWatched(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	utils.WriteJSONResponse(w, http.StatusOK, map[string]string{"message": "Movie moved to watched list"})
+	utils.WriteJSONResponse(w, r, http.StatusOK, map[string]string{"message": "Movie moved to watched list"})
 }
 
 // AddMovieToList adds a movie to a custom list
 func (h *MovieListHandler) AddMovieToList(w http.ResponseWriter, r *http.Request) {
-	userID := r.Context().Value("user_id").(int)
+	userID := r.Context().Value("user_id").(string)
 
 	listIDStr := chi.URLParam(r, "id")
-	listID, err := strconv.Atoi(listIDStr)
-	if err != nil {
+	if listIDStr == "" {
 		utils.WriteJSONError(w, http.StatusBadRequest, "error", "Invalid list ID")
 		return
 	}
@@ -338,7 +332,7 @@ func (h *MovieListHandler) AddMovieToList(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	err = h.movieListService.AddMovieToList(listID, userID, req.MovieID)
+	err := h.movieListService.AddMovieToList(listIDStr, userID, req.MovieID)
 	if err != nil {
 		if err.Error() == "movie list not found" {
 			utils.WriteJSONError(w, http.StatusNotFound, "error", "Movie list not found")
@@ -352,28 +346,26 @@ func (h *MovieListHandler) AddMovieToList(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	utils.WriteJSONResponse(w, http.StatusOK, map[string]string{"message": "Movie added to list"})
+	utils.WriteJSONResponse(w, r, http.StatusOK, map[string]string{"message": "Movie added to list"})
 }
 
 // RemoveMovieFromList removes a movie from a custom list
 func (h *MovieListHandler) RemoveMovieFromList(w http.ResponseWriter, r *http.Request) {
-	userID := r.Context().Value("user_id").(int)
+	userID := r.Context().Value("user_id").(string)
 
 	listIDStr := chi.URLParam(r, "id")
-	listID, err := strconv.Atoi(listIDStr)
-	if err != nil {
+	if listIDStr == "" {
 		utils.WriteJSONError(w, http.StatusBadRequest, "error", "Invalid list ID")
 		return
 	}
 
 	movieIDStr := chi.URLParam(r, "movieId")
-	movieID, err := strconv.Atoi(movieIDStr)
-	if err != nil {
+	if movieIDStr == "" {
 		utils.WriteJSONError(w, http.StatusBadRequest, "error", "Invalid movie ID")
 		return
 	}
 
-	err = h.movieListService.RemoveMovieFromList(listID, userID, movieID)
+	err := h.movieListService.RemoveMovieFromList(listIDStr, userID, movieIDStr)
 	if err != nil {
 		if err.Error() == "movie list not found" {
 			utils.WriteJSONError(w, http.StatusNotFound, "error", "Movie list not found")
@@ -387,14 +379,13 @@ func (h *MovieListHandler) RemoveMovieFromList(w http.ResponseWriter, r *http.Re
 		return
 	}
 
-	utils.WriteJSONResponse(w, http.StatusOK, map[string]string{"message": "Movie removed from list"})
+	utils.WriteJSONResponse(w, r, http.StatusOK, map[string]string{"message": "Movie removed from list"})
 }
 
 // GetListMovies returns movies in a specific list
 func (h *MovieListHandler) GetListMovies(w http.ResponseWriter, r *http.Request) {
 	listIDStr := chi.URLParam(r, "id")
-	listID, err := strconv.Atoi(listIDStr)
-	if err != nil {
+	if listIDStr == "" {
 		utils.WriteJSONError(w, http.StatusBadRequest, "error", "Invalid list ID")
 		return
 	}
@@ -402,13 +393,14 @@ func (h *MovieListHandler) GetListMovies(w http.ResponseWriter, r *http.Request)
 	pageStr := r.URL.Query().Get("page")
 	page := 1
 	if pageStr != "" {
+		var err error
 		page, err = strconv.Atoi(pageStr)
 		if err != nil || page < 1 {
 			page = 1
 		}
 	}
 
-	entries, err := h.movieListService.GetListMovies(listID, page)
+	entries, err := h.movieListService.GetListMovies(listIDStr, page)
 	if err != nil {
 		utils.WriteJSONError(w, http.StatusInternalServerError, "error", err.Error())
 		return
@@ -438,7 +430,7 @@ func (h *MovieListHandler) GetListMovies(w http.ResponseWriter, r *http.Request)
 		}
 	}
 
-	utils.WriteJSONResponse(w, http.StatusOK, response)
+	utils.WriteJSONResponse(w, r, http.StatusOK, response)
 }
 
 // Helper function to map domain to response

@@ -63,27 +63,24 @@ func (h *SocialHandler) SendFriendRequest(w http.ResponseWriter, r *http.Request
 	lang := middleware.GetLanguageFromContext(r.Context())
 	claims, ok := middleware.GetUserClaims(r.Context())
 	if !ok {
-		utils.WriteErrorResponse(w, r.Context(), http.StatusUnauthorized, "UNAUTHORIZED", nil)
+		utils.WriteErrorResponse(w, r, http.StatusUnauthorized, "UNAUTHORIZED", "")
 		return
 	}
 
 	userIDStr := chi.URLParam(r, "userID")
-	userID, err := strconv.Atoi(userIDStr)
-	if err != nil {
-		utils.WriteErrorResponse(w, r.Context(), http.StatusBadRequest, "INVALID_USER_ID", nil)
+	if userIDStr == "" {
+		utils.WriteErrorResponse(w, r, http.StatusBadRequest, "INVALID_USER_ID", "")
 		return
 	}
 
-	err = h.socialService.SendFriendRequest(claims.UserID, userID)
+	err := h.socialService.SendFriendRequest(claims.UserID, userIDStr)
 	if err != nil {
-		slog.Warn("Failed to send friend request", "error", err, "sender", claims.UserID, "receiver", userID)
-		utils.WriteErrorResponse(w, r.Context(), http.StatusBadRequest, "FRIEND_REQUEST_FAILED", map[string]interface{}{
-			"details": err.Error(),
-		})
+		slog.Warn("Failed to send friend request", "error", err, "sender", claims.UserID, "receiver", userIDStr)
+		utils.WriteErrorResponse(w, r, http.StatusBadRequest, "FRIEND_REQUEST_FAILED", err.Error())
 		return
 	}
 
-	utils.WriteJSONResponse(w, r.Context(), http.StatusOK, dto.MessageResponse{
+	utils.WriteJSONResponse(w, r, http.StatusOK, dto.MessageResponse{
 		Message: i18n.T(lang, "FRIEND_REQUEST_SENT"),
 	})
 }
@@ -102,27 +99,24 @@ func (h *SocialHandler) AcceptFriendRequest(w http.ResponseWriter, r *http.Reque
 	lang := middleware.GetLanguageFromContext(r.Context())
 	claims, ok := middleware.GetUserClaims(r.Context())
 	if !ok {
-		utils.WriteErrorResponse(w, r.Context(), http.StatusUnauthorized, "UNAUTHORIZED", nil)
+		utils.WriteErrorResponse(w, r, http.StatusUnauthorized, "UNAUTHORIZED", "")
 		return
 	}
 
 	userIDStr := chi.URLParam(r, "userID")
-	userID, err := strconv.Atoi(userIDStr)
-	if err != nil {
-		utils.WriteErrorResponse(w, r.Context(), http.StatusBadRequest, "INVALID_USER_ID", nil)
+	if userIDStr == "" {
+		utils.WriteErrorResponse(w, r, http.StatusBadRequest, "INVALID_USER_ID", "")
 		return
 	}
 
-	err = h.socialService.AcceptFriendRequest(claims.UserID, userID)
+	err := h.socialService.AcceptFriendRequest(claims.UserID, userIDStr)
 	if err != nil {
-		slog.Warn("Failed to accept friend request", "error", err, "user", claims.UserID, "requester", userID)
-		utils.WriteErrorResponse(w, r.Context(), http.StatusBadRequest, "FRIEND_REQUEST_ACCEPT_FAILED", map[string]interface{}{
-			"details": err.Error(),
-		})
+		slog.Warn("Failed to accept friend request", "error", err, "user", claims.UserID, "requester", userIDStr)
+		utils.WriteErrorResponse(w, r, http.StatusBadRequest, "FRIEND_REQUEST_ACCEPT_FAILED", err.Error())
 		return
 	}
 
-	utils.WriteJSONResponse(w, r.Context(), http.StatusOK, dto.MessageResponse{
+	utils.WriteJSONResponse(w, r, http.StatusOK, dto.MessageResponse{
 		Message: i18n.T(lang, "FRIEND_REQUEST_ACCEPTED"),
 	})
 }
@@ -141,27 +135,24 @@ func (h *SocialHandler) DeclineFriendRequest(w http.ResponseWriter, r *http.Requ
 	lang := middleware.GetLanguageFromContext(r.Context())
 	claims, ok := middleware.GetUserClaims(r.Context())
 	if !ok {
-		utils.WriteErrorResponse(w, r.Context(), http.StatusUnauthorized, "UNAUTHORIZED", nil)
+		utils.WriteErrorResponse(w, r, http.StatusUnauthorized, "UNAUTHORIZED", "")
 		return
 	}
 
 	userIDStr := chi.URLParam(r, "userID")
-	userID, err := strconv.Atoi(userIDStr)
-	if err != nil {
-		utils.WriteErrorResponse(w, r.Context(), http.StatusBadRequest, "INVALID_USER_ID", nil)
+	if userIDStr == "" {
+		utils.WriteErrorResponse(w, r, http.StatusBadRequest, "INVALID_USER_ID", "")
 		return
 	}
 
-	err = h.socialService.DeclineFriendRequest(claims.UserID, userID)
+	err := h.socialService.DeclineFriendRequest(claims.UserID, userIDStr)
 	if err != nil {
-		slog.Warn("Failed to decline friend request", "error", err, "user", claims.UserID, "requester", userID)
-		utils.WriteErrorResponse(w, r.Context(), http.StatusBadRequest, "FRIEND_REQUEST_DECLINE_FAILED", map[string]interface{}{
-			"details": err.Error(),
-		})
+		slog.Warn("Failed to decline friend request", "error", err, "user", claims.UserID, "requester", userIDStr)
+		utils.WriteErrorResponse(w, r, http.StatusBadRequest, "FRIEND_REQUEST_DECLINE_FAILED", err.Error())
 		return
 	}
 
-	utils.WriteJSONResponse(w, r.Context(), http.StatusOK, dto.MessageResponse{
+	utils.WriteJSONResponse(w, r, http.StatusOK, dto.MessageResponse{
 		Message: i18n.T(lang, "FRIEND_REQUEST_DECLINED"),
 	})
 }
@@ -180,27 +171,24 @@ func (h *SocialHandler) RemoveFriend(w http.ResponseWriter, r *http.Request) {
 	lang := middleware.GetLanguageFromContext(r.Context())
 	claims, ok := middleware.GetUserClaims(r.Context())
 	if !ok {
-		utils.WriteErrorResponse(w, r.Context(), http.StatusUnauthorized, "UNAUTHORIZED", nil)
+		utils.WriteErrorResponse(w, r, http.StatusUnauthorized, "UNAUTHORIZED", "")
 		return
 	}
 
 	userIDStr := chi.URLParam(r, "userID")
-	userID, err := strconv.Atoi(userIDStr)
-	if err != nil {
-		utils.WriteErrorResponse(w, r.Context(), http.StatusBadRequest, "INVALID_USER_ID", nil)
+	if userIDStr == "" {
+		utils.WriteErrorResponse(w, r, http.StatusBadRequest, "INVALID_USER_ID", "")
 		return
 	}
 
-	err = h.socialService.RemoveFriend(claims.UserID, userID)
+	err := h.socialService.RemoveFriend(claims.UserID, userIDStr)
 	if err != nil {
-		slog.Warn("Failed to remove friend", "error", err, "user", claims.UserID, "friend", userID)
-		utils.WriteErrorResponse(w, r.Context(), http.StatusBadRequest, "FRIEND_REMOVE_FAILED", map[string]interface{}{
-			"details": err.Error(),
-		})
+		slog.Warn("Failed to remove friend", "error", err, "user", claims.UserID, "friend", userIDStr)
+		utils.WriteErrorResponse(w, r, http.StatusBadRequest, "FRIEND_REMOVE_FAILED", err.Error())
 		return
 	}
 
-	utils.WriteJSONResponse(w, r.Context(), http.StatusOK, dto.MessageResponse{
+	utils.WriteJSONResponse(w, r, http.StatusOK, dto.MessageResponse{
 		Message: i18n.T(lang, "FRIEND_REMOVED"),
 	})
 }
@@ -219,27 +207,24 @@ func (h *SocialHandler) BlockUser(w http.ResponseWriter, r *http.Request) {
 	lang := middleware.GetLanguageFromContext(r.Context())
 	claims, ok := middleware.GetUserClaims(r.Context())
 	if !ok {
-		utils.WriteErrorResponse(w, r.Context(), http.StatusUnauthorized, "UNAUTHORIZED", nil)
+		utils.WriteErrorResponse(w, r, http.StatusUnauthorized, "UNAUTHORIZED", "")
 		return
 	}
 
 	userIDStr := chi.URLParam(r, "userID")
-	userID, err := strconv.Atoi(userIDStr)
-	if err != nil {
-		utils.WriteErrorResponse(w, r.Context(), http.StatusBadRequest, "INVALID_USER_ID", nil)
+	if userIDStr == "" {
+		utils.WriteErrorResponse(w, r, http.StatusBadRequest, "INVALID_USER_ID", "")
 		return
 	}
 
-	err = h.socialService.BlockUser(claims.UserID, userID)
+	err := h.socialService.BlockUser(claims.UserID, userIDStr)
 	if err != nil {
-		slog.Warn("Failed to block user", "error", err, "user", claims.UserID, "blocked", userID)
-		utils.WriteErrorResponse(w, r.Context(), http.StatusBadRequest, "USER_BLOCK_FAILED", map[string]interface{}{
-			"details": err.Error(),
-		})
+		slog.Warn("Failed to block user", "error", err, "user", claims.UserID, "blocked", userIDStr)
+		utils.WriteErrorResponse(w, r, http.StatusBadRequest, "USER_BLOCK_FAILED", err.Error())
 		return
 	}
 
-	utils.WriteJSONResponse(w, r.Context(), http.StatusOK, dto.MessageResponse{
+	utils.WriteJSONResponse(w, r, http.StatusOK, dto.MessageResponse{
 		Message: i18n.T(lang, "USER_BLOCKED"),
 	})
 }
@@ -255,14 +240,14 @@ func (h *SocialHandler) BlockUser(w http.ResponseWriter, r *http.Request) {
 func (h *SocialHandler) GetFriends(w http.ResponseWriter, r *http.Request) {
 	claims, ok := middleware.GetUserClaims(r.Context())
 	if !ok {
-		utils.WriteErrorResponse(w, r.Context(), http.StatusUnauthorized, "UNAUTHORIZED", nil)
+		utils.WriteErrorResponse(w, r, http.StatusUnauthorized, "UNAUTHORIZED", "")
 		return
 	}
 
 	friends, err := h.socialService.GetFriends(claims.UserID)
 	if err != nil {
 		slog.Error("Failed to get friends", "error", err, "user", claims.UserID)
-		utils.WriteErrorResponse(w, r.Context(), http.StatusInternalServerError, "INTERNAL_ERROR", nil)
+		utils.WriteErrorResponse(w, r, http.StatusInternalServerError, "INTERNAL_ERROR", "")
 		return
 	}
 
@@ -280,7 +265,7 @@ func (h *SocialHandler) GetFriends(w http.ResponseWriter, r *http.Request) {
 		})
 	}
 
-	utils.WriteJSONResponse(w, r.Context(), http.StatusOK, friendProfiles)
+	utils.WriteJSONResponse(w, r, http.StatusOK, friendProfiles)
 }
 
 // GetFriendRequests returns pending friend requests
@@ -294,14 +279,14 @@ func (h *SocialHandler) GetFriends(w http.ResponseWriter, r *http.Request) {
 func (h *SocialHandler) GetFriendRequests(w http.ResponseWriter, r *http.Request) {
 	claims, ok := middleware.GetUserClaims(r.Context())
 	if !ok {
-		utils.WriteErrorResponse(w, r.Context(), http.StatusUnauthorized, "UNAUTHORIZED", nil)
+		utils.WriteErrorResponse(w, r, http.StatusUnauthorized, "UNAUTHORIZED", "")
 		return
 	}
 
 	requesters, err := h.socialService.GetFriendRequests(claims.UserID)
 	if err != nil {
 		slog.Error("Failed to get friend requests", "error", err, "user", claims.UserID)
-		utils.WriteErrorResponse(w, r.Context(), http.StatusInternalServerError, "INTERNAL_ERROR", nil)
+		utils.WriteErrorResponse(w, r, http.StatusInternalServerError, "INTERNAL_ERROR", "")
 		return
 	}
 
@@ -319,7 +304,7 @@ func (h *SocialHandler) GetFriendRequests(w http.ResponseWriter, r *http.Request
 		})
 	}
 
-	utils.WriteJSONResponse(w, r.Context(), http.StatusOK, requesterProfiles)
+	utils.WriteJSONResponse(w, r, http.StatusOK, requesterProfiles)
 }
 
 // Follow endpoints
@@ -338,27 +323,24 @@ func (h *SocialHandler) FollowUser(w http.ResponseWriter, r *http.Request) {
 	lang := middleware.GetLanguageFromContext(r.Context())
 	claims, ok := middleware.GetUserClaims(r.Context())
 	if !ok {
-		utils.WriteErrorResponse(w, r.Context(), http.StatusUnauthorized, "UNAUTHORIZED", nil)
+		utils.WriteErrorResponse(w, r, http.StatusUnauthorized, "UNAUTHORIZED", "")
 		return
 	}
 
 	userIDStr := chi.URLParam(r, "userID")
-	userID, err := strconv.Atoi(userIDStr)
-	if err != nil {
-		utils.WriteErrorResponse(w, r.Context(), http.StatusBadRequest, "INVALID_USER_ID", nil)
+	if userIDStr == "" {
+		utils.WriteErrorResponse(w, r, http.StatusBadRequest, "INVALID_USER_ID", "")
 		return
 	}
 
-	err = h.socialService.FollowUser(claims.UserID, userID)
+	err := h.socialService.FollowUser(claims.UserID, userIDStr)
 	if err != nil {
-		slog.Warn("Failed to follow user", "error", err, "follower", claims.UserID, "following", userID)
-		utils.WriteErrorResponse(w, r.Context(), http.StatusBadRequest, "FOLLOW_FAILED", map[string]interface{}{
-			"details": err.Error(),
-		})
+		slog.Warn("Failed to follow user", "error", err, "follower", claims.UserID, "following", userIDStr)
+		utils.WriteErrorResponse(w, r, http.StatusBadRequest, "FOLLOW_FAILED", err.Error())
 		return
 	}
 
-	utils.WriteJSONResponse(w, r.Context(), http.StatusOK, dto.MessageResponse{
+	utils.WriteJSONResponse(w, r, http.StatusOK, dto.MessageResponse{
 		Message: i18n.T(lang, "USER_FOLLOWED"),
 	})
 }
@@ -377,27 +359,24 @@ func (h *SocialHandler) UnfollowUser(w http.ResponseWriter, r *http.Request) {
 	lang := middleware.GetLanguageFromContext(r.Context())
 	claims, ok := middleware.GetUserClaims(r.Context())
 	if !ok {
-		utils.WriteErrorResponse(w, r.Context(), http.StatusUnauthorized, "UNAUTHORIZED", nil)
+		utils.WriteErrorResponse(w, r, http.StatusUnauthorized, "UNAUTHORIZED", "")
 		return
 	}
 
 	userIDStr := chi.URLParam(r, "userID")
-	userID, err := strconv.Atoi(userIDStr)
-	if err != nil {
-		utils.WriteErrorResponse(w, r.Context(), http.StatusBadRequest, "INVALID_USER_ID", nil)
+	if userIDStr == "" {
+		utils.WriteErrorResponse(w, r, http.StatusBadRequest, "INVALID_USER_ID", "")
 		return
 	}
 
-	err = h.socialService.UnfollowUser(claims.UserID, userID)
+	err := h.socialService.UnfollowUser(claims.UserID, userIDStr)
 	if err != nil {
-		slog.Warn("Failed to unfollow user", "error", err, "follower", claims.UserID, "following", userID)
-		utils.WriteErrorResponse(w, r.Context(), http.StatusBadRequest, "UNFOLLOW_FAILED", map[string]interface{}{
-			"details": err.Error(),
-		})
+		slog.Warn("Failed to unfollow user", "error", err, "follower", claims.UserID, "following", userIDStr)
+		utils.WriteErrorResponse(w, r, http.StatusBadRequest, "UNFOLLOW_FAILED", err.Error())
 		return
 	}
 
-	utils.WriteJSONResponse(w, r.Context(), http.StatusOK, dto.MessageResponse{
+	utils.WriteJSONResponse(w, r, http.StatusOK, dto.MessageResponse{
 		Message: i18n.T(lang, "USER_UNFOLLOWED"),
 	})
 }
@@ -414,7 +393,7 @@ func (h *SocialHandler) UnfollowUser(w http.ResponseWriter, r *http.Request) {
 func (h *SocialHandler) GetFollowers(w http.ResponseWriter, r *http.Request) {
 	claims, ok := middleware.GetUserClaims(r.Context())
 	if !ok {
-		utils.WriteErrorResponse(w, r.Context(), http.StatusUnauthorized, "UNAUTHORIZED", nil)
+		utils.WriteErrorResponse(w, r, http.StatusUnauthorized, "UNAUTHORIZED", "")
 		return
 	}
 
@@ -428,7 +407,7 @@ func (h *SocialHandler) GetFollowers(w http.ResponseWriter, r *http.Request) {
 	followers, err := h.socialService.GetFollowers(claims.UserID, page)
 	if err != nil {
 		slog.Error("Failed to get followers", "error", err, "user", claims.UserID)
-		utils.WriteErrorResponse(w, r.Context(), http.StatusInternalServerError, "INTERNAL_ERROR", nil)
+		utils.WriteErrorResponse(w, r, http.StatusInternalServerError, "INTERNAL_ERROR", "")
 		return
 	}
 
@@ -446,7 +425,7 @@ func (h *SocialHandler) GetFollowers(w http.ResponseWriter, r *http.Request) {
 		})
 	}
 
-	utils.WriteJSONResponse(w, r.Context(), http.StatusOK, followerProfiles)
+	utils.WriteJSONResponse(w, r, http.StatusOK, followerProfiles)
 }
 
 // GetFollowing returns users that current user is following
@@ -461,7 +440,7 @@ func (h *SocialHandler) GetFollowers(w http.ResponseWriter, r *http.Request) {
 func (h *SocialHandler) GetFollowing(w http.ResponseWriter, r *http.Request) {
 	claims, ok := middleware.GetUserClaims(r.Context())
 	if !ok {
-		utils.WriteErrorResponse(w, r.Context(), http.StatusUnauthorized, "UNAUTHORIZED", nil)
+		utils.WriteErrorResponse(w, r, http.StatusUnauthorized, "UNAUTHORIZED", "")
 		return
 	}
 
@@ -475,7 +454,7 @@ func (h *SocialHandler) GetFollowing(w http.ResponseWriter, r *http.Request) {
 	following, err := h.socialService.GetFollowing(claims.UserID, page)
 	if err != nil {
 		slog.Error("Failed to get following", "error", err, "user", claims.UserID)
-		utils.WriteErrorResponse(w, r.Context(), http.StatusInternalServerError, "INTERNAL_ERROR", nil)
+		utils.WriteErrorResponse(w, r, http.StatusInternalServerError, "INTERNAL_ERROR", "")
 		return
 	}
 
@@ -493,7 +472,7 @@ func (h *SocialHandler) GetFollowing(w http.ResponseWriter, r *http.Request) {
 		})
 	}
 
-	utils.WriteJSONResponse(w, r.Context(), http.StatusOK, followingProfiles)
+	utils.WriteJSONResponse(w, r, http.StatusOK, followingProfiles)
 }
 
 // GetFollowersCount returns the count of user's followers
@@ -507,18 +486,18 @@ func (h *SocialHandler) GetFollowing(w http.ResponseWriter, r *http.Request) {
 func (h *SocialHandler) GetFollowersCount(w http.ResponseWriter, r *http.Request) {
 	claims, ok := middleware.GetUserClaims(r.Context())
 	if !ok {
-		utils.WriteErrorResponse(w, r.Context(), http.StatusUnauthorized, "UNAUTHORIZED", nil)
+		utils.WriteErrorResponse(w, r, http.StatusUnauthorized, "UNAUTHORIZED", "")
 		return
 	}
 
 	count, err := h.socialService.GetFollowersCount(claims.UserID)
 	if err != nil {
 		slog.Error("Failed to get followers count", "error", err, "user", claims.UserID)
-		utils.WriteErrorResponse(w, r.Context(), http.StatusInternalServerError, "INTERNAL_ERROR", nil)
+		utils.WriteErrorResponse(w, r, http.StatusInternalServerError, "INTERNAL_ERROR", "")
 		return
 	}
 
-	utils.WriteJSONResponse(w, r.Context(), http.StatusOK, map[string]int{
+	utils.WriteJSONResponse(w, r, http.StatusOK, map[string]int{
 		"count": count,
 	})
 }
@@ -534,18 +513,18 @@ func (h *SocialHandler) GetFollowersCount(w http.ResponseWriter, r *http.Request
 func (h *SocialHandler) GetFollowingCount(w http.ResponseWriter, r *http.Request) {
 	claims, ok := middleware.GetUserClaims(r.Context())
 	if !ok {
-		utils.WriteErrorResponse(w, r.Context(), http.StatusUnauthorized, "UNAUTHORIZED", nil)
+		utils.WriteErrorResponse(w, r, http.StatusUnauthorized, "UNAUTHORIZED", "")
 		return
 	}
 
 	count, err := h.socialService.GetFollowingCount(claims.UserID)
 	if err != nil {
 		slog.Error("Failed to get following count", "error", err, "user", claims.UserID)
-		utils.WriteErrorResponse(w, r.Context(), http.StatusInternalServerError, "INTERNAL_ERROR", nil)
+		utils.WriteErrorResponse(w, r, http.StatusInternalServerError, "INTERNAL_ERROR", "")
 		return
 	}
 
-	utils.WriteJSONResponse(w, r.Context(), http.StatusOK, map[string]int{
+	utils.WriteJSONResponse(w, r, http.StatusOK, map[string]int{
 		"count": count,
 	})
 }

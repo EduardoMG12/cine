@@ -340,7 +340,7 @@ func (r *movieRepository) cacheMovie(movie *domain.Movie) {
 	ctx := context.Background()
 
 	// Cache by ID
-	idKey := fmt.Sprintf("movie:id:%d", movie.ID)
+	idKey := fmt.Sprintf("movie:id:%s", movie.ID)
 	r.redis.Set(ctx, idKey, movie, 30*time.Minute)
 
 	// Cache by external ID

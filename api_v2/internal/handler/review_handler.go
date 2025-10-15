@@ -93,7 +93,7 @@ func (h *ReviewHandler) CreateReview(w http.ResponseWriter, r *http.Request) {
 	}
 
 	response := h.mapToResponse(review)
-	utils.WriteJSONResponse(w, http.StatusCreated, response)
+	utils.WriteJSONResponse(w, r, http.StatusCreated, response)
 }
 
 // GetReview returns a specific review by ID
@@ -109,13 +109,12 @@ func (h *ReviewHandler) CreateReview(w http.ResponseWriter, r *http.Request) {
 // @Router /reviews/{id} [get]
 func (h *ReviewHandler) GetReview(w http.ResponseWriter, r *http.Request) {
 	reviewIDStr := chi.URLParam(r, "id")
-	reviewID, err := strconv.Atoi(reviewIDStr)
-	if err != nil {
+	if reviewIDStr == "" {
 		utils.WriteJSONError(w, http.StatusBadRequest, "invalid_id", "Invalid review ID")
 		return
 	}
 
-	review, err := h.reviewService.GetReview(reviewID)
+	review, err := h.reviewService.GetReview(reviewIDStr)
 	if err != nil {
 		if err.Error() == "failed to get review: review not found" {
 			utils.WriteJSONError(w, http.StatusNotFound, "review_not_found", "Review not found")
@@ -126,7 +125,7 @@ func (h *ReviewHandler) GetReview(w http.ResponseWriter, r *http.Request) {
 	}
 
 	response := h.mapToResponse(review)
-	utils.WriteJSONResponse(w, http.StatusOK, response)
+	utils.WriteJSONResponse(w, r, http.StatusOK, response)
 }
 
 // GetMovieReviews returns reviews for a specific movie
@@ -143,8 +142,7 @@ func (h *ReviewHandler) GetReview(w http.ResponseWriter, r *http.Request) {
 // @Router /reviews/movie/{movieId} [get]
 func (h *ReviewHandler) GetMovieReviews(w http.ResponseWriter, r *http.Request) {
 	movieIDStr := chi.URLParam(r, "movieId")
-	movieID, err := strconv.Atoi(movieIDStr)
-	if err != nil {
+	if movieIDStr == "" {
 		utils.WriteJSONError(w, http.StatusBadRequest, "invalid_id", "Invalid movie ID")
 		return
 	}
@@ -152,13 +150,14 @@ func (h *ReviewHandler) GetMovieReviews(w http.ResponseWriter, r *http.Request) 
 	pageStr := r.URL.Query().Get("page")
 	page := 1
 	if pageStr != "" {
+		var err error
 		page, err = strconv.Atoi(pageStr)
 		if err != nil || page < 1 {
 			page = 1
 		}
 	}
 
-	reviews, err := h.reviewService.GetMovieReviews(movieID, page)
+	reviews, err := h.reviewService.GetMovieReviews(movieIDStr, page)
 	if err != nil {
 		if err.Error() == "movie not found: movie not found" {
 			utils.WriteJSONError(w, http.StatusNotFound, "movie_not_found", "Movie not found")
@@ -173,14 +172,13 @@ func (h *ReviewHandler) GetMovieReviews(w http.ResponseWriter, r *http.Request) 
 		response[i] = h.mapToResponse(review)
 	}
 
-	utils.WriteJSONResponse(w, http.StatusOK, response)
+	utils.WriteJSONResponse(w, r, http.StatusOK, response)
 }
 
 // GetUserReviews returns reviews by a specific user
 func (h *ReviewHandler) GetUserReviews(w http.ResponseWriter, r *http.Request) {
 	userIDStr := chi.URLParam(r, "userId")
-	userID, err := strconv.Atoi(userIDStr)
-	if err != nil {
+	if userIDStr == "" {
 		utils.WriteJSONError(w, http.StatusBadRequest, "invalid_id", "Invalid user ID")
 		return
 	}
@@ -188,13 +186,14 @@ func (h *ReviewHandler) GetUserReviews(w http.ResponseWriter, r *http.Request) {
 	pageStr := r.URL.Query().Get("page")
 	page := 1
 	if pageStr != "" {
+		var err error
 		page, err = strconv.Atoi(pageStr)
 		if err != nil || page < 1 {
 			page = 1
 		}
 	}
 
-	reviews, err := h.reviewService.GetUserReviews(userID, page)
+	reviews, err := h.reviewService.GetUserReviews(userIDStr, page)
 	if err != nil {
 		if err.Error() == "user not found: user not found" {
 			utils.WriteJSONError(w, http.StatusNotFound, "user_not_found", "User not found")
@@ -209,7 +208,7 @@ func (h *ReviewHandler) GetUserReviews(w http.ResponseWriter, r *http.Request) {
 		response[i] = h.mapToResponse(review)
 	}
 
-	utils.WriteJSONResponse(w, http.StatusOK, response)
+	utils.WriteJSONResponse(w, r, http.StatusOK, response)
 }
 
 // UpdateReview updates an existing review
@@ -221,8 +220,7 @@ func (h *ReviewHandler) UpdateReview(w http.ResponseWriter, r *http.Request) {
 	}
 
 	reviewIDStr := chi.URLParam(r, "id")
-	reviewID, err := strconv.Atoi(reviewIDStr)
-	if err != nil {
+	if reviewIDStr == "" {
 		utils.WriteJSONError(w, http.StatusBadRequest, "invalid_id", "Invalid review ID")
 		return
 	}
@@ -238,7 +236,7 @@ func (h *ReviewHandler) UpdateReview(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	review, err := h.reviewService.UpdateReview(reviewID, claims.UserID, req.Rating, req.Content)
+	review, err := h.reviewService.UpdateReview(reviewIDStr, claims.UserID, req.Rating, req.Content)
 	if err != nil {
 		if err.Error() == "failed to get review: review not found" {
 			utils.WriteJSONError(w, http.StatusNotFound, "review_not_found", "Review not found")
@@ -253,7 +251,7 @@ func (h *ReviewHandler) UpdateReview(w http.ResponseWriter, r *http.Request) {
 	}
 
 	response := h.mapToResponse(review)
-	utils.WriteJSONResponse(w, http.StatusOK, response)
+	utils.WriteJSONResponse(w, r, http.StatusOK, response)
 }
 
 // DeleteReview deletes a review
@@ -265,13 +263,12 @@ func (h *ReviewHandler) DeleteReview(w http.ResponseWriter, r *http.Request) {
 	}
 
 	reviewIDStr := chi.URLParam(r, "id")
-	reviewID, err := strconv.Atoi(reviewIDStr)
-	if err != nil {
+	if reviewIDStr == "" {
 		utils.WriteJSONError(w, http.StatusBadRequest, "invalid_id", "Invalid review ID")
 		return
 	}
 
-	err = h.reviewService.DeleteReview(reviewID, claims.UserID)
+	err := h.reviewService.DeleteReview(reviewIDStr, claims.UserID)
 	if err != nil {
 		if err.Error() == "review not found: review not found" {
 			utils.WriteJSONError(w, http.StatusNotFound, "review_not_found", "Review not found")
@@ -285,7 +282,7 @@ func (h *ReviewHandler) DeleteReview(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	utils.WriteJSONResponse(w, http.StatusOK, map[string]string{"message": "Review deleted successfully"})
+	utils.WriteJSONResponse(w, r, http.StatusOK, map[string]string{"message": "Review deleted successfully"})
 }
 
 // Helper function to map domain to response

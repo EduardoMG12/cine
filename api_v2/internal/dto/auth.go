@@ -10,7 +10,7 @@ type RegisterRequest struct {
 }
 
 type SessionResponse struct {
-	me          string `json:"username" validate:"required,min=3,max=30,alphanum"`
+	Username    string `json:"username" validate:"required,min=3,max=30,alphanum"`
 	Email       string `json:"email" validate:"required,email"`
 	Password    string `json:"password" validate:"required,min=8,max=100"`
 	DisplayName string `json:"display_name" validate:"required,min=2,max=100"`
@@ -70,7 +70,7 @@ type UpdateSettingsRequest struct {
 
 // Session DTOs
 type UserSessionResponse struct {
-	ID        int       `json:"id"`
+	ID        string    `json:"id"`
 	IPAddress string    `json:"ip_address"`
 	UserAgent string    `json:"user_agent"`
 	CreatedAt time.Time `json:"created_at"`

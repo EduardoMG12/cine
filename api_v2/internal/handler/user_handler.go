@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"log/slog"
 	"net/http"
-	"strconv"
 
 	"github.com/EduardoMG12/cine/api_v2/internal/domain"
 	"github.com/EduardoMG12/cine/api_v2/internal/utils"
@@ -83,8 +82,15 @@ func (h *UserHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// TODO: This is temporary - will be replaced with proper auth endpoints
-	user, err := h.userService.Register(req.Username, req.Email, "temp_password", req.DisplayName)
+	user := &domain.User{
+		Username:      req.Username,
+		Email:         req.Email,
+		DisplayName:   req.DisplayName,
+		EmailVerified: false,
+		Theme:         "light",
+	}
+
+	err := h.userService.CreateUser(user)
 	if err != nil {
 		slog.Error("Failed to create user", "error", err, "username", req.Username)
 		utils.WriteErrorResponse(w, r, http.StatusConflict, "error.failed_to_create_user", err.Error())
@@ -96,15 +102,14 @@ func (h *UserHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
 
 func (h *UserHandler) GetUser(w http.ResponseWriter, r *http.Request) {
 	idStr := chi.URLParam(r, "id")
-	id, err := strconv.Atoi(idStr)
-	if err != nil {
+	if idStr == "" {
 		h.writeErrorResponse(w, http.StatusBadRequest, "Invalid user ID", "ID must be a number")
 		return
 	}
 
-	user, err := h.userService.GetUser(id)
+	user, err := h.userService.GetUser(idStr)
 	if err != nil {
-		slog.Error("Failed to get user", "error", err, "id", id)
+		slog.Error("Failed to get user", "error", err, "id", idStr)
 		h.writeErrorResponse(w, http.StatusNotFound, "User not found", err.Error())
 		return
 	}
@@ -114,8 +119,7 @@ func (h *UserHandler) GetUser(w http.ResponseWriter, r *http.Request) {
 
 func (h *UserHandler) UpdateUser(w http.ResponseWriter, r *http.Request) {
 	idStr := chi.URLParam(r, "id")
-	id, err := strconv.Atoi(idStr)
-	if err != nil {
+	if idStr == "" {
 		h.writeErrorResponse(w, http.StatusBadRequest, "Invalid user ID", "ID must be a number")
 		return
 	}
@@ -148,9 +152,9 @@ func (h *UserHandler) UpdateUser(w http.ResponseWriter, r *http.Request) {
 		updates["profile_picture_url"] = *req.ProfilePictureURL
 	}
 
-	user, err := h.userService.UpdateProfile(id, updates)
+	user, err := h.userService.UpdateProfile(idStr, updates)
 	if err != nil {
-		slog.Error("Failed to update user", "error", err, "id", id)
+		slog.Error("Failed to update user", "error", err, "id", idStr)
 		h.writeErrorResponse(w, http.StatusBadRequest, "Failed to update user", err.Error())
 		return
 	}
@@ -160,14 +164,13 @@ func (h *UserHandler) UpdateUser(w http.ResponseWriter, r *http.Request) {
 
 func (h *UserHandler) DeleteUser(w http.ResponseWriter, r *http.Request) {
 	idStr := chi.URLParam(r, "id")
-	id, err := strconv.Atoi(idStr)
-	if err != nil {
+	if idStr == "" {
 		h.writeErrorResponse(w, http.StatusBadRequest, "Invalid user ID", "ID must be a number")
 		return
 	}
 
-	if err := h.userService.DeleteUser(id); err != nil {
-		slog.Error("Failed to delete user", "error", err, "id", id)
+	if err := h.userService.DeleteUser(idStr); err != nil {
+		slog.Error("Failed to delete user", "error", err, "id", idStr)
 		h.writeErrorResponse(w, http.StatusNotFound, "Failed to delete user", err.Error())
 		return
 	}
@@ -207,7 +210,7 @@ func (h *UserHandler) writeErrorResponse(w http.ResponseWriter, statusCode int, 
 func (h *UserHandler) GetMySessions(w http.ResponseWriter, r *http.Request) {
 	// TODO: Get user ID from JWT token in middleware
 	// For now, using a mock user ID
-	userID := 1 // This should come from the JWT middleware context
+	userID := "1" // This should come from the JWT middleware context
 
 	sessions, err := h.userSessionService.GetUserSessions(userID)
 	if err != nil {
@@ -235,18 +238,17 @@ func (h *UserHandler) GetMySessions(w http.ResponseWriter, r *http.Request) {
 // @Router /users/me/sessions/{sessionId} [delete]
 func (h *UserHandler) RevokeSession(w http.ResponseWriter, r *http.Request) {
 	// TODO: Get user ID from JWT token in middleware
-	userID := 1 // This should come from the JWT middleware context
+	userID := "1" // This should come from the JWT middleware context
 
 	sessionIDStr := chi.URLParam(r, "sessionId")
-	sessionID, err := strconv.Atoi(sessionIDStr)
-	if err != nil {
+	if sessionIDStr == "" {
 		h.writeErrorResponse(w, http.StatusBadRequest, "Invalid session ID", "Session ID must be a number")
 		return
 	}
 
-	err = h.userSessionService.RevokeSession(userID, sessionID)
+	err := h.userSessionService.RevokeSession(userID, sessionIDStr)
 	if err != nil {
-		slog.Error("Failed to revoke session", "error", err, "userID", userID, "sessionID", sessionID)
+		slog.Error("Failed to revoke session", "error", err, "userID", userID, "sessionID", sessionIDStr)
 		h.writeErrorResponse(w, http.StatusNotFound, "Session not found", err.Error())
 		return
 	}
@@ -267,7 +269,7 @@ func (h *UserHandler) RevokeSession(w http.ResponseWriter, r *http.Request) {
 // @Router /users/me/sessions [delete]
 func (h *UserHandler) RevokeAllSessions(w http.ResponseWriter, r *http.Request) {
 	// TODO: Get user ID from JWT token in middleware
-	userID := 1 // This should come from the JWT middleware context
+	userID := "1" // This should come from the JWT middleware context
 
 	err := h.userSessionService.RevokeAllSessions(userID)
 	if err != nil {
@@ -294,7 +296,7 @@ func (h *UserHandler) RevokeAllSessions(w http.ResponseWriter, r *http.Request) 
 // @Router /users/me/settings [put]
 func (h *UserHandler) UpdateUserSettings(w http.ResponseWriter, r *http.Request) {
 	// TODO: Get user ID from JWT token in middleware
-	userID := 1 // This should come from the JWT middleware context
+	userID := "1" // This should come from the JWT middleware context
 
 	var req UserSettingsRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {

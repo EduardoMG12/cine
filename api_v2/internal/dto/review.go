@@ -4,7 +4,7 @@ import "time"
 
 // Review DTOs
 type CreateReviewRequest struct {
-	MovieID int     `json:"movie_id" validate:"required,gt=0"`
+	MovieID string  `json:"movie_id" validate:"required,gt=0"`
 	Rating  *int    `json:"rating,omitempty" validate:"omitempty,min=1,max=10"`
 	Content *string `json:"content,omitempty" validate:"omitempty,min=1,max=2000"`
 }
@@ -15,7 +15,7 @@ type UpdateReviewRequest struct {
 }
 
 type ReviewResponse struct {
-	ID        int                  `json:"id"`
+	ID        string               `json:"id"`
 	Rating    *int                 `json:"rating,omitempty"`
 	Content   *string              `json:"content,omitempty"`
 	CreatedAt time.Time            `json:"created_at"`
@@ -26,7 +26,7 @@ type ReviewResponse struct {
 
 // Specific movie response for reviews to avoid import cycles
 type ReviewMovieResponse struct {
-	ID          int      `json:"id"`
+	ID          string   `json:"id"`
 	ExternalID  string   `json:"external_id"`
 	Title       string   `json:"title"`
 	Overview    *string  `json:"overview,omitempty"`

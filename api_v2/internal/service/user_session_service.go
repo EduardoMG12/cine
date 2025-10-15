@@ -21,7 +21,7 @@ func NewUserSessionService(userSessionRepo domain.UserSessionRepository, session
 	}
 }
 
-func (s *userSessionService) CreateSession(userID int, ipAddress, userAgent string) (*domain.UserSession, error) {
+func (s *userSessionService) CreateSession(userID string, ipAddress, userAgent string) (*domain.UserSession, error) {
 	// Generate secure random token
 	token, err := s.generateSecureToken()
 	if err != nil {
@@ -60,11 +60,11 @@ func (s *userSessionService) ValidateSession(token string) (*domain.UserSession,
 	return session, nil
 }
 
-func (s *userSessionService) GetUserSessions(userID int) ([]*domain.UserSession, error) {
+func (s *userSessionService) GetUserSessions(userID string) ([]*domain.UserSession, error) {
 	return s.userSessionRepo.GetByUserID(userID)
 }
 
-func (s *userSessionService) RevokeSession(userID, sessionID int) error {
+func (s *userSessionService) RevokeSession(userID, sessionID string) error {
 	// First verify the session belongs to the user
 	sessions, err := s.userSessionRepo.GetByUserID(userID)
 	if err != nil {
@@ -86,7 +86,7 @@ func (s *userSessionService) RevokeSession(userID, sessionID int) error {
 	return s.userSessionRepo.DeleteByID(sessionID)
 }
 
-func (s *userSessionService) RevokeAllSessions(userID int) error {
+func (s *userSessionService) RevokeAllSessions(userID string) error {
 	return s.userSessionRepo.DeleteByUserID(userID)
 }
 

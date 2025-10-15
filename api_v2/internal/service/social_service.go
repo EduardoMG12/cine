@@ -26,7 +26,7 @@ func NewSocialService(
 
 // Friendship operations
 
-func (s *socialService) SendFriendRequest(senderID, receiverID int) error {
+func (s *socialService) SendFriendRequest(senderID, receiverID string) error {
 	if senderID == receiverID {
 		return fmt.Errorf("cannot send friend request to yourself")
 	}
@@ -69,7 +69,7 @@ func (s *socialService) SendFriendRequest(senderID, receiverID int) error {
 	return s.friendshipRepo.Create(friendship)
 }
 
-func (s *socialService) AcceptFriendRequest(userID, requesterID int) error {
+func (s *socialService) AcceptFriendRequest(userID, requesterID string) error {
 	// Check if friend request exists and is pending
 	friendship, err := s.friendshipRepo.GetByUsers(requesterID, userID)
 	if err != nil {
@@ -92,7 +92,7 @@ func (s *socialService) AcceptFriendRequest(userID, requesterID int) error {
 	return s.friendshipRepo.UpdateStatus(requesterID, userID, domain.FriendshipStatusAccepted)
 }
 
-func (s *socialService) DeclineFriendRequest(userID, requesterID int) error {
+func (s *socialService) DeclineFriendRequest(userID, requesterID string) error {
 	// Check if friend request exists and is pending
 	friendship, err := s.friendshipRepo.GetByUsers(requesterID, userID)
 	if err != nil {
@@ -116,7 +116,7 @@ func (s *socialService) DeclineFriendRequest(userID, requesterID int) error {
 	return s.friendshipRepo.Delete(requesterID, userID)
 }
 
-func (s *socialService) RemoveFriend(userID, friendID int) error {
+func (s *socialService) RemoveFriend(userID, friendID string) error {
 	// Check if friendship exists and is accepted
 	friendship, err := s.friendshipRepo.GetByUsers(userID, friendID)
 	if err != nil {
@@ -130,7 +130,7 @@ func (s *socialService) RemoveFriend(userID, friendID int) error {
 	return s.friendshipRepo.Delete(userID, friendID)
 }
 
-func (s *socialService) BlockUser(userID, blockedUserID int) error {
+func (s *socialService) BlockUser(userID, blockedUserID string) error {
 	if userID == blockedUserID {
 		return fmt.Errorf("cannot block yourself")
 	}
@@ -155,7 +155,7 @@ func (s *socialService) BlockUser(userID, blockedUserID int) error {
 	}
 }
 
-func (s *socialService) GetFriends(userID int) ([]*domain.User, error) {
+func (s *socialService) GetFriends(userID string) ([]*domain.User, error) {
 	friendships, err := s.friendshipRepo.GetUserFriends(userID)
 	if err != nil {
 		return nil, err
@@ -174,7 +174,7 @@ func (s *socialService) GetFriends(userID int) ([]*domain.User, error) {
 	return friends, nil
 }
 
-func (s *socialService) GetFriendRequests(userID int) ([]*domain.User, error) {
+func (s *socialService) GetFriendRequests(userID string) ([]*domain.User, error) {
 	friendships, err := s.friendshipRepo.GetFriendRequests(userID)
 	if err != nil {
 		return nil, err
@@ -188,7 +188,7 @@ func (s *socialService) GetFriendRequests(userID int) ([]*domain.User, error) {
 	return requesters, nil
 }
 
-func (s *socialService) AreFriends(userID1, userID2 int) (bool, error) {
+func (s *socialService) AreFriends(userID1, userID2 string) (bool, error) {
 	friendship, err := s.friendshipRepo.GetByUsers(userID1, userID2)
 	if err != nil {
 		return false, err
@@ -199,7 +199,7 @@ func (s *socialService) AreFriends(userID1, userID2 int) (bool, error) {
 
 // Follow operations
 
-func (s *socialService) FollowUser(followerID, followingID int) error {
+func (s *socialService) FollowUser(followerID, followingID string) error {
 	if followerID == followingID {
 		return fmt.Errorf("cannot follow yourself")
 	}
@@ -234,7 +234,7 @@ func (s *socialService) FollowUser(followerID, followingID int) error {
 	return s.followRepo.Create(follow)
 }
 
-func (s *socialService) UnfollowUser(followerID, followingID int) error {
+func (s *socialService) UnfollowUser(followerID, followingID string) error {
 	// Check if follow relationship exists
 	existing, err := s.followRepo.GetByUsers(followerID, followingID)
 	if err != nil {
@@ -248,7 +248,7 @@ func (s *socialService) UnfollowUser(followerID, followingID int) error {
 	return s.followRepo.Delete(followerID, followingID)
 }
 
-func (s *socialService) GetFollowers(userID int, page int) ([]*domain.User, error) {
+func (s *socialService) GetFollowers(userID string, page int) ([]*domain.User, error) {
 	limit := 20 // Fixed page size
 	offset := (page - 1) * limit
 
@@ -265,7 +265,7 @@ func (s *socialService) GetFollowers(userID int, page int) ([]*domain.User, erro
 	return followers, nil
 }
 
-func (s *socialService) GetFollowing(userID int, page int) ([]*domain.User, error) {
+func (s *socialService) GetFollowing(userID string, page int) ([]*domain.User, error) {
 	limit := 20 // Fixed page size
 	offset := (page - 1) * limit
 
@@ -282,7 +282,7 @@ func (s *socialService) GetFollowing(userID int, page int) ([]*domain.User, erro
 	return following, nil
 }
 
-func (s *socialService) IsFollowing(followerID, followingID int) (bool, error) {
+func (s *socialService) IsFollowing(followerID, followingID string) (bool, error) {
 	follow, err := s.followRepo.GetByUsers(followerID, followingID)
 	if err != nil {
 		return false, err
@@ -291,10 +291,10 @@ func (s *socialService) IsFollowing(followerID, followingID int) (bool, error) {
 	return follow != nil, nil
 }
 
-func (s *socialService) GetFollowersCount(userID int) (int, error) {
+func (s *socialService) GetFollowersCount(userID string) (int, error) {
 	return s.followRepo.GetFollowersCount(userID)
 }
 
-func (s *socialService) GetFollowingCount(userID int) (int, error) {
+func (s *socialService) GetFollowingCount(userID string) (int, error) {
 	return s.followRepo.GetFollowingCount(userID)
 }

@@ -103,8 +103,8 @@ func (s *userService) Register(username, email, password, displayName string) (*
 	return user, nil
 }
 
-func (s *userService) GetUser(id int) (*domain.User, error) {
-	if id <= 0 {
+func (s *userService) GetUser(id string) (*domain.User, error) {
+	if id == "" {
 		return nil, errors.New("invalid user ID")
 	}
 
@@ -116,8 +116,8 @@ func (s *userService) GetUser(id int) (*domain.User, error) {
 	return user, nil
 }
 
-func (s *userService) UpdateUser(id int, updates map[string]interface{}) (*domain.User, error) {
-	if id <= 0 {
+func (s *userService) UpdateUser(id string, updates map[string]interface{}) (*domain.User, error) {
+	if id == "" {
 		return nil, errors.New("invalid user ID")
 	}
 
@@ -169,8 +169,8 @@ func (s *userService) UpdateUser(id int, updates map[string]interface{}) (*domai
 	return user, nil
 }
 
-func (s *userService) DeleteUser(id int) error {
-	if id <= 0 {
+func (s *userService) DeleteUser(id string) error {
+	if id == "" {
 		return errors.New("invalid user ID")
 	}
 
@@ -375,18 +375,18 @@ func (s *userService) ResetPassword(token, newPassword string) error {
 }
 
 // GetUserProfile returns user profile respecting privacy settings
-func (s *userService) GetUserProfile(id int) (*domain.User, error) {
+func (s *userService) GetUserProfile(id string) (*domain.User, error) {
 	// TODO: Implement profile retrieval with privacy checks
 	return s.GetUser(id)
 }
 
 // UpdateProfile updates user profile
-func (s *userService) UpdateProfile(userID int, updates map[string]interface{}) (*domain.User, error) {
+func (s *userService) UpdateProfile(userID string, updates map[string]interface{}) (*domain.User, error) {
 	return s.UpdateUser(userID, updates)
 }
 
 // UpdateSettings updates user settings
-func (s *userService) UpdateSettings(userID int, settings map[string]interface{}) error {
+func (s *userService) UpdateSettings(userID string, settings map[string]interface{}) error {
 	return s.userRepo.UpdateSettings(userID, settings)
 }
 

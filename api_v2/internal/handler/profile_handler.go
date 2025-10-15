@@ -173,26 +173,25 @@ func (h *ProfileHandler) UpdateMySettings(w http.ResponseWriter, r *http.Request
 
 func (h *ProfileHandler) GetUserProfile(w http.ResponseWriter, r *http.Request) {
 	userIDStr := chi.URLParam(r, "userId")
-	userID, err := strconv.Atoi(userIDStr)
-	if err != nil {
-		utils.WriteError(w, http.StatusBadRequest, err, "Invalid user ID")
+	if userIDStr == "" {
+		utils.WriteError(w, http.StatusBadRequest, nil, "Invalid user ID")
 		return
 	}
 
 	// Get requesting user info (if authenticated)
-	var requestingUserID int
+	var requestingUserID string
 	if claims, ok := middleware.GetUserClaims(r.Context()); ok {
 		requestingUserID = claims.UserID
 	}
 
-	user, err := h.userService.GetUserProfile(userID)
+	user, err := h.userService.GetUserProfile(userIDStr)
 	if err != nil {
 		utils.WriteError(w, http.StatusNotFound, err, "User not found")
 		return
 	}
 
 	// Check privacy settings
-	if user.IsPrivate && requestingUserID != userID {
+	if user.IsPrivate && requestingUserID != userIDStr {
 		// TODO: Check if users are friends/followers
 		// For now, just return basic info for private profiles
 		userProfile := dto.UserProfile{
@@ -217,7 +216,7 @@ func (h *ProfileHandler) GetUserProfile(w http.ResponseWriter, r *http.Request) 
 	}
 
 	// Don't include email and email verification for other users
-	if requestingUserID == userID {
+	if requestingUserID == userIDStr {
 		userProfile.Email = user.Email
 		userProfile.EmailVerified = user.EmailVerified
 		userProfile.Theme = user.Theme
@@ -270,7 +269,7 @@ func (h *ProfileHandler) RevokeSession(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = h.userSessionService.RevokeSession(claims.UserID, sessionID)
+	err = h.userSessionService.RevokeSession(claims.UserID, sessionIDStr)
 	if err != nil {
 		slog.Error("Failed to revoke session", "error", err, "user_id", claims.UserID, "session_id", sessionID)
 		utils.WriteError(w, http.StatusBadRequest, err, "Failed to revoke session")

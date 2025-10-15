@@ -4,7 +4,7 @@ import "time"
 
 // Movie DTOs
 type MovieResponse struct {
-	ID          int      `json:"id"`
+	ID          string   `json:"id"`
 	ExternalID  string   `json:"external_id"`
 	Title       string   `json:"title"`
 	Overview    *string  `json:"overview,omitempty"`
@@ -44,18 +44,18 @@ type UpdateListRequest struct {
 }
 
 type AddMovieToListRequest struct {
-	MovieID int `json:"movie_id" validate:"required,min=1"`
+	MovieID string `json:"movie_id" validate:"required,min=1"`
 }
 
 type MoveMovieRequest struct {
-	FromListID int `json:"from_list_id" validate:"required,min=1"`
-	ToListID   int `json:"to_list_id" validate:"required,min=1"`
-	MovieID    int `json:"movie_id" validate:"required,min=1"`
+	FromListID string `json:"from_list_id" validate:"required,min=1"`
+	ToListID   string `json:"to_list_id" validate:"required,min=1"`
+	MovieID    string `json:"movie_id" validate:"required,min=1"`
 }
 
 type MovieListResponse struct {
-	ID          int                      `json:"id"`
-	UserID      int                      `json:"user_id"`
+	ID          string                   `json:"id"`
+	UserID      string                   `json:"user_id"`
 	Name        string                   `json:"name"`
 	Description *string                  `json:"description,omitempty"`
 	IsPublic    bool                     `json:"is_public"`
@@ -66,7 +66,7 @@ type MovieListResponse struct {
 }
 
 type MovieListEntryResponse struct {
-	ID       int           `json:"id"`
+	ID       string        `json:"id"`
 	Position *int          `json:"position,omitempty"`
 	AddedAt  time.Time     `json:"added_at"`
 	Movie    MovieResponse `json:"movie"`

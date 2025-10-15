@@ -76,7 +76,7 @@ func (h *MovieHandler) SearchMovies(w http.ResponseWriter, r *http.Request) {
 		TotalCount: len(movies),
 	}
 
-	utils.WriteJSONResponse(w, http.StatusOK, response)
+	utils.WriteJSONResponse(w, r, http.StatusOK, response)
 }
 
 // GetPopularMovies handles requests for popular movies
@@ -109,7 +109,7 @@ func (h *MovieHandler) GetPopularMovies(w http.ResponseWriter, r *http.Request) 
 		TotalCount: len(movies),
 	}
 
-	utils.WriteJSONResponse(w, http.StatusOK, response)
+	utils.WriteJSONResponse(w, r, http.StatusOK, response)
 }
 
 // GetMoviesByGenre handles requests for movies by genre
@@ -150,7 +150,7 @@ func (h *MovieHandler) GetMoviesByGenre(w http.ResponseWriter, r *http.Request) 
 		TotalCount: len(movies),
 	}
 
-	utils.WriteJSONResponse(w, http.StatusOK, response)
+	utils.WriteJSONResponse(w, r, http.StatusOK, response)
 }
 
 // GetMovie handles requests for a specific movie by internal ID
@@ -165,13 +165,12 @@ func (h *MovieHandler) GetMoviesByGenre(w http.ResponseWriter, r *http.Request) 
 // @Router /movies/{id} [get]
 func (h *MovieHandler) GetMovie(w http.ResponseWriter, r *http.Request) {
 	idStr := chi.URLParam(r, "id")
-	id, err := strconv.Atoi(idStr)
-	if err != nil {
+	if idStr == "" {
 		utils.WriteJSONError(w, http.StatusBadRequest, "INVALID_ID", "Invalid movie ID")
 		return
 	}
 
-	movie, err := h.movieService.GetMovie(id)
+	movie, err := h.movieService.GetMovie(idStr)
 	if err != nil {
 		if err == service.ErrMovieNotFound {
 			utils.WriteJSONError(w, http.StatusNotFound, "MOVIE_NOT_FOUND", "Movie not found")
@@ -182,7 +181,7 @@ func (h *MovieHandler) GetMovie(w http.ResponseWriter, r *http.Request) {
 	}
 
 	response := h.convertMovieToDTO(movie)
-	utils.WriteJSONResponse(w, http.StatusOK, response)
+	utils.WriteJSONResponse(w, r, http.StatusOK, response)
 }
 
 // GetMovieByExternalID handles requests for a movie by TMDb external ID
@@ -213,7 +212,7 @@ func (h *MovieHandler) GetMovieByExternalID(w http.ResponseWriter, r *http.Reque
 	}
 
 	response := h.convertMovieToDTO(movie)
-	utils.WriteJSONResponse(w, http.StatusOK, response)
+	utils.WriteJSONResponse(w, r, http.StatusOK, response)
 }
 
 // Helper methods

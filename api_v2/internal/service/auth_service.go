@@ -61,7 +61,7 @@ func (s *AuthService) Register(req *dto.RegisterRequest) (*dto.AuthResponse, err
 		return nil, fmt.Errorf("failed to hash password: %w", err)
 	}
 
-	// Create user
+	// Create user with proper defaults
 	user := &domain.User{
 		Username:      req.Username,
 		Email:         req.Email,
@@ -69,9 +69,15 @@ func (s *AuthService) Register(req *dto.RegisterRequest) (*dto.AuthResponse, err
 		DisplayName:   req.DisplayName,
 		IsPrivate:     false,
 		EmailVerified: false,
-		Theme:         "light",
-		CreatedAt:     time.Now(),
-		UpdatedAt:     time.Now(),
+		// Theme:         s.cfg.Application.DefaultTheme, // Use config default
+		Theme:     "light", // Use config default
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
+	}
+
+	// Validate user domain rules
+	if err := s.validateUserDomainRules(user); err != nil {
+		return nil, fmt.Errorf("user validation failed: %w", err)
 	}
 
 	if err := s.userRepo.Create(user); err != nil {
@@ -101,20 +107,18 @@ func (s *AuthService) Register(req *dto.RegisterRequest) (*dto.AuthResponse, err
 }
 
 func (s *AuthService) Login(req *dto.LoginRequest, ipAddress, userAgent string) (*dto.AuthResponse, error) {
+	if req == nil {
+		return nil, errors.New("login request cannot be nil")
+	}
+
 	user, err := s.userRepo.GetByEmail(req.Email)
 	if err != nil {
 		return nil, ErrInvalidCredentials
 	}
 
-	// Verify password
 	if err := s.passwordHasher.ComparePasswordAndHash(req.Password, user.PasswordHash); err != nil {
 		return nil, ErrInvalidCredentials
 	}
-
-	// Check if email is verified (optional based on requirements)
-	// if !user.EmailVerified {
-	//     return nil, ErrEmailNotVerified
-	// }
 
 	return s.createAuthResponse(user, ipAddress, userAgent)
 }
@@ -222,7 +226,6 @@ func (s *AuthService) LogoutAllSessions(userID string) error {
 }
 
 func (s *AuthService) createAuthResponse(user *domain.User, ipAddress, userAgent string) (*dto.AuthResponse, error) {
-	// Create session
 	session := &domain.UserSession{
 		UserID:    user.ID,
 		IPAddress: ipAddress,
@@ -231,7 +234,6 @@ func (s *AuthService) createAuthResponse(user *domain.User, ipAddress, userAgent
 		ExpiresAt: time.Now().Add(time.Duration(s.cfg.JWT.Expiration) * time.Hour),
 	}
 
-	// Generate JWT token
 	tokenString, err := s.jwtManager.GenerateToken(user.ID, user.Email, session.ID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to generate token: %w", err)
@@ -259,4 +261,29 @@ func (s *AuthService) createAuthResponse(user *domain.User, ipAddress, userAgent
 			CreatedAt:         user.CreatedAt,
 		},
 	}, nil
+}
+
+// validateUserDomainRules validates business rules for user creation
+func (s *AuthService) validateUserDomainRules(user *domain.User) error {
+	// Username validation
+	if len(user.Username) < 3 || len(user.Username) > 30 {
+		return errors.New("username must be between 3 and 30 characters")
+	}
+
+	// Display name validation
+	if len(user.DisplayName) < 1 || len(user.DisplayName) > 100 {
+		return errors.New("display name must be between 1 and 100 characters")
+	}
+
+	// Email validation (basic - more comprehensive validation should be at DTO level)
+	if user.Email == "" {
+		return errors.New("email is required")
+	}
+
+	// Password hash validation
+	if user.PasswordHash == "" {
+		return errors.New("password hash is required")
+	}
+
+	return nil
 }

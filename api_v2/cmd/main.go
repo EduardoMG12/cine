@@ -30,6 +30,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/EduardoMG12/cine/api_v2/internal/auth"
 	"github.com/EduardoMG12/cine/api_v2/internal/config"
 	"github.com/EduardoMG12/cine/api_v2/internal/handler"
 	customMiddleware "github.com/EduardoMG12/cine/api_v2/internal/middleware"
@@ -93,8 +94,15 @@ func main() {
 	userSessionService := service.NewUserSessionService(userSessionRepo, sessionDuration)
 	socialService := service.NewSocialService(friendshipRepo, followRepo, userRepo)
 
+	// Auth components
+	jwtManager := auth.NewJWTManager(cfg.JWT.Secret, time.Duration(cfg.JWT.Expiration)*time.Hour)
+	passwordHasher := auth.NewPasswordHasher()
+	authService := service.NewAuthService(userRepo, userSessionRepo, jwtManager, passwordHasher, cfg)
+	authMiddleware := customMiddleware.NewAuthMiddleware(jwtManager, userSessionService)
+
 	userHandler := handler.NewUserHandler(userService, userSessionService)
 	socialHandler := handler.NewSocialHandler(socialService)
+	authHandler := handler.NewAuthHandler(authService)
 
 	r := chi.NewRouter()
 
@@ -128,11 +136,14 @@ func main() {
 
 	// API routes
 	r.Route("/api/v1", func(r chi.Router) {
+		// Auth routes (public)
+		r.Mount("/auth", authHandler.Routes())
+
 		r.Mount("/users", userHandler.Routes())
 
 		// Protected social routes
 		r.Group(func(r chi.Router) {
-			r.Use(customMiddleware.AuthMiddleware)
+			r.Use(authMiddleware.RequireAuth)
 			r.Mount("/social", socialHandler.Routes())
 		})
 	})

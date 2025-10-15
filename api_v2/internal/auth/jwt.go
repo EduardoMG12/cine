@@ -4,6 +4,7 @@ import (
 	"crypto/rand"
 	"encoding/hex"
 	"errors"
+	"log/slog"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -48,6 +49,7 @@ func (manager *JWTManager) GenerateToken(userID string, email string, sessionID 
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	slog.Warn("JWT secret key is being used", "secretKey", manager.secretKey)
 	return token.SignedString([]byte(manager.secretKey))
 }
 

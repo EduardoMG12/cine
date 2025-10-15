@@ -182,11 +182,11 @@ func (s *reviewService) ValidateReview(review *domain.Review) error {
 		return errors.New("review cannot be nil")
 	}
 
-	if review.UserID <= 0 {
+	if review.UserID == "" {
 		return errors.New("invalid user ID")
 	}
 
-	if review.MovieID <= 0 {
+	if review.MovieID == "" {
 		return errors.New("invalid movie ID")
 	}
 

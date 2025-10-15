@@ -182,7 +182,7 @@ func (r *friendshipRepository) UpdateStatus(userID1, userID2 string, status doma
 	}
 
 	if rowsAffected == 0 {
-		return fmt.Errorf("no friendship found between users %d and %d", userID1, userID2)
+		return fmt.Errorf("no friendship found between users %s and %s", userID1, userID2)
 	}
 
 	return nil
