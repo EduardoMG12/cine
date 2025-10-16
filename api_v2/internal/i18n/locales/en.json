@@ -1,0 +1,33 @@
+{
+  "app": {
+    "name": "CineVerse API",
+    "welcome": "Welcome to CineVerse - Your Movie Social Network"
+  },
+  "server": {
+    "starting": "Starting server on {{.address}}",
+    "started": "Server started successfully",
+    "stopping": "Server is shutting down gracefully",
+    "stopped": "Server stopped"
+  },
+  "database": {
+    "connecting": "Connecting to database...",
+    "connected": "Database connected successfully",
+    "migration_start": "Running database migrations...",
+    "migration_complete": "Database migrations completed",
+    "disconnected": "Database disconnected"
+  },
+  "health": {
+    "status": "API is healthy",
+    "database": "Database connection OK",
+    "version": "Version {{.version}}"
+  },
+  "errors": {
+    "internal_server": "Internal server error",
+    "not_found": "Resource not found",
+    "bad_request": "Invalid request",
+    "unauthorized": "Authentication required",
+    "forbidden": "Access denied",
+    "validation_failed": "Validation failed",
+    "database_error": "Database error occurred"
+  }
+}

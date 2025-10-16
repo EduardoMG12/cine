@@ -1,0 +1,33 @@
+{
+  "app": {
+    "name": "CineVerse API",
+    "welcome": "Bem-vindo ao CineVerse - Sua Rede Social de Filmes"
+  },
+  "server": {
+    "starting": "Iniciando servidor em {{.address}}",
+    "started": "Servidor iniciado com sucesso",
+    "stopping": "Servidor sendo encerrado graciosamente",
+    "stopped": "Servidor parado"
+  },
+  "database": {
+    "connecting": "Conectando ao banco de dados...",
+    "connected": "Banco de dados conectado com sucesso",
+    "migration_start": "Executando migrações do banco de dados...",
+    "migration_complete": "Migrações do banco de dados concluídas",
+    "disconnected": "Banco de dados desconectado"
+  },
+  "health": {
+    "status": "API está funcionando",
+    "database": "Conexão com banco de dados OK",
+    "version": "Versão {{.version}}"
+  },
+  "errors": {
+    "internal_server": "Erro interno do servidor",
+    "not_found": "Recurso não encontrado",
+    "bad_request": "Requisição inválida",
+    "unauthorized": "Autenticação necessária",
+    "forbidden": "Acesso negado",
+    "validation_failed": "Validação falhou",
+    "database_error": "Erro no banco de dados"
+  }
+}
