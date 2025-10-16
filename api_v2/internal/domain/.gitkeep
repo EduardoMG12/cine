@@ -1,0 +1,5 @@
+package domain
+
+// Domain package for CineVerse API v2
+// Contains business entities and domain logic
+// Following Clean Architecture principles

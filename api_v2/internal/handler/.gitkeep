@@ -1,0 +1,5 @@
+package handler
+
+// Handler package for CineVerse API v2
+// HTTP handlers and controllers
+// Clean Architecture - Interface/Presentation layer
