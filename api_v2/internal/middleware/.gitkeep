@@ -1,5 +1,0 @@
-package middleware
-
-// Middleware package for CineVerse API v2
-// HTTP middlewares for authentication, logging, CORS, etc.
-// Cross-cutting concerns

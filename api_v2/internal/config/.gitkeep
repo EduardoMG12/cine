@@ -1,5 +1,0 @@
-package config
-
-// Configuration package for CineVerse API v2
-// This package handles all application configuration from environment variables
-// Following Sprint 0 - Clean Architecture setup

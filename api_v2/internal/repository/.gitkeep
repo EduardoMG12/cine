@@ -1,5 +1,0 @@
-package repository
-
-// Repository package for CineVerse API v2
-// Data access layer following Repository pattern
-// Clean Architecture - Infrastructure layer

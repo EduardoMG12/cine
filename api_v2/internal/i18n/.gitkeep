@@ -1,5 +1,0 @@
-package i18n
-
-// Internationalization package for CineVerse API v2
-// Multi-language support: English, Portuguese, Spanish
-// Auto-detection via Accept-Language header

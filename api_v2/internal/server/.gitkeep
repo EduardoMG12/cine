@@ -1,5 +1,0 @@
-package server
-
-// Server package for CineVerse API v2
-// HTTP server setup and configuration
-// Routes and middleware composition

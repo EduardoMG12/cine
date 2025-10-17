@@ -24,6 +24,7 @@
 ## 🚀 Cronograma Detalhado
 
 ### **Sprint 0: Fundação** *(1-2 dias)*
+**Status de desenvolvimento:** 🔴 CONCLÚIDO
 **Status:** 🔴 CRÍTICO
 **Objetivo:** Limpeza completa e base sólida
 
@@ -38,6 +39,7 @@
 ---
 
 ### **Sprint 1: Autenticação** *(3-4 dias)*
+**Status de desenvolvimento:** 🔴 PENDENTE
 **Status:** 🔴 CRÍTICO
 **Dependências:** Sprint 0
 
@@ -53,6 +55,7 @@
 ---
 
 ### **Sprint 2: Gestão de Usuários** *(2-3 dias)*
+**Status de desenvolvimento:** 🔴 PENDENTE
 **Status:** 🟠 ALTA
 **Dependências:** Sprint 1
 
@@ -68,6 +71,7 @@
 ---
 
 ### **Sprint 3: Sistema de Filmes** *(3-4 dias)*
+**Status de desenvolvimento:** 🔴 PENDENTE
 **Status:** 🟠 ALTA
 **Dependências:** Sprint 1-2
 
@@ -84,6 +88,7 @@
 ---
 
 ### **Sprint 4: Reviews e Avaliações** *(3-4 dias)*
+**Status de desenvolvimento:** 🔴 PENDENTE
 **Status:** 🟠 ALTA
 **Dependências:** Sprint 1-3
 
@@ -99,6 +104,7 @@
 ---
 
 ### **Sprint 5: Listas de Filmes** *(3-4 dias)*
+**Status de desenvolvimento:** 🔴 PENDENTE
 **Status:** 🟠 ALTA
 **Dependências:** Sprint 1-3
 
@@ -114,6 +120,7 @@
 ---
 
 ### **Sprint 6: Sistema Social** *(4-5 dias)*
+**Status de desenvolvimento:** 🔴 PENDENTE
 **Status:** 🟡 MÉDIA
 **Dependências:** Sprint 1-2
 
@@ -129,6 +136,7 @@
 ---
 
 ### **Sprint 7: Posts e Feed** *(3-4 dias)*
+**Status de desenvolvimento:** 🔴 PENDENTE
 **Status:** 🟡 MÉDIA
 **Dependências:** Sprint 1-2, 6
 
@@ -144,6 +152,7 @@
 ---
 
 ### **Sprint 8: Match de Filmes** *(Futuro)*
+**Status de desenvolvimento:** 🔴 PENDENTE
 **Status:** 🟢 BAIXA (Opcional)
 **Dependências:** Todo o resto
 
