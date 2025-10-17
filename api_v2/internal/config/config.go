@@ -8,7 +8,6 @@ import (
 	"time"
 )
 
-// Config holds all application configuration
 type Config struct {
 	Server   ServerConfig   `json:"server"`
 	Database DatabaseConfig `json:"database"`
@@ -17,7 +16,6 @@ type Config struct {
 	Redis    RedisConfig    `json:"redis"`
 }
 
-// ServerConfig holds HTTP server configuration
 type ServerConfig struct {
 	Port            string        `json:"port"`
 	Host            string        `json:"host"`
@@ -27,42 +25,40 @@ type ServerConfig struct {
 	ShutdownTimeout time.Duration `json:"shutdown_timeout"`
 }
 
-// DatabaseConfig holds database connection configuration
 type DatabaseConfig struct {
-	Host     string `json:"host"`
-	Port     string `json:"port"`
-	Name     string `json:"name"`
-	User     string `json:"user"`
-	Password string `json:"password"`
-	SSLMode  string `json:"ssl_mode"`
+	Host            string `json:"host"`
+	Port            int    `json:"port"`
+	Name            string `json:"name"`
+	User            string `json:"user"`
+	Password        string `json:"password"`
+	SSLMode         string `json:"ssl_mode"`
+	MaxOpenConns    int    `json:"max_open_conns"`
+	MaxIdleConns    int    `json:"max_idle_conns"`
+	ConnMaxLifetime int    `json:"conn_max_lifetime"` // in minutes
 }
 
-// JWTConfig holds JWT token configuration
 type JWTConfig struct {
-	Secret         string        `json:"-"` // Never log secrets
+	Secret         string        `json:"-"`
 	ExpirationTime time.Duration `json:"expiration_time"`
 	RefreshTime    time.Duration `json:"refresh_time"`
 	Issuer         string        `json:"issuer"`
 }
 
-// TMDbConfig holds TMDb API configuration
 type TMDbConfig struct {
-	APIKey       string        `json:"-"` // Never log API keys
+	APIKey       string        `json:"-"`
 	BaseURL      string        `json:"base_url"`
 	ImageBaseURL string        `json:"image_base_url"`
 	CacheTTL     time.Duration `json:"cache_ttl"`
 	RateLimit    int           `json:"rate_limit"`
 }
 
-// RedisConfig holds Redis configuration
 type RedisConfig struct {
 	Host     string `json:"host"`
 	Port     string `json:"port"`
-	Password string `json:"-"` // Never log passwords
+	Password string `json:"-"`
 	DB       int    `json:"db"`
 }
 
-// Load loads configuration from environment variables
 func Load() (*Config, error) {
 	config := &Config{
 		Server: ServerConfig{
@@ -74,12 +70,15 @@ func Load() (*Config, error) {
 			ShutdownTimeout: getEnvDuration("SHUTDOWN_TIMEOUT", "30s"),
 		},
 		Database: DatabaseConfig{
-			Host:     getEnv("DB_HOST", "localhost"),
-			Port:     getEnv("DB_PORT", "5432"),
-			Name:     getEnv("DB_NAME", "cineverse"),
-			User:     getEnv("DB_USER", "cineverse"),
-			Password: getEnv("DB_PASSWORD", "cineverse"),
-			SSLMode:  getEnv("DB_SSL_MODE", "disable"),
+			Host:            getEnv("DB_HOST", "localhost"),
+			Port:            getEnvInt("DB_PORT", 5432),
+			Name:            getEnv("DB_NAME", "cineverse"),
+			User:            getEnv("DB_USER", "cineverse"),
+			Password:        getEnv("DB_PASSWORD", "cineverse"),
+			SSLMode:         getEnv("DB_SSL_MODE", "disable"),
+			MaxOpenConns:    getEnvInt("DB_MAX_OPEN_CONNS", 25),
+			MaxIdleConns:    getEnvInt("DB_MAX_IDLE_CONNS", 10),
+			ConnMaxLifetime: getEnvInt("DB_CONN_MAX_LIFETIME", 5),
 		},
 		JWT: JWTConfig{
 			Secret:         getEnv("JWT_SECRET", "your-super-secret-jwt-key-change-this"),
@@ -105,7 +104,6 @@ func Load() (*Config, error) {
 	return config, config.Validate()
 }
 
-// Validate validates the configuration
 func (c *Config) Validate() error {
 	if c.Server.Port == "" {
 		return fmt.Errorf("server port is required")
@@ -130,35 +128,28 @@ func (c *Config) Validate() error {
 	return nil
 }
 
-// GetDSN returns the database connection string
 func (c *DatabaseConfig) GetDSN() string {
 	return fmt.Sprintf(
-		"host=%s port=%s user=%s password=%s dbname=%s sslmode=%s",
+		"host=%s port=%d user=%s password=%s dbname=%s sslmode=%s",
 		c.Host, c.Port, c.User, c.Password, c.Name, c.SSLMode,
 	)
 }
 
-// GetServerAddress returns the full server address
 func (c *ServerConfig) GetServerAddress() string {
 	return fmt.Sprintf("%s:%s", c.Host, c.Port)
 }
 
-// IsProduction returns true if running in production environment
 func (c *ServerConfig) IsProduction() bool {
 	return c.Environment == "production"
 }
 
-// IsDevelopment returns true if running in development environment
 func (c *ServerConfig) IsDevelopment() bool {
 	return c.Environment == "development"
 }
 
-// GetRedisAddress returns the Redis connection address
 func (c *RedisConfig) GetRedisAddress() string {
 	return fmt.Sprintf("%s:%s", c.Host, c.Port)
 }
-
-// Helper functions for environment variable parsing
 
 func getEnv(key, defaultValue string) string {
 	if value := os.Getenv(key); value != "" {

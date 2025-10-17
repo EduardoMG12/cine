@@ -9,7 +9,6 @@ import (
 	"time"
 )
 
-// Colors for console output
 const (
 	Reset  = "\033[0m"
 	Red    = "\033[31m"
@@ -22,24 +21,80 @@ const (
 	Bold   = "\033[1m"
 )
 
-// Logger wraps slog.Logger with additional functionality
 type Logger struct {
 	*slog.Logger
 	isDevelopment bool
 }
 
-// NewLogger creates a new logger instance
-func NewLogger(isDevelopment bool) *Logger {
+func SetupLogger(environment string) *slog.Logger {
+	isDevelopment := environment == "development"
 	var handler slog.Handler
 
 	if isDevelopment {
-		// Development: colorized text handler
 		handler = NewColorHandler(os.Stdout, &slog.HandlerOptions{
 			Level:     slog.LevelDebug,
 			AddSource: true,
 		})
 	} else {
-		// Production: JSON handler
+		handler = slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
+			Level:     slog.LevelInfo,
+			AddSource: false,
+		})
+	}
+
+	return slog.New(handler)
+}
+
+func LoggerMiddleware() func(http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			start := time.Now()
+
+			ww := &responseWriterWrapper{
+				ResponseWriter: w,
+				statusCode:     http.StatusOK,
+			}
+
+			next.ServeHTTP(ww, r)
+
+			duration := time.Since(start)
+			logHTTPRequest(r, ww.statusCode, duration)
+		})
+	}
+}
+
+func logHTTPRequest(r *http.Request, statusCode int, duration time.Duration) {
+	var level slog.Level
+	switch {
+	case statusCode >= 500:
+		level = slog.LevelError
+	case statusCode >= 400:
+		level = slog.LevelWarn
+	default:
+		level = slog.LevelInfo
+	}
+
+	slog.Log(r.Context(), level, "HTTP Request",
+		"method", r.Method,
+		"path", r.URL.Path,
+		"status", statusCode,
+		"duration", duration.String(),
+		"ip", getClientIP(r),
+		"user_agent", r.UserAgent(),
+	)
+}
+
+func NewLogger(isDevelopment bool) *Logger {
+	var handler slog.Handler
+
+	if isDevelopment {
+
+		handler = NewColorHandler(os.Stdout, &slog.HandlerOptions{
+			Level:     slog.LevelDebug,
+			AddSource: true,
+		})
+	} else {
+
 		handler = slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
 			Level:     slog.LevelInfo,
 			AddSource: false,
@@ -53,29 +108,24 @@ func NewLogger(isDevelopment bool) *Logger {
 	}
 }
 
-// LoggingMiddleware returns HTTP logging middleware
 func (l *Logger) LoggingMiddleware() func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			start := time.Now()
 
-			// Wrap response writer to capture status code
 			ww := &responseWriterWrapper{
 				ResponseWriter: w,
 				statusCode:     http.StatusOK,
 			}
 
-			// Process request
 			next.ServeHTTP(ww, r)
 
-			// Log request
 			duration := time.Since(start)
 			l.LogRequest(r, ww.statusCode, duration)
 		})
 	}
 }
 
-// LogRequest logs HTTP request details
 func (l *Logger) LogRequest(r *http.Request, statusCode int, duration time.Duration) {
 	var level slog.Level
 	switch {
@@ -97,7 +147,6 @@ func (l *Logger) LogRequest(r *http.Request, statusCode int, duration time.Durat
 	)
 }
 
-// LogStartup logs application startup information
 func (l *Logger) LogStartup(config map[string]interface{}) {
 	l.printBanner()
 
@@ -107,7 +156,6 @@ func (l *Logger) LogStartup(config map[string]interface{}) {
 		"pid", os.Getpid(),
 	)
 
-	// Log configuration (without secrets)
 	for key, value := range config {
 		if !l.isSensitive(key) {
 			l.Debug("Configuration loaded",
@@ -118,7 +166,6 @@ func (l *Logger) LogStartup(config map[string]interface{}) {
 	}
 }
 
-// LogDatabaseConnection logs database connection status
 func (l *Logger) LogDatabaseConnection(connected bool, dsn string) {
 	if connected {
 		l.Info("✅ Database connected successfully",
@@ -133,7 +180,6 @@ func (l *Logger) LogDatabaseConnection(connected bool, dsn string) {
 	}
 }
 
-// LogServerStart logs server startup
 func (l *Logger) LogServerStart(address string) {
 	l.Info("🌐 HTTP Server started",
 		"address", address,
@@ -149,12 +195,10 @@ func (l *Logger) LogServerStart(address string) {
 	}
 }
 
-// LogServerStop logs server shutdown
 func (l *Logger) LogServerStop() {
 	l.Info("🛑 Server shutdown completed")
 }
 
-// LogMigration logs database migration status
 func (l *Logger) LogMigration(success bool, count int) {
 	if success {
 		l.Info("✅ Database migrations completed",
@@ -167,7 +211,6 @@ func (l *Logger) LogMigration(success bool, count int) {
 	}
 }
 
-// printBanner prints ASCII art banner in development
 func (l *Logger) printBanner() {
 	if !l.isDevelopment {
 		return
@@ -189,7 +232,6 @@ func (l *Logger) printBanner() {
 	fmt.Print(banner)
 }
 
-// isSensitive checks if a config key contains sensitive information
 func (l *Logger) isSensitive(key string) bool {
 	sensitiveKeys := []string{
 		"password", "secret", "key", "token", "api_key",
@@ -205,8 +247,6 @@ func (l *Logger) isSensitive(key string) bool {
 	return false
 }
 
-// Helper functions
-
 type responseWriterWrapper struct {
 	http.ResponseWriter
 	statusCode int
@@ -218,22 +258,20 @@ func (rw *responseWriterWrapper) WriteHeader(code int) {
 }
 
 func getClientIP(r *http.Request) string {
-	// Check X-Forwarded-For header
+
 	if xff := r.Header.Get("X-Forwarded-For"); xff != "" {
 		return strings.Split(xff, ",")[0]
 	}
 
-	// Check X-Real-IP header
 	if xri := r.Header.Get("X-Real-IP"); xri != "" {
 		return xri
 	}
 
-	// Fall back to remote address
 	return strings.Split(r.RemoteAddr, ":")[0]
 }
 
 func extractHost(dsn string) string {
-	// Simple extraction for logging purposes
+
 	if strings.Contains(dsn, "host=") {
 		parts := strings.Split(dsn, "host=")
 		if len(parts) > 1 {
@@ -245,7 +283,7 @@ func extractHost(dsn string) string {
 }
 
 func redactDSN(dsn string) string {
-	// Replace password in DSN for logging
+
 	if strings.Contains(dsn, "password=") {
 		parts := strings.Split(dsn, "password=")
 		if len(parts) == 2 {
