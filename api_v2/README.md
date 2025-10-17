@@ -107,8 +107,8 @@ cd cine
 
 2. **Set up environment variables**
 ```bash
-cp api_v2/.env.example api_v2/.env
-# Edit api_v2/.env with your TMDb API key and other configuration
+cp .env.example .env
+# Edit .env with your TMDb API key and other configuration
 ```
 
 3. **Start all services with Docker**
@@ -121,7 +121,7 @@ This will start:
 - Redis cache on port 6379
 - CineVerse API on port 8080
 
-4. **Run database migrations**
+4. **Run database migrations** (Optional - migrations will run automatically)
 ```bash
 docker-compose exec api_v2 migrate -path migrations -database "postgres://cineverse:cineverse123@postgres:5432/cineverse?sslmode=disable" up
 ```
