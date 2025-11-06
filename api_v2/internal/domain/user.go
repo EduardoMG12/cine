@@ -48,3 +48,11 @@ type SessionRepository interface {
 	DeleteSession(token string) error
 	DeleteUserSessions(userID uuid.UUID) error
 }
+
+// UserService defines the service interface for user operations
+type UserService interface {
+	GetProfile(userID uuid.UUID) (*User, error)
+	UpdateProfile(userID uuid.UUID, displayName, bio, profilePictureURL *string) (*User, error)
+	UpdateSettings(userID uuid.UUID, theme *string, isPrivate *bool) error
+	CheckUsernameAvailability(username string, excludeUserID *uuid.UUID) (bool, error)
+}
