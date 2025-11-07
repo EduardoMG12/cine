@@ -37,15 +37,18 @@ type RouteInfo struct {
 }
 
 func NewServer(cfg *config.Config, logger *slog.Logger) (*Server, error) {
+	// Connect to database
 	db, err := sqlx.Connect("postgres", cfg.Database.GetDSN())
 	if err != nil {
 		return nil, fmt.Errorf("failed to connect to database: %w", err)
 	}
 
+	// Configure database connection pool
 	db.SetMaxOpenConns(cfg.Database.MaxOpenConns)
 	db.SetMaxIdleConns(cfg.Database.MaxIdleConns)
 	db.SetConnMaxLifetime(time.Duration(cfg.Database.ConnMaxLifetime) * time.Minute)
 
+	// Test database connection
 	if err := db.Ping(); err != nil {
 		return nil, fmt.Errorf("failed to ping database: %w", err)
 	}
@@ -56,7 +59,9 @@ func NewServer(cfg *config.Config, logger *slog.Logger) (*Server, error) {
 		logger: logger,
 	}
 
+	// Setup HTTP server
 	server.setupHTTPServer()
+
 	return server, nil
 }
 
@@ -64,11 +69,13 @@ func (s *Server) setupHTTPServer() {
 	r := chi.NewRouter()
 	s.router = r
 
+	// Global middleware
 	r.Use(middleware.RequestID)
 	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
 	r.Use(middleware.Timeout(60 * time.Second))
 
+	// CORS middleware
 	r.Use(func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			w.Header().Set("Access-Control-Allow-Origin", "*")
@@ -83,36 +90,37 @@ func (s *Server) setupHTTPServer() {
 		})
 	})
 
+	// Health check
 	r.Get("/health", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte(`{"status":"healthy","service":"cineverse-api"}`))
 	})
 
+	// Initialize infrastructure
 	passwordService := infrastructure.NewPasswordService()
 	jwtService := infrastructure.NewJWTService(s.config.JWT.Secret)
+	redisService, err := infrastructure.NewRedisService(s.config.Redis.Host, s.config.Redis.Port, s.config.Redis.Password, s.config.Redis.DB)
+	if err != nil {
+		s.logger.Error("Failed to initialize Redis service", "error", err)
+		// Continue without Redis, caching will be disabled
+		redisService = nil
+	}
+	tmdbService := infrastructure.NewTMDbService(s.config.TMDb.APIKey)
 
+	// Initialize repositories
 	userRepo := repository.NewUserRepository(s.db)
 	sessionRepo := repository.NewSessionRepository(s.db)
+	movieRepo := repository.NewMovieRepository(s.db)
 
+	// Initialize auth use cases
 	registerUC := auth.NewRegisterUseCase(userRepo, sessionRepo, passwordService, jwtService)
 	loginUC := auth.NewLoginUseCase(userRepo, sessionRepo, passwordService, jwtService)
 	getMeUC := auth.NewGetMeUseCase(userRepo)
 	logoutUC := auth.NewLogoutUseCase(sessionRepo)
 	logoutAllUC := auth.NewLogoutAllUseCase(sessionRepo)
 
-	authHandler := httpHandler.NewAuthHandler(registerUC, loginUC, getMeUC, logoutUC, logoutAllUC)
-
-	// Movie infrastructure and repositories
-	redisService, err := infrastructure.NewRedisService(s.config.Redis.Host, s.config.Redis.Port, s.config.Redis.Password, s.config.Redis.DB)
-	if err != nil {
-		s.logger.Error("Failed to initialize Redis service", "error", err)
-		redisService = nil
-	}
-	tmdbService := infrastructure.NewTMDbService(s.config.TMDb.APIKey)
-	movieRepo := repository.NewMovieRepository(s.db)
-
-	// Movie use cases
+	// Initialize movie use cases
 	getMovieByIDUC := movie.NewGetMovieByIDUseCase(movieRepo, tmdbService, redisService)
 	getRandomMovieUC := movie.NewGetRandomMovieUseCase(movieRepo)
 	getRandomMovieByGenreUC := movie.NewGetRandomMovieByGenreUseCase(movieRepo)
@@ -121,7 +129,8 @@ func (s *Server) setupHTTPServer() {
 	getTrendingMoviesUC := movie.NewGetTrendingMoviesUseCase(tmdbService)
 	getGenresUC := movie.NewGetGenresUseCase(tmdbService)
 
-	// Handlers
+	// Initialize handlers
+	authHandler := httpHandler.NewAuthHandler(registerUC, loginUC, getMeUC, logoutUC, logoutAllUC)
 	movieHandler := httpHandler.NewMovieHandler(
 		getMovieByIDUC,
 		getRandomMovieUC,
@@ -132,13 +141,18 @@ func (s *Server) setupHTTPServer() {
 		getGenresUC,
 	)
 
+	// Initialize middleware
 	authMiddleware := customMiddleware.JWTAuthMiddleware(jwtService, userRepo)
 
+	// Setup API routes
 	r.Route("/api/v1", func(r chi.Router) {
+		// Auth routes
 		r.Route("/auth", func(r chi.Router) {
+			// Public routes
 			r.Post("/register", authHandler.Register)
 			r.Post("/login", authHandler.Login)
 
+			// Protected routes
 			r.Group(func(r chi.Router) {
 				r.Use(authMiddleware)
 				r.Get("/me", authHandler.GetMe)
@@ -172,7 +186,9 @@ func (s *Server) Start() error {
 		"address", s.config.Server.GetServerAddress(),
 		"environment", s.config.Server.Environment)
 
+	// Print routes
 	s.printRoutes()
+
 	return s.httpServer.ListenAndServe()
 }
 
@@ -184,6 +200,7 @@ func (s *Server) printRoutes() {
 	fmt.Println("└─────────────────────────────────────────────────────────────────┘")
 	fmt.Println()
 
+	// Group routes by prefix
 	publicRoutes := []RouteInfo{}
 	protectedRoutes := []RouteInfo{}
 	movieRoutes := []RouteInfo{}
@@ -265,11 +282,13 @@ func colorizeMethod(method string) string {
 func (s *Server) Stop(ctx context.Context) error {
 	s.logger.Info("Shutting down server...")
 
+	// Close database connection
 	if s.db != nil {
 		if err := s.db.Close(); err != nil {
 			s.logger.Error("Failed to close database connection", "error", err)
 		}
 	}
 
+	// Shutdown HTTP server
 	return s.httpServer.Shutdown(ctx)
 }
