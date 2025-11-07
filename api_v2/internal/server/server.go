@@ -19,6 +19,7 @@ import (
 	customMiddleware "github.com/EduardoMG12/cine/api_v2/internal/middleware"
 	"github.com/EduardoMG12/cine/api_v2/internal/repository"
 	"github.com/EduardoMG12/cine/api_v2/internal/usecase/auth"
+	"github.com/EduardoMG12/cine/api_v2/internal/usecase/movie"
 )
 
 type Server struct {
@@ -102,6 +103,35 @@ func (s *Server) setupHTTPServer() {
 
 	authHandler := httpHandler.NewAuthHandler(registerUC, loginUC, getMeUC, logoutUC, logoutAllUC)
 
+	// Movie infrastructure and repositories
+	redisService, err := infrastructure.NewRedisService(s.config.Redis.Host, s.config.Redis.Port, s.config.Redis.Password, s.config.Redis.DB)
+	if err != nil {
+		s.logger.Error("Failed to initialize Redis service", "error", err)
+		redisService = nil
+	}
+	tmdbService := infrastructure.NewTMDbService(s.config.TMDb.APIKey)
+	movieRepo := repository.NewMovieRepository(s.db)
+
+	// Movie use cases
+	getMovieByIDUC := movie.NewGetMovieByIDUseCase(movieRepo, tmdbService, redisService)
+	getRandomMovieUC := movie.NewGetRandomMovieUseCase(movieRepo)
+	getRandomMovieByGenreUC := movie.NewGetRandomMovieByGenreUseCase(movieRepo)
+	searchMoviesUC := movie.NewSearchMoviesUseCase(tmdbService)
+	getPopularMoviesUC := movie.NewGetPopularMoviesUseCase(tmdbService)
+	getTrendingMoviesUC := movie.NewGetTrendingMoviesUseCase(tmdbService)
+	getGenresUC := movie.NewGetGenresUseCase(tmdbService)
+
+	// Handlers
+	movieHandler := httpHandler.NewMovieHandler(
+		getMovieByIDUC,
+		getRandomMovieUC,
+		getRandomMovieByGenreUC,
+		searchMoviesUC,
+		getPopularMoviesUC,
+		getTrendingMoviesUC,
+		getGenresUC,
+	)
+
 	authMiddleware := customMiddleware.JWTAuthMiddleware(jwtService, userRepo)
 
 	r.Route("/api/v1", func(r chi.Router) {
@@ -115,6 +145,17 @@ func (s *Server) setupHTTPServer() {
 				r.Post("/logout", authHandler.Logout)
 				r.Post("/logout-all", authHandler.LogoutAll)
 			})
+		})
+
+		// Movie routes (all public)
+		r.Route("/movies", func(r chi.Router) {
+			r.Get("/{id}", movieHandler.GetMovieByID)
+			r.Get("/random", movieHandler.GetRandomMovie)
+			r.Get("/random-by-genre", movieHandler.GetRandomMovieByGenre)
+			r.Get("/search", movieHandler.SearchMovies)
+			r.Get("/popular", movieHandler.GetPopularMovies)
+			r.Get("/trending", movieHandler.GetTrendingMovies)
+			r.Get("/genres", movieHandler.GetGenres)
 		})
 	})
 
@@ -145,9 +186,12 @@ func (s *Server) printRoutes() {
 
 	publicRoutes := []RouteInfo{}
 	protectedRoutes := []RouteInfo{}
+	movieRoutes := []RouteInfo{}
 
 	for _, route := range routes {
-		if strings.Contains(route.Path, "/auth/me") ||
+		if strings.Contains(route.Path, "/movies") {
+			movieRoutes = append(movieRoutes, route)
+		} else if strings.Contains(route.Path, "/auth/me") ||
 			strings.Contains(route.Path, "/auth/logout") {
 			protectedRoutes = append(protectedRoutes, route)
 		} else {
@@ -166,6 +210,14 @@ func (s *Server) printRoutes() {
 	if len(protectedRoutes) > 0 {
 		fmt.Println("  🔒 Protected Routes (require JWT):")
 		for _, route := range protectedRoutes {
+			fmt.Printf("    %-7s %s\n", colorizeMethod(route.Method), route.Path)
+		}
+		fmt.Println()
+	}
+
+	if len(movieRoutes) > 0 {
+		fmt.Println("  🎬 Movie Routes:")
+		for _, route := range movieRoutes {
 			fmt.Printf("    %-7s %s\n", colorizeMethod(route.Method), route.Path)
 		}
 		fmt.Println()
