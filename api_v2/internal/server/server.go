@@ -107,6 +107,7 @@ func (s *Server) setupHTTPServer() {
 		redisService = nil
 	}
 	tmdbService := infrastructure.NewTMDbService(s.config.TMDb.APIKey)
+	omdbService := infrastructure.NewOMDbService(s.config.OMDb.APIKey)
 
 	// Initialize repositories
 	userRepo := repository.NewUserRepository(s.db)
@@ -140,6 +141,7 @@ func (s *Server) setupHTTPServer() {
 		getTrendingMoviesUC,
 		getGenresUC,
 	)
+	omdbHandler := httpHandler.NewOMDbHandler(omdbService)
 
 	// Initialize middleware
 	authMiddleware := customMiddleware.JWTAuthMiddleware(jwtService, userRepo)
@@ -170,6 +172,15 @@ func (s *Server) setupHTTPServer() {
 			r.Get("/popular", movieHandler.GetPopularMovies)
 			r.Get("/trending", movieHandler.GetTrendingMovies)
 			r.Get("/genres", movieHandler.GetGenres)
+		})
+
+		// OMDb routes (test and search)
+		r.Route("/omdb", func(r chi.Router) {
+			r.Get("/test", omdbHandler.TestConnection)
+			r.Get("/{imdbId}", omdbHandler.GetMovieByIMDbID)
+			r.Get("/title", omdbHandler.GetMovieByTitle)
+			r.Get("/search", omdbHandler.SearchMovies)
+			r.Get("/search-by-type", omdbHandler.SearchMoviesByType)
 		})
 	})
 

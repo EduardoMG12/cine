@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"log"
 	"log/slog"
 	"net/http"
 	"os"
@@ -12,6 +13,7 @@ import (
 	"github.com/EduardoMG12/cine/api_v2/internal/config"
 	"github.com/EduardoMG12/cine/api_v2/internal/middleware"
 	"github.com/EduardoMG12/cine/api_v2/internal/server"
+	"github.com/joho/godotenv"
 )
 
 const banner = `
@@ -27,6 +29,11 @@ const banner = `
 
 func main() {
 	fmt.Print(banner)
+
+	// Load .env file if it exists
+	if err := godotenv.Load(); err != nil {
+		log.Println("No .env file found or error loading it, using environment variables")
+	}
 
 	// Load configuration
 	cfg, err := config.Load()

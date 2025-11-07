@@ -13,6 +13,7 @@ type Config struct {
 	Database DatabaseConfig `json:"database"`
 	JWT      JWTConfig      `json:"jwt"`
 	TMDb     TMDbConfig     `json:"tmdb"`
+	OMDb     OMDbConfig     `json:"omdb"`
 	Redis    RedisConfig    `json:"redis"`
 }
 
@@ -50,6 +51,11 @@ type TMDbConfig struct {
 	ImageBaseURL string        `json:"image_base_url"`
 	CacheTTL     time.Duration `json:"cache_ttl"`
 	RateLimit    int           `json:"rate_limit"`
+}
+
+type OMDbConfig struct {
+	APIKey  string `json:"-"`
+	BaseURL string `json:"base_url"`
 }
 
 type RedisConfig struct {
@@ -93,6 +99,10 @@ func Load() (*Config, error) {
 			CacheTTL:     getEnvDuration("TMDB_CACHE_TTL", "24h"),
 			RateLimit:    getEnvInt("TMDB_RATE_LIMIT", 40),
 		},
+		OMDb: OMDbConfig{
+			APIKey:  getEnv("OMDB_API_KEY", "83a81446"),
+			BaseURL: getEnv("OMDB_BASE_URL", "http://www.omdbapi.com/"),
+		},
 		Redis: RedisConfig{
 			Host:     getEnv("REDIS_HOST", "localhost"),
 			Port:     getEnv("REDIS_PORT", "6379"),
@@ -123,6 +133,10 @@ func (c *Config) Validate() error {
 
 	if c.TMDb.APIKey == "" {
 		log.Println("WARNING: TMDb API key not configured. Movie data will not be available!")
+	}
+
+	if c.OMDb.APIKey == "" {
+		log.Println("WARNING: OMDb API key not configured. Using default key for testing only!")
 	}
 
 	return nil
