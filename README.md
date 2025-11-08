@@ -580,12 +580,12 @@ curl "http://localhost:8080/api/v1/movies/tt0133093"
 
 <a name="team-en"></a>
 
-**Project Lead & Developer:** Eduardo Machado Gehrke  
+**Project Lead & Developer:** Charles Eduardo Mello Guimaraes  
 **Institution:** IFPR Campus Palmas-PR  
 **Course:** Software Engineering  
 **GitHub:** [@EduardoMG12](https://github.com/EduardoMG12)
 
-**Advisor:** [Professor Name]  
+**Advisor:** Alexis Kang 
 **Course:** Software Engineering - IFPR
 
 </details>
@@ -1174,12 +1174,12 @@ curl "http://localhost:8080/api/v1/movies/tt0133093"
 
 <a name="equipe-pt"></a>
 
-**Líder do Projeto & Desenvolvedor:** Eduardo Machado Gehrke  
+**Líder do Projeto & Desenvolvedor:** Charles Eduardo Mello Guimaraes  
 **Instituição:** IFPR Campus Palmas-PR  
 **Curso:** Engenharia de Software  
 **GitHub:** [@EduardoMG12](https://github.com/EduardoMG12)
 
-**Orientador:** [Nome do Professor]  
+**Orientador:** Alexis Kang  
 **Curso:** Engenharia de Software - IFPR
 
 </details>
