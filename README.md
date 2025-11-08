@@ -2,305 +2,464 @@
 
 > A modern social network for movie enthusiasts built with Flutter and Go
 
-CineVerse is a comprehensive social platform designed for movie lovers to discover, rate, review, and discuss films. Built with modern technologies and following clean architecture principles, it offers a seamless experience across web and mobile platforms.
+**CineVerse** is a comprehensive social platform designed for movie lovers to discover, rate, review, and discuss films. Built with modern technologies and following clean architecture principles, it offers a seamless experience across web and mobile platforms.
 
-## 🏗️ Architecture Overview
-
-This project follows a **monorepo** structure with clean architecture principles:
-
-```
-📂 CineVerse/
-├── 📂 api_v2/          # ✅ Go Backend (Primary API)
-│   ├── cmd/            # Main application entry point
-│   ├── internal/       # Private application code
-│   │   ├── domain/     # Business entities and rules
-│   │   ├── handler/    # HTTP handlers (Chi router)
-│   │   ├── service/    # Business logic layer
-│   │   └── repository/ # Data access layer
-│   └── migrations/     # Database migrations
-├── 📂 flutter_app/     # ✅ Flutter Frontend (Multi-platform)
-│   ├── lib/src/        # Application source code
-│   │   ├── core/       # Shared utilities and configs
-│   │   └── features/   # Feature-based modules
-│   └── Dockerfile*     # Web & Android containers
-├── 📂 api/             # ❌ Legacy NestJS API (Deprecated)
-└── 📂 scripts/         # Setup and utility scripts
-```
-
-## 🚀 Tech Stack
-
-### Backend (Go - `api_v2`)
-- **Framework**: Chi (lightweight HTTP router)
-- **Database**: PostgreSQL + SQLx
-- **Cache**: Redis
-- **Config**: Viper
-- **Validation**: go-playground/validator
-- **Logging**: slog (structured logging)
-
-### Frontend (Flutter - `flutter_app`)
-- **State Management**: Riverpod
-- **Navigation**: go_router
-- **HTTP Client**: Dio
-- **Dependency Injection**: get_it
-- **Platforms**: Web, Android, iOS
-
-### Infrastructure
-- **Containerization**: Docker + Docker Compose
-- **Database**: PostgreSQL 15
-- **Cache**: Redis 7
-- **Development**: Hot-reloading enabled
-
-## 📋 Prerequisites
-
-Before you begin, ensure you have installed:
-
-- **Docker** (v20.10+)
-- **Docker Compose** (v2.0+)
-- **Git**
-- **Node.js** (v16+) - for development tools
-
-### Optional (for local development)
-- **Go** (v1.21+)
-- **Flutter SDK** (v3.24+)
+[![Go Version](https://img.shields.io/badge/Go-1.21+-00ADD8?style=flat&logo=go)](https://golang.org/)
+[![Flutter](https://img.shields.io/badge/Flutter-3.24+-02569B?style=flat&logo=flutter)](https://flutter.dev/)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-15-316192?style=flat&logo=postgresql)](https://www.postgresql.org/)
+[![License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 ## 🎯 Quick Start
 
-### 1. Clone the Repository
 ```bash
+# Clone repository
 git clone https://github.com/EduardoMG12/cine.git
 cd cine
+
+# Run setup script
+./scripts/setup.sh
+
+# Or manually with Docker
+docker-compose up -d
 ```
 
-### 2. Setup Development Environment
+**Access the app**: http://localhost:3000  
+**API Health**: http://localhost:8080/health
+
+## ✨ Features
+
+### 🎥 Movie Discovery
+- Search movies by title, genre, actor
+- Get detailed information (cast, crew, ratings)
+- OMDb API integration (TMDb coming soon)
+- Smart caching for performance
+
+### 👤 User Profiles
+- Secure JWT authentication
+- Profile customization
+- Watch history tracking
+- Multi-device session management
+
+### ⭐ Social Features
+- Rate and review movies
+- Create custom watchlists
+- Follow other users (coming soon)
+- Activity feed (coming soon)
+
+### 📱 Multi-Platform
+- ✅ Web (PWA)
+- ✅ Android
+- 🔄 iOS (coming soon)
+- 🔄 Desktop (coming soon)
+
+## 🏗️ Architecture
+
+This project follows a **monorepo** structure with clean architecture:
+
+```
+cine/
+├── api_v2/              # 🎯 Go Backend (PRIMARY)
+│   ├── cmd/             # Application entrypoint
+│   ├── internal/        # Business logic
+│   │   ├── domain/      # Entities & interfaces
+│   │   ├── usecase/     # Business rules
+│   │   ├── handler/     # HTTP handlers
+│   │   ├── repository/  # Data access
+│   │   └── infrastructure/ # External services
+│   ├── migrations/      # Database schema
+│   └── README.md        # Backend docs
+├── flutter_app/         # 📱 Flutter Frontend
+│   ├── lib/src/         # App source code
+│   │   ├── core/        # Shared utilities
+│   │   └── features/    # Feature modules
+│   └── Dockerfile       # Web & Android build
+├── api/                 # ⚠️  Legacy NestJS (deprecated)
+└── scripts/             # Automation scripts
+```
+
+### Tech Stack
+
+**Backend (api_v2)**
+- Go 1.21+ with Chi router
+- PostgreSQL 15 + SQLx
+- Redis 7 for caching
+- JWT authentication
+- OMDb/TMDb integration
+
+**Frontend (flutter_app)**
+- Flutter 3.24+
+- Riverpod (state management)
+- Dio (HTTP client)
+- go_router (navigation)
+
+**Infrastructure**
+- Docker & Docker Compose
+- PostgreSQL, Redis
+- Development hot-reload
+
+## 📋 Prerequisites
+
+**Required:**
+- Docker 20.10+ & Docker Compose 2.0+
+- Git
+
+**Optional (for local development):**
+- Go 1.21+
+- Flutter SDK 3.24+
+- Node.js 16+ (for dev tools)
+
+## 🚀 Getting Started
+
+### Automated Setup (Recommended)
+
 ```bash
-# Run the automated setup script
+# 1. Clone repository
+git clone https://github.com/EduardoMG12/cine.git
+cd cine
+
+# 2. Run automated setup
 ./scripts/setup.sh
 ```
 
 This script will:
-- Install Node.js dependencies (husky, lint-staged)
-- Setup pre-commit hooks
+- Install Node.js dependencies & Git hooks
 - Build Docker images
 - Initialize PostgreSQL with migrations
 - Start all services
-- Optionally setup Android development environment
+- Setup Android environment (optional)
 
-### 3. Manual Setup (Alternative)
-If you prefer manual setup:
+### Manual Setup
 
 ```bash
-# Install development dependencies
+# 1. Install development dependencies
 npm install
 
-# Start infrastructure services
+# 2. Start infrastructure
 docker-compose up -d postgres redis
 
-# Start the Go API
+# 3. Start backend
 docker-compose up -d api_v2
 
-# Start the Flutter web app
+# 4. Start frontend
 docker-compose up -d flutter_app
 
-# Optional: Start Android development environment
+# 5. (Optional) Android development
 docker-compose up -d flutter_android
 ```
 
-## 🌐 Access Your Application
+### Environment Configuration
 
-After setup, you can access:
+Create `.env` file in project root:
+
+```bash
+# Database
+DB_HOST=postgres
+DB_PORT=5432
+DB_NAME=cineverse
+DB_USER=cineverse
+DB_PASSWORD=cineverse123
+
+# API
+PORT=8080
+JWT_SECRET=your-super-secret-key
+ENVIRONMENT=development
+
+# External APIs
+OMDB_API_KEY=your_omdb_key
+TMDB_API_KEY=your_tmdb_key
+
+# Redis
+REDIS_HOST=redis
+REDIS_PORT=6379
+```
+
+## 🌐 Services & Ports
+
+After running the setup, access:
 
 | Service | URL | Description |
 |---------|-----|-------------|
-| **Flutter Web App** | http://localhost:3000 | Main application interface |
-| **Go API** | http://localhost:8080 | REST API endpoints |
-| **API Health Check** | http://localhost:8080/health | API status |
-| **Android Studio** | http://localhost:6080 | Web-based Android development |
-| **PostgreSQL** | localhost:5432 | Database (user: `cineverse`, db: `cineverse`) |
-| **Redis** | localhost:6379 | Cache and sessions |
+| **Web App** | http://localhost:3000 | Flutter PWA |
+| **API** | http://localhost:8080 | Go REST API |
+| **Health** | http://localhost:8080/health | API status |
+| **Android Studio** | http://localhost:6080 | Browser IDE (password: `cineverse`) |
+| **PostgreSQL** | localhost:5432 | Database |
+| **Redis** | localhost:6379 | Cache |
 
-## 📱 Android Development
+## � Development
 
-CineVerse includes a complete Android development environment with Android Studio running in Docker.
+### Backend Development
 
-### Starting Android Environment
 ```bash
-# Start the Android development container
-docker-compose up -d flutter_android
+# Navigate to backend
+cd api_v2
 
-# Access Android Studio in your browser
-# URL: http://localhost:6080
-# Password: cineverse
+# Start with hot reload (install air first)
+go install github.com/cosmtrek/air@latest
+air
+
+# Or manually
+go run cmd/main.go
+
+# Run tests
+go test ./...
+
+# Format code
+go fmt ./...
 ```
 
-### Features:
-- ✅ Android Studio IDE in browser
-- ✅ Android SDK and build tools
-- ✅ Pre-configured Android emulator
-- ✅ Flutter Android development ready
-- ✅ Hot reload support
+See [api_v2/README.md](./api_v2/README.md) for detailed backend documentation.
 
-### Building for Android
+### Frontend Development
+
 ```bash
-# Connect to the Android container
-docker-compose exec flutter_android bash
+# Navigate to frontend
+cd flutter_app
 
-# Build APK
-flutter build apk
+# Install dependencies
+flutter pub get
 
-# Build App Bundle
-flutter build appbundle
+# Run on web
+flutter run -d chrome
 
-# Run on emulator
+# Run on Android
 flutter run -d android
-```
 
-## 🔧 Development Workflow
+# Run tests
+flutter test
+
+# Format code
+flutter format .
+```
 
 ### Code Quality
+
 The project uses automated code quality tools:
 
 ```bash
-# Format code (runs automatically on commit)
+# Format all code (runs on commit)
 npm run lint-staged
 
-# Manual formatting
-# Go code
-gofmt -w api_v2/
-go vet ./api_v2/...
+# Backend formatting
+cd api_v2
+go fmt ./...
+go vet ./...
 
-# Flutter code
-flutter format flutter_app/
-flutter analyze flutter_app/
+# Frontend formatting
+cd flutter_app
+flutter format .
+flutter analyze
 ```
 
-### Database Migrations
-```bash
-# Run migrations
-docker-compose exec api_v2 go run cmd/migrate.go up
+### Database Management
 
-# Create new migration
-docker-compose exec api_v2 go run cmd/migrate.go create migration_name
+```bash
+# Connect to database
+docker exec -it cineverse-postgres psql -U cineverse -d cineverse
+
+# View tables
+\dt
+
+# Backup database
+docker exec cineverse-postgres pg_dump -U cineverse cineverse > backup.sql
+
+# Restore database
+docker exec -i cineverse-postgres psql -U cineverse cineverse < backup.sql
 ```
 
-### Logs and Debugging
+### Viewing Logs
+
 ```bash
-# View logs for all services
+# All services
 docker-compose logs -f
 
-# View specific service logs
+# Specific service
 docker-compose logs -f api_v2
 docker-compose logs -f flutter_app
-docker-compose logs -f flutter_android
-
-# View database logs
 docker-compose logs -f postgres
+
+# Follow logs
+docker-compose logs --tail=100 -f api_v2
 ```
 
 ## 🧪 Testing
 
-### Backend Tests (Go)
+### Backend Tests
+
 ```bash
-# Run unit tests
-docker-compose exec api_v2 go test ./...
+cd api_v2
 
-# Run tests with coverage
-docker-compose exec api_v2 go test -cover ./...
+# Run all tests
+go test ./...
 
-# Run integration tests
-docker-compose exec api_v2 go test -tags=integration ./...
+# With coverage
+go test -cover ./...
+go test -coverprofile=coverage.out ./...
+go tool cover -html=coverage.out
+
+# Integration tests
+go test -tags=integration ./...
+
+# Specific package
+go test ./internal/usecase/auth/...
 ```
 
-### Frontend Tests (Flutter)
-```bash
-# Run Flutter tests
-docker-compose exec flutter_app flutter test
+### Frontend Tests
 
-# Run with coverage
-docker-compose exec flutter_app flutter test --coverage
+```bash
+cd flutter_app
+
+# Run tests
+flutter test
+
+# With coverage
+flutter test --coverage
+
+# Integration tests
+flutter test integration_test/
+```
+
+### API Testing
+
+```bash
+# Use provided test script
+cd api_v2
+./test-omdb.sh
+
+# Or manually with curl
+curl http://localhost:8080/health
+curl http://localhost:8080/api/v1/omdb/test
+curl "http://localhost:8080/api/v1/omdb/search?q=Batman"
 ```
 
 ## 🚢 Production Deployment
 
-### Building Production Images
+### Building for Production
+
 ```bash
-# Build optimized production images
+# Backend
+cd api_v2
+CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o build/main ./cmd/main.go
+
+# Frontend (Web)
+cd flutter_app
+flutter build web --release
+
+# Frontend (Android)
+flutter build apk --release
+flutter build appbundle --release
+```
+
+### Docker Production Build
+
+```bash
+# Build optimized images
 docker-compose -f docker-compose.prod.yml build
 
-# Deploy to production
+# Deploy
 docker-compose -f docker-compose.prod.yml up -d
 ```
 
-### Environment Variables
-Create a `.env` file for production:
+### Production Checklist
 
-```env
-# Database
-CINE_DATABASE_URL=postgres://user:password@host:5432/database
-CINE_REDIS_ADDR=redis:6379
-CINE_REDIS_PASSWORD=your_redis_password
-
-# API
-CINE_PORT=8080
-CINE_ENV=production
-
-# Security
-JWT_SECRET=your_jwt_secret_here
-API_KEY=your_api_key_here
-```
+- [ ] Set strong `JWT_SECRET`
+- [ ] Configure `ENVIRONMENT=production`
+- [ ] Enable PostgreSQL SSL (`DB_SSL_MODE=require`)
+- [ ] Set Redis password
+- [ ] Configure CORS for production domains
+- [ ] Setup SSL/TLS certificates
+- [ ] Configure monitoring & logging
+- [ ] Setup database backups
+- [ ] Enable rate limiting
+- [ ] Configure reverse proxy (nginx/caddy)
 
 ## 🤝 Contributing
 
-We welcome contributions! Please see our [Contributing Guidelines](.github/CONTRIBUTING.md).
+We welcome contributions! Please follow these guidelines:
 
 ### Development Rules
-1. **Follow Conventional Commits**: `feat:`, `fix:`, `docs:`, etc.
-2. **Write Tests**: Ensure new features have adequate test coverage
-3. **Code Quality**: All code must pass linting and formatting checks
-4. **Architecture**: Follow clean architecture principles
-5. **Documentation**: Update documentation for new features
 
-### Commit Message Format
+1. **Follow Conventional Commits**: `feat:`, `fix:`, `docs:`, etc.
+2. **Write Tests**: Ensure new features have test coverage
+3. **Code Quality**: Pass all linting and formatting checks
+4. **Clean Architecture**: Follow established patterns
+5. **Documentation**: Update docs for new features
+
+### Commit Format
+
 ```
 <type>(<scope>): <description>
 
 [optional body]
-
 [optional footer]
 ```
 
-Examples:
+**Examples:**
 - `feat(auth): add user registration endpoint`
-- `fix(ui): resolve login form validation issue`
-- `docs(api): update authentication documentation`
+- `fix(ui): resolve login form validation`
+- `docs(api): update authentication guide`
 
-## 📚 API Documentation
+### Pull Request Process
 
-### Authentication Endpoints
-```
-POST /api/auth/register    # User registration
-POST /api/auth/login       # User login
-POST /api/auth/refresh     # Refresh access token
-DELETE /api/auth/logout    # User logout
-```
+1. Fork the repository
+2. Create feature branch (`git checkout -b feature/amazing-feature`)
+3. Make your changes
+4. Run tests and linting
+5. Commit with conventional format
+6. Push to your fork
+7. Open a Pull Request
 
-### User Endpoints
-```
-GET    /api/users/profile  # Get user profile
-PUT    /api/users/profile  # Update user profile
-GET    /api/users/:id      # Get user by ID
-```
+## 🐛 Troubleshooting
 
-### Movie Endpoints
-```
-GET    /api/movies         # List movies
-GET    /api/movies/:id     # Get movie details
-POST   /api/movies/:id/rating  # Rate a movie
-GET    /api/movies/:id/reviews # Get movie reviews
+### Common Issues
+
+**Port already in use:**
+```bash
+# Find process using port
+lsof -i :8080
+# Kill process
+kill -9 <PID>
 ```
 
-## 🛠️ Utility Commands
+**Database connection errors:**
+```bash
+# Check PostgreSQL status
+docker exec cineverse-postgres pg_isready -U cineverse
+
+# Restart database
+docker-compose restart postgres
+
+# Reset database (WARNING: deletes data)
+docker-compose down postgres
+docker volume rm cine_postgres-data
+docker-compose up -d postgres
+```
+
+**Flutter app not starting:**
+```bash
+# Rebuild container
+docker-compose build --no-cache flutter_app
+docker-compose up flutter_app
+
+# Check logs
+docker-compose logs flutter_app
+```
+
+**API connection issues:**
+```bash
+# Check health
+curl http://localhost:8080/health
+
+# Restart API
+docker-compose restart api_v2
+
+# Rebuild API
+docker-compose build api_v2
+docker-compose up -d api_v2
+```
 
 ### Reset Development Environment
+
 ```bash
 # Complete reset (removes all data)
 docker-compose down -v
@@ -308,62 +467,86 @@ docker system prune -f
 ./scripts/setup.sh
 ```
 
-### Backup Database
-```bash
-# Create database backup
-docker-compose exec postgres pg_dump -U cineverse cineverse > backup.sql
+## 📚 Documentation
 
-# Restore database backup
-docker-compose exec -T postgres psql -U cineverse cineverse < backup.sql
+- **[Backend README](./api_v2/README.md)** - Complete Go API documentation
+- **[OMDb Integration](./api_v2/OMDB_INTEGRATION.md)** - Movie API integration guide
+- **[Architecture Decisions](./docs/adr/)** - ADRs and design decisions
+- **[Contributing Guide](./.github/CONTRIBUTING.md)** - How to contribute
+
+## 📡 API Endpoints
+
+Quick reference for main endpoints:
+
+### Authentication
 ```
+POST   /api/v1/auth/register    # User registration
+POST   /api/v1/auth/login       # User login
+GET    /api/v1/auth/me          # Get current user
+POST   /api/v1/auth/logout      # Logout
+```
+
+### Movies (OMDb)
+```
+GET    /api/v1/omdb/test                # Test connection
+GET    /api/v1/omdb/{imdbId}            # Get movie by IMDb ID
+GET    /api/v1/omdb/title               # Get movie by title
+GET    /api/v1/omdb/search              # Search movies
+GET    /api/v1/omdb/search-by-type      # Search by type
+```
+
+### Health
+```
+GET    /health                           # API health check
+```
+
+See [api_v2/README.md](./api_v2/README.md) for complete API documentation.
+
+## 🛠️ Utility Commands
 
 ### Performance Monitoring
+
 ```bash
-# Monitor container resources
+# Monitor all containers
 docker stats
 
-# Monitor specific service
-docker stats cineverse-api cineverse-flutter cineverse-postgres
+# Monitor specific services
+docker stats cineverse-api cineverse-postgres cineverse-redis
+
+# Check resource usage
+docker system df
 ```
 
-## 🐛 Troubleshooting
+### Cleanup
 
-### Common Issues
-
-**Flutter app not starting:**
 ```bash
-# Rebuild Flutter container
-docker-compose build --no-cache flutter_app
-docker-compose up flutter_app
+# Stop all services
+docker-compose down
+
+# Remove volumes (WARNING: deletes data)
+docker-compose down -v
+
+# Clean system
+docker system prune -a --volumes
+
+# Remove specific volume
+docker volume rm cine_postgres-data
 ```
 
-**API connection issues:**
+### Database Operations
+
 ```bash
-# Check API health
-curl http://localhost:8080/health
+# Export database
+docker exec cineverse-postgres pg_dump -U cineverse cineverse > backup_$(date +%Y%m%d).sql
 
-# Restart API service
-docker-compose restart api_v2
-```
+# Import database
+docker exec -i cineverse-postgres psql -U cineverse cineverse < backup.sql
 
-**Database connection problems:**
-```bash
-# Check PostgreSQL status
-docker-compose exec postgres pg_isready -U cineverse
+# Connect to PostgreSQL CLI
+docker exec -it cineverse-postgres psql -U cineverse -d cineverse
 
-# Reset database
-docker-compose down postgres
-docker volume rm cineverse_postgres-data
-docker-compose up -d postgres
-```
-
-**Android Studio not accessible:**
-```bash
-# Restart Android container
-docker-compose restart flutter_android
-
-# Check container logs
-docker-compose logs flutter_android
+# View all tables
+docker exec cineverse-postgres psql -U cineverse -d cineverse -c "\dt"
 ```
 
 ## 📄 License
@@ -372,17 +555,31 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 👥 Team
 
-- **Eduardo MG** - *Project Lead & Backend Developer* - [@EduardoMG12](https://github.com/EduardoMG12)
+- **Eduardo MG** - *Project Lead & Developer* - [@EduardoMG12](https://github.com/EduardoMG12)
 
 ## 🙏 Acknowledgments
 
 - Flutter team for the amazing framework
 - Go community for excellent libraries
+- [OMDb API](http://www.omdbapi.com/) for movie data
+- [TMDb](https://www.themoviedb.org/) for additional movie information
 - Docker for containerization simplicity
 - All contributors who make this project better
 
+## 📞 Support
+
+- **Issues**: [GitHub Issues](https://github.com/EduardoMG12/cine/issues)
+- **Documentation**: Check the [api_v2/README.md](./api_v2/README.md)
+- **Email**: eduardo@cineverse.app
+
 ---
+
+<div align="center">
 
 **Ready to build the future of movie social networking?** 🍿✨
 
-For detailed technical documentation, check our [Wiki](../../wiki) or the `.github/RFCs` directory for feature specifications.
+Made with ❤️ by the CineVerse team
+
+[![Star on GitHub](https://img.shields.io/github/stars/EduardoMG12/cine?style=social)](https://github.com/EduardoMG12/cine)
+
+</div>

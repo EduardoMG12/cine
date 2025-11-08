@@ -32,24 +32,20 @@ func NewLoginUseCase(
 }
 
 func (uc *LoginUseCase) Execute(input dto.LoginRequestDTO) (*dto.AuthResponseDTO, error) {
-	// Buscar usuário por email
 	user, err := uc.userRepo.GetUserByEmail(strings.ToLower(input.Email))
 	if err != nil {
 		return nil, fmt.Errorf("invalid credentials")
 	}
 
-	// Verificar senha
 	if !uc.passwordService.ComparePassword(user.PasswordHash, input.Password) {
 		return nil, fmt.Errorf("invalid credentials")
 	}
 
-	// Gerar token JWT
 	token, err := uc.jwtService.GenerateToken(user.ID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to generate token: %w", err)
 	}
 
-	// Criar sessão
 	session := &domain.UserSession{
 		UserID:    user.ID,
 		Token:     token,
@@ -60,7 +56,6 @@ func (uc *LoginUseCase) Execute(input dto.LoginRequestDTO) (*dto.AuthResponseDTO
 		return nil, fmt.Errorf("failed to create session: %w", err)
 	}
 
-	// Retornar resposta
 	return &dto.AuthResponseDTO{
 		Token: token,
 		User:  uc.userToDTO(user),

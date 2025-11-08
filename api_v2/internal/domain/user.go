@@ -31,7 +31,6 @@ type UserSession struct {
 	IPAddress *string   `db:"ip_address" json:"ip_address,omitempty"`
 }
 
-// UserRepository defines the repository interface for user operations
 type UserRepository interface {
 	CreateUser(user *User) error
 	GetUserByID(id uuid.UUID) (*User, error)
@@ -41,7 +40,6 @@ type UserRepository interface {
 	DeleteUser(id uuid.UUID) error
 }
 
-// SessionRepository defines the repository interface for session operations
 type SessionRepository interface {
 	CreateSession(session *UserSession) error
 	GetSessionByToken(token string) (*UserSession, error)
@@ -49,7 +47,6 @@ type SessionRepository interface {
 	DeleteUserSessions(userID uuid.UUID) error
 }
 
-// UserService defines the service interface for user operations
 type UserService interface {
 	GetProfile(userID uuid.UUID) (*User, error)
 	UpdateProfile(userID uuid.UUID, displayName, bio, profilePictureURL *string) (*User, error)

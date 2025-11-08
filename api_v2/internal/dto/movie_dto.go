@@ -6,7 +6,6 @@ import (
 	"github.com/google/uuid"
 )
 
-// Movie DTOs
 type MovieDTO struct {
 	ID            uuid.UUID  `json:"id"`
 	ExternalAPIID string     `json:"external_api_id"`
@@ -38,7 +37,6 @@ type RandomMovieByGenreQuery struct {
 	Genre string `json:"genre" validate:"required"`
 }
 
-// TMDb API Response structures
 type TMDbMovieResponse struct {
 	ID                  int           `json:"id"`
 	Title               string        `json:"title"`

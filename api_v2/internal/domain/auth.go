@@ -29,7 +29,6 @@ type JWTClaims struct {
 	jwt.RegisteredClaims
 }
 
-// AuthService defines the service interface for authentication operations
 type AuthService interface {
 	Register(req RegisterRequest) (*AuthResponse, error)
 	Login(req LoginRequest) (*AuthResponse, error)
@@ -38,14 +37,12 @@ type AuthService interface {
 	LogoutAll(userID uuid.UUID) error
 }
 
-// JWTService defines the service interface for JWT operations
 type JWTService interface {
 	GenerateToken(userID uuid.UUID) (string, error)
 	ValidateToken(token string) (*JWTClaims, error)
 	ParseToken(token string) (*JWTClaims, error)
 }
 
-// PasswordService defines the service interface for password operations
 type PasswordService interface {
 	HashPassword(password string) (string, error)
 	ComparePassword(hash, password string) bool
