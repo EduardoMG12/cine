@@ -19,7 +19,17 @@ func NewOMDbHandler(omdbService *infrastructure.OMDbService) *OMDbHandler {
 	}
 }
 
-// GetMovieByIMDbID handles GET /api/v1/omdb/{imdbId}
+// GetMovieByIMDbID godoc
+// @Summary Get movie by IMDb ID from OMDb
+// @Description Retrieves detailed movie information from OMDb API using IMDb ID
+// @Tags OMDb
+// @Accept json
+// @Produce json
+// @Param imdbId path string true "IMDb ID (e.g., tt0133093)"
+// @Success 200 {object} infrastructure.MovieDetails "Movie details"
+// @Failure 400 {object} map[string]string "Invalid IMDb ID"
+// @Failure 404 {object} map[string]string "Movie not found"
+// @Router /api/v1/omdb/{imdbId} [get]
 func (h *OMDbHandler) GetMovieByIMDbID(w http.ResponseWriter, r *http.Request) {
 	imdbID := chi.URLParam(r, "imdbId")
 	if imdbID == "" {
@@ -36,7 +46,18 @@ func (h *OMDbHandler) GetMovieByIMDbID(w http.ResponseWriter, r *http.Request) {
 	respondWithJSON(w, http.StatusOK, movie)
 }
 
-// GetMovieByTitle handles GET /api/v1/omdb/title
+// GetMovieByTitle godoc
+// @Summary Get movie by title from OMDb
+// @Description Retrieves movie information from OMDb API using title and optional year
+// @Tags OMDb
+// @Accept json
+// @Produce json
+// @Param title query string true "Movie title"
+// @Param year query string false "Release year (optional)"
+// @Success 200 {object} infrastructure.MovieDetails "Movie details"
+// @Failure 400 {object} map[string]string "Invalid parameters"
+// @Failure 404 {object} map[string]string "Movie not found"
+// @Router /api/v1/omdb/title [get]
 func (h *OMDbHandler) GetMovieByTitle(w http.ResponseWriter, r *http.Request) {
 	title := r.URL.Query().Get("title")
 	if title == "" {
@@ -55,7 +76,18 @@ func (h *OMDbHandler) GetMovieByTitle(w http.ResponseWriter, r *http.Request) {
 	respondWithJSON(w, http.StatusOK, movie)
 }
 
-// SearchMovies handles GET /api/v1/omdb/search
+// SearchMovies godoc
+// @Summary Search movies in OMDb
+// @Description Search for movies in OMDb API by query string with pagination
+// @Tags OMDb
+// @Accept json
+// @Produce json
+// @Param q query string true "Search query"
+// @Param page query int false "Page number (default: 1)"
+// @Success 200 {object} infrastructure.SearchResults "Search results with pagination"
+// @Failure 400 {object} map[string]string "Invalid parameters"
+// @Failure 500 {object} map[string]string "Internal server error"
+// @Router /api/v1/omdb/search [get]
 func (h *OMDbHandler) SearchMovies(w http.ResponseWriter, r *http.Request) {
 	query := r.URL.Query().Get("q")
 	if query == "" {
@@ -74,7 +106,19 @@ func (h *OMDbHandler) SearchMovies(w http.ResponseWriter, r *http.Request) {
 	respondWithJSON(w, http.StatusOK, results)
 }
 
-// SearchMoviesByType handles GET /api/v1/omdb/search-by-type
+// SearchMoviesByType godoc
+// @Summary Search movies by type in OMDb
+// @Description Search for content in OMDb API by query and filter by type (movie, series, episode)
+// @Tags OMDb
+// @Accept json
+// @Produce json
+// @Param q query string true "Search query"
+// @Param type query string true "Content type (movie, series, episode)"
+// @Param page query int false "Page number (default: 1)"
+// @Success 200 {object} infrastructure.SearchResults "Search results with pagination"
+// @Failure 400 {object} map[string]string "Invalid parameters"
+// @Failure 500 {object} map[string]string "Internal server error"
+// @Router /api/v1/omdb/search-by-type [get]
 func (h *OMDbHandler) SearchMoviesByType(w http.ResponseWriter, r *http.Request) {
 	query := r.URL.Query().Get("q")
 	if query == "" {
@@ -94,7 +138,14 @@ func (h *OMDbHandler) SearchMoviesByType(w http.ResponseWriter, r *http.Request)
 	respondWithJSON(w, http.StatusOK, results)
 }
 
-// TestConnection handles GET /api/v1/omdb/test - tests the OMDb connection
+// TestConnection godoc
+// @Summary Test OMDb API connection
+// @Description Tests the connection to OMDb API by fetching a known movie (The Matrix)
+// @Tags OMDb
+// @Accept json
+// @Produce json
+// @Success 200 {object} map[string]interface{} "Connection test result"
+// @Router /api/v1/omdb/test [get]
 func (h *OMDbHandler) TestConnection(w http.ResponseWriter, r *http.Request) {
 	// Test with a known movie (The Matrix)
 	movie, err := h.omdbService.GetMovieByExternalID("tt0133093")

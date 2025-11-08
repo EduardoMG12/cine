@@ -8,6 +8,7 @@ import (
 
 type Movie struct {
 	ID             uuid.UUID  `db:"id" json:"id"`
+	ExternalAPIID  string     `db:"external_api_id" json:"external_api_id"`
 	Title          string     `db:"title" json:"title"`
 	Overview       *string    `db:"overview" json:"overview,omitempty"`
 	ReleaseDate    *time.Time `db:"release_date" json:"release_date,omitempty"`
