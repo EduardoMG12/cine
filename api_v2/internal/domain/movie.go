@@ -9,6 +9,7 @@ import (
 type Movie struct {
 	ID             uuid.UUID  `db:"id" json:"id"`
 	ExternalAPIID  string     `db:"external_api_id" json:"external_api_id"`
+	Provider       string     `db:"provider" json:"provider"` // "omdb", "tmdb", "internal"
 	Title          string     `db:"title" json:"title"`
 	Overview       *string    `db:"overview" json:"overview,omitempty"`
 	ReleaseDate    *time.Time `db:"release_date" json:"release_date,omitempty"`
@@ -19,6 +20,7 @@ type Movie struct {
 	VoteAverage    *float64   `db:"vote_average" json:"vote_average,omitempty"`
 	VoteCount      *int       `db:"vote_count" json:"vote_count,omitempty"`
 	Adult          bool       `db:"adult" json:"adult"`
+	LastSyncAt     *time.Time `db:"last_sync_at" json:"last_sync_at,omitempty"`
 	CacheExpiresAt time.Time  `db:"cache_expires_at" json:"-"`
 	CreatedAt      time.Time  `db:"created_at" json:"created_at"`
 	UpdatedAt      time.Time  `db:"updated_at" json:"updated_at"`

@@ -100,19 +100,20 @@ func (s *Server) setupHTTPServer() {
 	// Initialize infrastructure
 	passwordService := infrastructure.NewPasswordService()
 	jwtService := infrastructure.NewJWTService(s.config.JWT.Secret)
-	redisService, err := infrastructure.NewRedisService(s.config.Redis.Host, s.config.Redis.Port, s.config.Redis.Password, s.config.Redis.DB)
+	_, err := infrastructure.NewRedisService(s.config.Redis.Host, s.config.Redis.Port, s.config.Redis.Password, s.config.Redis.DB)
 	if err != nil {
 		s.logger.Error("Failed to initialize Redis service", "error", err)
 		// Continue without Redis, caching will be disabled
-		redisService = nil
 	}
-	tmdbService := infrastructure.NewTMDbService(s.config.TMDb.APIKey)
 	omdbService := infrastructure.NewOMDbService(s.config.OMDb.APIKey)
 
 	// Initialize repositories
 	userRepo := repository.NewUserRepository(s.db)
 	sessionRepo := repository.NewSessionRepository(s.db)
 	movieRepo := repository.NewMovieRepository(s.db)
+
+	// Initialize movie fetcher chain: OMDb -> Database (with auto-save enabled)
+	movieFetcher := infrastructure.NewMovieFetcherChain(omdbService, movieRepo, true)
 
 	// Initialize auth use cases
 	registerUC := auth.NewRegisterUseCase(userRepo, sessionRepo, passwordService, jwtService)
@@ -122,13 +123,10 @@ func (s *Server) setupHTTPServer() {
 	logoutAllUC := auth.NewLogoutAllUseCase(sessionRepo)
 
 	// Initialize movie use cases
-	getMovieByIDUC := movie.NewGetMovieByIDUseCase(movieRepo, tmdbService, redisService)
+	getMovieByIDUC := movie.NewGetMovieByIDUseCase(movieFetcher)
 	getRandomMovieUC := movie.NewGetRandomMovieUseCase(movieRepo)
 	getRandomMovieByGenreUC := movie.NewGetRandomMovieByGenreUseCase(movieRepo)
-	searchMoviesUC := movie.NewSearchMoviesUseCase(tmdbService)
-	getPopularMoviesUC := movie.NewGetPopularMoviesUseCase(tmdbService)
-	getTrendingMoviesUC := movie.NewGetTrendingMoviesUseCase(tmdbService)
-	getGenresUC := movie.NewGetGenresUseCase(tmdbService)
+	searchMoviesUC := movie.NewSearchMoviesUseCase(movieFetcher)
 
 	// Initialize handlers
 	authHandler := httpHandler.NewAuthHandler(registerUC, loginUC, getMeUC, logoutUC, logoutAllUC)
@@ -137,9 +135,6 @@ func (s *Server) setupHTTPServer() {
 		getRandomMovieUC,
 		getRandomMovieByGenreUC,
 		searchMoviesUC,
-		getPopularMoviesUC,
-		getTrendingMoviesUC,
-		getGenresUC,
 	)
 	omdbHandler := httpHandler.NewOMDbHandler(omdbService)
 
@@ -169,9 +164,6 @@ func (s *Server) setupHTTPServer() {
 			r.Get("/random", movieHandler.GetRandomMovie)
 			r.Get("/random-by-genre", movieHandler.GetRandomMovieByGenre)
 			r.Get("/search", movieHandler.SearchMovies)
-			r.Get("/popular", movieHandler.GetPopularMovies)
-			r.Get("/trending", movieHandler.GetTrendingMovies)
-			r.Get("/genres", movieHandler.GetGenres)
 		})
 
 		// OMDb routes (test and search)

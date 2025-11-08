@@ -12,7 +12,6 @@ type Config struct {
 	Server   ServerConfig   `json:"server"`
 	Database DatabaseConfig `json:"database"`
 	JWT      JWTConfig      `json:"jwt"`
-	TMDb     TMDbConfig     `json:"tmdb"`
 	OMDb     OMDbConfig     `json:"omdb"`
 	Redis    RedisConfig    `json:"redis"`
 }
@@ -43,14 +42,6 @@ type JWTConfig struct {
 	ExpirationTime time.Duration `json:"expiration_time"`
 	RefreshTime    time.Duration `json:"refresh_time"`
 	Issuer         string        `json:"issuer"`
-}
-
-type TMDbConfig struct {
-	APIKey       string        `json:"-"`
-	BaseURL      string        `json:"base_url"`
-	ImageBaseURL string        `json:"image_base_url"`
-	CacheTTL     time.Duration `json:"cache_ttl"`
-	RateLimit    int           `json:"rate_limit"`
 }
 
 type OMDbConfig struct {
@@ -92,13 +83,6 @@ func Load() (*Config, error) {
 			RefreshTime:    getEnvDuration("JWT_REFRESH", "7d"),
 			Issuer:         getEnv("JWT_ISSUER", "cineverse-api"),
 		},
-		TMDb: TMDbConfig{
-			APIKey:       getEnv("TMDB_API_KEY", ""),
-			BaseURL:      getEnv("TMDB_BASE_URL", "https://api.themoviedb.org/3"),
-			ImageBaseURL: getEnv("TMDB_IMAGE_BASE_URL", "https://image.tmdb.org/t/p/"),
-			CacheTTL:     getEnvDuration("TMDB_CACHE_TTL", "24h"),
-			RateLimit:    getEnvInt("TMDB_RATE_LIMIT", 40),
-		},
 		OMDb: OMDbConfig{
 			APIKey:  getEnv("OMDB_API_KEY", "83a81446"),
 			BaseURL: getEnv("OMDB_BASE_URL", "http://www.omdbapi.com/"),
@@ -129,10 +113,6 @@ func (c *Config) Validate() error {
 
 	if c.JWT.Secret == "" || c.JWT.Secret == "your-super-secret-jwt-key-change-this" {
 		log.Println("WARNING: Using default JWT secret. Set JWT_SECRET environment variable for production!")
-	}
-
-	if c.TMDb.APIKey == "" {
-		log.Println("WARNING: TMDb API key not configured. Movie data will not be available!")
 	}
 
 	if c.OMDb.APIKey == "" {

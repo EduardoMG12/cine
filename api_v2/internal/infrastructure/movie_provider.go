@@ -80,6 +80,7 @@ type SearchItem struct {
 	Year       string `json:"year"`
 	Type       string `json:"type"`
 	Poster     string `json:"poster"`
+	Genre      string `json:"genre,omitempty"`
 	IMDbID     string `json:"imdb_id,omitempty"`
 	ProviderID string `json:"provider_id"`
 }

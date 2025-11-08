@@ -3,39 +3,54 @@ package movie
 import (
 	"fmt"
 
+	"github.com/EduardoMG12/cine/api_v2/internal/domain"
 	"github.com/EduardoMG12/cine/api_v2/internal/dto"
 	"github.com/EduardoMG12/cine/api_v2/internal/infrastructure"
 )
 
 type SearchMoviesUseCase struct {
-	tmdbService *infrastructure.TMDbService
+	movieFetcher infrastructure.MovieFetcher
 }
 
-func NewSearchMoviesUseCase(tmdbService *infrastructure.TMDbService) *SearchMoviesUseCase {
+func NewSearchMoviesUseCase(movieFetcher infrastructure.MovieFetcher) *SearchMoviesUseCase {
 	return &SearchMoviesUseCase{
-		tmdbService: tmdbService,
+		movieFetcher: movieFetcher,
 	}
 }
 
-func (uc *SearchMoviesUseCase) Execute(query string, page int) (*dto.TMDbSearchResponse, error) {
-	if page < 1 {
-		page = 1
+func (uc *SearchMoviesUseCase) Execute(query string, page int) ([]*dto.MovieDTO, error) {
+	if query == "" {
+		return nil, fmt.Errorf("search query cannot be empty")
 	}
 
-	searchResp, err := uc.tmdbService.SearchMovies(query, page)
+	movies, err := uc.movieFetcher.Search(query, page)
 	if err != nil {
 		return nil, fmt.Errorf("failed to search movies: %w", err)
 	}
 
-	// Processar URLs das imagens
-	for i := range searchResp.Results {
-		if searchResp.Results[i].PosterPath != "" {
-			searchResp.Results[i].PosterPath = uc.tmdbService.GetImageURL(searchResp.Results[i].PosterPath)
-		}
-		if searchResp.Results[i].BackdropPath != "" {
-			searchResp.Results[i].BackdropPath = uc.tmdbService.GetImageURL(searchResp.Results[i].BackdropPath)
-		}
+	dtos := make([]*dto.MovieDTO, len(movies))
+	for i, movie := range movies {
+		dtos[i] = uc.movieToDTO(movie)
 	}
 
-	return searchResp, nil
+	return dtos, nil
+}
+
+func (uc *SearchMoviesUseCase) movieToDTO(movie *domain.Movie) *dto.MovieDTO {
+	return &dto.MovieDTO{
+		ID:            movie.ID,
+		ExternalAPIID: movie.ExternalAPIID,
+		Title:         movie.Title,
+		Overview:      movie.Overview,
+		ReleaseDate:   movie.ReleaseDate,
+		PosterURL:     movie.PosterURL,
+		BackdropURL:   movie.BackdropURL,
+		Genres:        movie.Genres,
+		Runtime:       movie.Runtime,
+		VoteAverage:   movie.VoteAverage,
+		VoteCount:     movie.VoteCount,
+		Adult:         movie.Adult,
+		CreatedAt:     movie.CreatedAt,
+		UpdatedAt:     movie.UpdatedAt,
+	}
 }

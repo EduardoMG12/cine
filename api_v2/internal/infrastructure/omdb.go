@@ -318,6 +318,8 @@ func (s *OMDbService) convertToSearchResults(omdb *omdbSearchResponse, page int)
 			Poster:     item.Poster,
 			IMDbID:     item.IMDbID,
 			ProviderID: item.IMDbID,
+			// Genre is not available in search results from OMDb API
+			// Only available in detailed movie fetch
 		}
 	}
 

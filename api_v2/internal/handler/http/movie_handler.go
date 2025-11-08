@@ -13,9 +13,6 @@ type MovieHandler struct {
 	getRandomUC        *movie.GetRandomMovieUseCase
 	getRandomByGenreUC *movie.GetRandomMovieByGenreUseCase
 	searchMoviesUC     *movie.SearchMoviesUseCase
-	getPopularUC       *movie.GetPopularMoviesUseCase
-	getTrendingUC      *movie.GetTrendingMoviesUseCase
-	getGenresUC        *movie.GetGenresUseCase
 }
 
 func NewMovieHandler(
@@ -23,18 +20,12 @@ func NewMovieHandler(
 	getRandomUC *movie.GetRandomMovieUseCase,
 	getRandomByGenreUC *movie.GetRandomMovieByGenreUseCase,
 	searchMoviesUC *movie.SearchMoviesUseCase,
-	getPopularUC *movie.GetPopularMoviesUseCase,
-	getTrendingUC *movie.GetTrendingMoviesUseCase,
-	getGenresUC *movie.GetGenresUseCase,
 ) *MovieHandler {
 	return &MovieHandler{
 		getMovieByIDUC:     getMovieByIDUC,
 		getRandomUC:        getRandomUC,
 		getRandomByGenreUC: getRandomByGenreUC,
 		searchMoviesUC:     searchMoviesUC,
-		getPopularUC:       getPopularUC,
-		getTrendingUC:      getTrendingUC,
-		getGenresUC:        getGenresUC,
 	}
 }
 
@@ -142,72 +133,4 @@ func (h *MovieHandler) SearchMovies(w http.ResponseWriter, r *http.Request) {
 	}
 
 	sendSuccessResponse(w, http.StatusOK, "Movies found", result)
-}
-
-// GetPopularMovies godoc
-// @Summary Get popular movies
-// @Description Get popular movies from TMDb
-// @Tags movies
-// @Produce json
-// @Param page query int false "Page number" default(1)
-// @Success 200 {object} dto.APIResponse{data=dto.TMDbDiscoverResponse}
-// @Failure 500 {object} dto.APIResponse
-// @Router /api/v1/movies/popular [get]
-func (h *MovieHandler) GetPopularMovies(w http.ResponseWriter, r *http.Request) {
-	page := 1
-	if pageStr := r.URL.Query().Get("page"); pageStr != "" {
-		if p, err := strconv.Atoi(pageStr); err == nil && p > 0 {
-			page = p
-		}
-	}
-
-	result, err := h.getPopularUC.Execute(page)
-	if err != nil {
-		sendErrorResponse(w, http.StatusInternalServerError, "FETCH_FAILED", err.Error())
-		return
-	}
-
-	sendSuccessResponse(w, http.StatusOK, "Popular movies retrieved", result)
-}
-
-// GetTrendingMovies godoc
-// @Summary Get trending movies
-// @Description Get trending movies from TMDb
-// @Tags movies
-// @Produce json
-// @Param time_window query string false "Time window (day or week)" default(week)
-// @Success 200 {object} dto.APIResponse{data=dto.TMDbDiscoverResponse}
-// @Failure 500 {object} dto.APIResponse
-// @Router /api/v1/movies/trending [get]
-func (h *MovieHandler) GetTrendingMovies(w http.ResponseWriter, r *http.Request) {
-	timeWindow := r.URL.Query().Get("time_window")
-	if timeWindow == "" {
-		timeWindow = "week"
-	}
-
-	result, err := h.getTrendingUC.Execute(timeWindow)
-	if err != nil {
-		sendErrorResponse(w, http.StatusInternalServerError, "FETCH_FAILED", err.Error())
-		return
-	}
-
-	sendSuccessResponse(w, http.StatusOK, "Trending movies retrieved", result)
-}
-
-// GetGenres godoc
-// @Summary Get movie genres
-// @Description Get list of all movie genres from TMDb
-// @Tags movies
-// @Produce json
-// @Success 200 {object} dto.APIResponse{data=dto.TMDbGenresResponse}
-// @Failure 500 {object} dto.APIResponse
-// @Router /api/v1/movies/genres [get]
-func (h *MovieHandler) GetGenres(w http.ResponseWriter, r *http.Request) {
-	result, err := h.getGenresUC.Execute()
-	if err != nil {
-		sendErrorResponse(w, http.StatusInternalServerError, "FETCH_FAILED", err.Error())
-		return
-	}
-
-	sendSuccessResponse(w, http.StatusOK, "Genres retrieved", result)
 }
