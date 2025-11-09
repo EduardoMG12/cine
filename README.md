@@ -580,9 +580,9 @@ curl "http://localhost:8080/api/v1/movies/tt0133093"
 
 <a name="team-en"></a>
 
-**Project Lead & Developer:** Charles Eduardo Mello Guimaraes  
+**Project Lead & Developer:** Charles Eduardo Mello Guimaraes  and Willian Fragata
 **Institution:** IFPR Campus Palmas-PR  
-**Course:** Software Engineering  
+**Course:** Information System  
 **GitHub:** [@EduardoMG12](https://github.com/EduardoMG12)
 
 **Advisor:** Alexis Kang 
@@ -666,7 +666,7 @@ CineVerse é uma plataforma de rede social projetada para entusiastas de cinema 
 <a name="academico-pt"></a>
 
 **Instituição:** Instituto Federal do Paraná (IFPR) - Campus Palmas-PR  
-**Curso:** Engenharia de Software  
+**Curso:** sistema de informações  
 **Semestre:** 2025/1  
 **Tipo de Projeto:** Projeto de Desenvolvimento Acadêmico
 
@@ -1174,9 +1174,9 @@ curl "http://localhost:8080/api/v1/movies/tt0133093"
 
 <a name="equipe-pt"></a>
 
-**Líder do Projeto & Desenvolvedor:** Charles Eduardo Mello Guimaraes  
+**Líder do Projeto & Desenvolvedor:** Charles Eduardo Mello Guimaraes e Willian Fragata
 **Instituição:** IFPR Campus Palmas-PR  
-**Curso:** Engenharia de Software  
+**Curso:** Sistema de informações  
 **GitHub:** [@EduardoMG12](https://github.com/EduardoMG12)
 
 **Orientador:** Alexis Kang  
