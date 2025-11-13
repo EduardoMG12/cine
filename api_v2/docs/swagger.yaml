@@ -1,0 +1,734 @@
+definitions:
+  dto.APIError:
+    properties:
+      code:
+        type: string
+      message:
+        type: string
+    type: object
+  dto.APIResponse:
+    properties:
+      data: {}
+      error:
+        $ref: '#/definitions/dto.APIError'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  dto.AuthResponseDTO:
+    properties:
+      token:
+        type: string
+      user:
+        $ref: '#/definitions/dto.UserDTO'
+    type: object
+  dto.LoginRequestDTO:
+    properties:
+      email:
+        type: string
+      password:
+        minLength: 8
+        type: string
+    required:
+    - email
+    - password
+    type: object
+  dto.MovieDTO:
+    properties:
+      adult:
+        type: boolean
+      backdrop_url:
+        type: string
+      created_at:
+        type: string
+      external_api_id:
+        type: string
+      genres:
+        items:
+          type: string
+        type: array
+      id:
+        type: string
+      overview:
+        type: string
+      poster_url:
+        type: string
+      release_date:
+        type: string
+      runtime:
+        type: integer
+      title:
+        type: string
+      updated_at:
+        type: string
+      vote_average:
+        type: number
+      vote_count:
+        type: integer
+    type: object
+  dto.RegisterRequestDTO:
+    properties:
+      display_name:
+        maxLength: 100
+        minLength: 2
+        type: string
+      email:
+        type: string
+      password:
+        minLength: 8
+        type: string
+      username:
+        maxLength: 30
+        minLength: 3
+        type: string
+    required:
+    - display_name
+    - email
+    - password
+    - username
+    type: object
+  dto.TMDbMovieSearchResult:
+    properties:
+      adult:
+        type: boolean
+      backdrop_path:
+        type: string
+      genre_ids:
+        items:
+          type: integer
+        type: array
+      id:
+        type: integer
+      overview:
+        type: string
+      poster_path:
+        type: string
+      release_date:
+        type: string
+      title:
+        type: string
+      vote_average:
+        type: number
+      vote_count:
+        type: integer
+    type: object
+  dto.TMDbSearchResponse:
+    properties:
+      page:
+        type: integer
+      results:
+        items:
+          $ref: '#/definitions/dto.TMDbMovieSearchResult'
+        type: array
+      total_pages:
+        type: integer
+      total_results:
+        type: integer
+    type: object
+  dto.UserDTO:
+    properties:
+      bio:
+        type: string
+      created_at:
+        type: string
+      display_name:
+        type: string
+      email:
+        type: string
+      email_verified:
+        type: boolean
+      id:
+        type: string
+      is_private:
+        type: boolean
+      profile_picture_url:
+        type: string
+      theme:
+        type: string
+      updated_at:
+        type: string
+      username:
+        type: string
+    type: object
+  infrastructure.MovieDetails:
+    properties:
+      actors:
+        type: string
+      awards:
+        description: Additional Info
+        type: string
+      backdrop_url:
+        type: string
+      box_office:
+        type: string
+      country:
+        type: string
+      director:
+        description: Credits
+        type: string
+      genre:
+        type: string
+      imdb_id:
+        description: Ratings
+        type: string
+      imdb_rating:
+        type: string
+      imdb_votes:
+        type: string
+      language:
+        type: string
+      metascore:
+        type: string
+      plot:
+        type: string
+      poster:
+        description: Media
+        type: string
+      production:
+        type: string
+      provider:
+        description: Provider Info
+        type: string
+      provider_id:
+        type: string
+      rated:
+        description: Classification
+        type: string
+      ratings:
+        items:
+          $ref: '#/definitions/infrastructure.Rating'
+        type: array
+      released:
+        type: string
+      runtime:
+        type: string
+      title:
+        description: Basic Info
+        type: string
+      type:
+        description: movie, series, episode
+        type: string
+      website:
+        type: string
+      writer:
+        type: string
+      year:
+        type: string
+    type: object
+  infrastructure.Rating:
+    properties:
+      source:
+        type: string
+      value:
+        type: string
+    type: object
+  infrastructure.SearchItem:
+    properties:
+      genre:
+        type: string
+      imdb_id:
+        type: string
+      poster:
+        type: string
+      provider_id:
+        type: string
+      title:
+        type: string
+      type:
+        type: string
+      year:
+        type: string
+    type: object
+  infrastructure.SearchResults:
+    properties:
+      page:
+        type: integer
+      provider:
+        type: string
+      results:
+        items:
+          $ref: '#/definitions/infrastructure.SearchItem'
+        type: array
+      total_pages:
+        type: integer
+      total_results:
+        type: integer
+    type: object
+info:
+  contact: {}
+paths:
+  /:
+    get:
+      description: Welcome endpoint with documentation and health check links
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Welcome message with links
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: API Root
+      tags:
+      - system
+  /api/v1/auth/login:
+    post:
+      consumes:
+      - application/json
+      description: Authenticate user and return JWT token
+      parameters:
+      - description: Login credentials
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.LoginRequestDTO'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/dto.APIResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.AuthResponseDTO'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.APIResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/dto.APIResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.APIResponse'
+      summary: Login user
+      tags:
+      - auth
+  /api/v1/auth/logout:
+    post:
+      description: Logout user by invalidating current session
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.APIResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/dto.APIResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: Logout user
+      tags:
+      - auth
+  /api/v1/auth/logout-all:
+    post:
+      description: Logout user from all active sessions
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.APIResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/dto.APIResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: Logout from all sessions
+      tags:
+      - auth
+  /api/v1/auth/me:
+    get:
+      description: Get authenticated user information
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/dto.APIResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.UserDTO'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/dto.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: Get current user
+      tags:
+      - auth
+  /api/v1/auth/register:
+    post:
+      consumes:
+      - application/json
+      description: Create a new user account
+      parameters:
+      - description: Registration data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.RegisterRequestDTO'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            allOf:
+            - $ref: '#/definitions/dto.APIResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.AuthResponseDTO'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.APIResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.APIResponse'
+      summary: Register a new user
+      tags:
+      - auth
+  /api/v1/movies/{id}:
+    get:
+      description: Get detailed information about a specific movie
+      parameters:
+      - description: TMDb Movie ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/dto.APIResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.MovieDTO'
+              type: object
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/dto.APIResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.APIResponse'
+      summary: Get movie by TMDb ID
+      tags:
+      - movies
+  /api/v1/movies/random:
+    get:
+      description: Get a random movie from the database
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/dto.APIResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.MovieDTO'
+              type: object
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/dto.APIResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.APIResponse'
+      summary: Get random movie
+      tags:
+      - movies
+  /api/v1/movies/random-by-genre:
+    get:
+      description: Get a random movie filtered by genre
+      parameters:
+      - description: Genre name
+        in: query
+        name: genre
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/dto.APIResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.MovieDTO'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.APIResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/dto.APIResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.APIResponse'
+      summary: Get random movie by genre
+      tags:
+      - movies
+  /api/v1/movies/search:
+    get:
+      description: Search movies by title in TMDb
+      parameters:
+      - description: Search query
+        in: query
+        name: q
+        required: true
+        type: string
+      - default: 1
+        description: Page number
+        in: query
+        name: page
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/dto.APIResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.TMDbSearchResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.APIResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.APIResponse'
+      summary: Search movies
+      tags:
+      - movies
+  /api/v1/omdb/{imdbId}:
+    get:
+      consumes:
+      - application/json
+      description: Retrieves detailed movie information from OMDb API using IMDb ID
+      parameters:
+      - description: IMDb ID (e.g., tt0133093)
+        in: path
+        name: imdbId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Movie details
+          schema:
+            $ref: '#/definitions/infrastructure.MovieDetails'
+        "400":
+          description: Invalid IMDb ID
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Movie not found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get movie by IMDb ID from OMDb
+      tags:
+      - OMDb
+  /api/v1/omdb/search:
+    get:
+      consumes:
+      - application/json
+      description: Search for movies in OMDb API by query string with pagination
+      parameters:
+      - description: Search query
+        in: query
+        name: q
+        required: true
+        type: string
+      - description: 'Page number (default: 1)'
+        in: query
+        name: page
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Search results with pagination
+          schema:
+            $ref: '#/definitions/infrastructure.SearchResults'
+        "400":
+          description: Invalid parameters
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Search movies in OMDb
+      tags:
+      - OMDb
+  /api/v1/omdb/search-by-type:
+    get:
+      consumes:
+      - application/json
+      description: Search for content in OMDb API by query and filter by type (movie,
+        series, episode)
+      parameters:
+      - description: Search query
+        in: query
+        name: q
+        required: true
+        type: string
+      - description: Content type (movie, series, episode)
+        in: query
+        name: type
+        required: true
+        type: string
+      - description: 'Page number (default: 1)'
+        in: query
+        name: page
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Search results with pagination
+          schema:
+            $ref: '#/definitions/infrastructure.SearchResults'
+        "400":
+          description: Invalid parameters
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Search movies by type in OMDb
+      tags:
+      - OMDb
+  /api/v1/omdb/test:
+    get:
+      consumes:
+      - application/json
+      description: Tests the connection to OMDb API by fetching a known movie (The
+        Matrix)
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Connection test result
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Test OMDb API connection
+      tags:
+      - OMDb
+  /api/v1/omdb/title:
+    get:
+      consumes:
+      - application/json
+      description: Retrieves movie information from OMDb API using title and optional
+        year
+      parameters:
+      - description: Movie title
+        in: query
+        name: title
+        required: true
+        type: string
+      - description: Release year (optional)
+        in: query
+        name: year
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Movie details
+          schema:
+            $ref: '#/definitions/infrastructure.MovieDetails'
+        "400":
+          description: Invalid parameters
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Movie not found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get movie by title from OMDb
+      tags:
+      - OMDb
+  /health:
+    get:
+      description: Check if the API is running and healthy
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Health status
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Health Check
+      tags:
+      - system
+swagger: "2.0"

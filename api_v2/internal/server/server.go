@@ -12,7 +12,9 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
+	httpSwagger "github.com/swaggo/http-swagger"
 
+	_ "github.com/EduardoMG12/cine/api_v2/docs"
 	"github.com/EduardoMG12/cine/api_v2/internal/config"
 	httpHandler "github.com/EduardoMG12/cine/api_v2/internal/handler/http"
 	"github.com/EduardoMG12/cine/api_v2/internal/infrastructure"
@@ -90,13 +92,6 @@ func (s *Server) setupHTTPServer() {
 		})
 	})
 
-	// Health check
-	r.Get("/health", func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(`{"status":"healthy","service":"cineverse-api"}`))
-	})
-
 	// Initialize infrastructure
 	passwordService := infrastructure.NewPasswordService()
 	jwtService := infrastructure.NewJWTService(s.config.JWT.Secret)
@@ -129,6 +124,7 @@ func (s *Server) setupHTTPServer() {
 	searchMoviesUC := movie.NewSearchMoviesUseCase(movieFetcher)
 
 	// Initialize handlers
+	systemHandler := httpHandler.NewSystemHandler()
 	authHandler := httpHandler.NewAuthHandler(registerUC, loginUC, getMeUC, logoutUC, logoutAllUC)
 	movieHandler := httpHandler.NewMovieHandler(
 		getMovieByIDUC,
@@ -137,6 +133,10 @@ func (s *Server) setupHTTPServer() {
 		searchMoviesUC,
 	)
 	omdbHandler := httpHandler.NewOMDbHandler(omdbService)
+
+	// System routes
+	r.Get("/", systemHandler.Root)
+	r.Get("/health", systemHandler.HealthCheck)
 
 	// Initialize middleware
 	authMiddleware := customMiddleware.JWTAuthMiddleware(jwtService, userRepo)
@@ -176,6 +176,11 @@ func (s *Server) setupHTTPServer() {
 		})
 	})
 
+	// Swagger documentation route
+	r.Get("/swagger/*", httpSwagger.Handler(
+		httpSwagger.URL("http://localhost:8080/swagger/doc.json"),
+	))
+
 	s.httpServer = &http.Server{
 		Addr:         s.config.Server.GetServerAddress(),
 		Handler:      r,
@@ -191,6 +196,14 @@ func (s *Server) Start() error {
 
 	// Print routes
 	s.printRoutes()
+
+	// Print Swagger documentation URL
+	fmt.Println("┌─────────────────────────────────────────────────────────────────┐")
+	fmt.Println("│                  📚 API DOCUMENTATION                           │")
+	fmt.Println("└─────────────────────────────────────────────────────────────────┘")
+	fmt.Printf("\n  For more information, access: http://localhost:%s/swagger/index.html\n\n", s.config.Server.Port)
+	fmt.Println("─────────────────────────────────────────────────────────────────")
+	fmt.Println()
 
 	return s.httpServer.ListenAndServe()
 }
