@@ -133,23 +133,6 @@ while [ $attempt -le $max_attempts ]; do
     ((attempt++))
 done
 
-log_info "Iniciando Flutter App..."
-docker-compose up -d flutter_app
-
-log_info "Aguardando Flutter App inicializar..."
-sleep 10
-
-# Ask user if they want to start Android development environment
-read -p "Deseja iniciar o ambiente de desenvolvimento Android? (y/N): " start_android
-if [[ $start_android =~ ^[Yy]$ ]]; then
-    log_info "Iniciando ambiente Android com Android Studio..."
-    docker-compose up -d flutter_android
-    log_info "Aguardando Android Studio inicializar..."
-    sleep 15
-    log_success "Android Studio disponível em: http://localhost:6080"
-    log_info "Senha do VNC: cineverse"
-fi
-
 log_success "🎉 Ambiente configurado com sucesso!"
 echo ""
 echo "📋 Serviços disponíveis:"
