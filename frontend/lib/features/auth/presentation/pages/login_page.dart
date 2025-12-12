@@ -27,8 +27,14 @@ class _LoginPageState extends ConsumerState<LoginPage> {
   Widget build(BuildContext context) {
     final authState = ref.watch(authStateProvider);
 
-    // REMOVIDO: listener que causava navegação automática
+    if (authState.isLoading) {
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
 
+    return _buildLoginForm(context, authState);
+  }
+
+  Widget _buildLoginForm(BuildContext context, AuthState authState) {
     return Scaffold(
       body: SafeArea(
         child: Center(
@@ -49,10 +55,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                   const SizedBox(height: 16),
                   const Text(
                     'CineVerse',
-                    style: TextStyle(
-                      fontSize: 32,
-                      fontWeight: FontWeight.bold,
-                    ),
+                    style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold),
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 48),
@@ -142,9 +145,11 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                   Align(
                     alignment: Alignment.centerRight,
                     child: TextButton(
-                      onPressed: authState.isLoading ? null : () {
-                        // TODO: Implement forgot password
-                      },
+                      onPressed: authState.isLoading
+                          ? null
+                          : () {
+                              // TODO: Implement forgot password
+                            },
                       child: const Text('Forgot Password?'),
                     ),
                   ),
@@ -165,10 +170,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                               color: Colors.white,
                             ),
                           )
-                        : const Text(
-                            'Login',
-                            style: TextStyle(fontSize: 16),
-                          ),
+                        : const Text('Login', style: TextStyle(fontSize: 16)),
                   ),
                   const SizedBox(height: 16),
 
@@ -178,9 +180,11 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                     children: [
                       const Text("Don't have an account?"),
                       TextButton(
-                        onPressed: authState.isLoading ? null : () {
-                          context.go('/auth/register');
-                        },
+                        onPressed: authState.isLoading
+                            ? null
+                            : () {
+                                context.go('/auth/register');
+                              },
                         child: const Text('Sign Up'),
                       ),
                     ],
@@ -201,23 +205,22 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     }
 
     print('🟢 [LOGIN_PAGE] Formulário validado, iniciando login...');
-    
+
     // Clear previous errors
     ref.read(authStateProvider.notifier).clearError();
-    
+
     // Call login
-    final success = await ref.read(authStateProvider.notifier).login(
-      _emailController.text.trim(),
-      _passwordController.text,
-    );
-    
+    final success = await ref
+        .read(authStateProvider.notifier)
+        .login(_emailController.text.trim(), _passwordController.text);
+
     if (!mounted) return;
-    
+
     // Check result and act accordingly
     if (success) {
       // SUCCESS: Token saved, navigate to home
       print('✅ [LOGIN_PAGE] Login bem-sucedido! Navegando para /home');
-      
+
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('✅ Login bem-sucedido!'),
@@ -225,16 +228,16 @@ class _LoginPageState extends ConsumerState<LoginPage> {
           duration: Duration(seconds: 2),
         ),
       );
-      
+
       // Navigate to home
       context.go('/home');
     } else {
       // ERROR: Stay on page, show error
       final authState = ref.read(authStateProvider);
       final errorMessage = authState.errorMessage ?? 'Login falhou';
-      
+
       print('❌ [LOGIN_PAGE] Login falhou: $errorMessage - FICANDO NA PÁGINA');
-      
+
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('❌ $errorMessage'),
@@ -242,7 +245,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
           duration: const Duration(seconds: 4),
         ),
       );
-      
+
       // DO NOT NAVIGATE - stay on login page
     }
   }
