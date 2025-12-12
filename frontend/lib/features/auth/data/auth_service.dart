@@ -16,14 +16,13 @@ class AuthService {
     try {
       print('🔵 [AUTH_SERVICE] Iniciando login...');
       print('🔵 [AUTH_SERVICE] Email: $email');
-      print('🔵 [AUTH_SERVICE] URL: ${ApiConstants.baseUrl}${ApiConstants.login}');
-      
+      print(
+        '🔵 [AUTH_SERVICE] URL: ${ApiConstants.baseUrl}${ApiConstants.login}',
+      );
+
       final response = await _dio.post(
         ApiConstants.login,
-        data: {
-          'email': email,
-          'password': password,
-        },
+        data: {'email': email, 'password': password},
       );
 
       print('✅ [AUTH_SERVICE] Login response recebida!');
@@ -31,12 +30,13 @@ class AuthService {
       print('✅ [AUTH_SERVICE] Data: ${response.data}');
 
       final authResponse = AuthResponse.fromJson(response.data);
-      
+
       if (authResponse.success && authResponse.data != null) {
         print('✅ [AUTH_SERVICE] Login bem-sucedido! Token salvo.');
-        // Save token and user ID
+        // Save token, user ID, and user data
         await StorageService.saveToken(authResponse.data!.token);
         await StorageService.saveUserId(authResponse.data!.user.id);
+        await StorageService.saveUserData(authResponse.data!.user.toJson());
       } else {
         print('❌ [AUTH_SERVICE] Login falhou: ${authResponse.error?.message}');
       }
@@ -56,10 +56,7 @@ class AuthService {
     } catch (e) {
       return AuthResponse(
         success: false,
-        error: ErrorData(
-          code: 'UNKNOWN_ERROR',
-          message: e.toString(),
-        ),
+        error: ErrorData(code: 'UNKNOWN_ERROR', message: e.toString()),
       );
     }
   }
@@ -76,8 +73,10 @@ class AuthService {
       print('🔵 [AUTH_SERVICE] Username: $username');
       print('🔵 [AUTH_SERVICE] Email: $email');
       print('🔵 [AUTH_SERVICE] Display Name: $displayName');
-      print('🔵 [AUTH_SERVICE] URL: ${ApiConstants.baseUrl}${ApiConstants.register}');
-      
+      print(
+        '🔵 [AUTH_SERVICE] URL: ${ApiConstants.baseUrl}${ApiConstants.register}',
+      );
+
       final response = await _dio.post(
         ApiConstants.register,
         data: {
@@ -93,14 +92,17 @@ class AuthService {
       print('✅ [AUTH_SERVICE] Data: ${response.data}');
 
       final authResponse = AuthResponse.fromJson(response.data);
-      
+
       if (authResponse.success && authResponse.data != null) {
         print('✅ [AUTH_SERVICE] Registro bem-sucedido! Token salvo.');
-        // Save token and user ID
+        // Save token, user ID, and user data
         await StorageService.saveToken(authResponse.data!.token);
         await StorageService.saveUserId(authResponse.data!.user.id);
+        await StorageService.saveUserData(authResponse.data!.user.toJson());
       } else {
-        print('❌ [AUTH_SERVICE] Registro falhou: ${authResponse.error?.message}');
+        print(
+          '❌ [AUTH_SERVICE] Registro falhou: ${authResponse.error?.message}',
+        );
       }
 
       return authResponse;
@@ -118,10 +120,7 @@ class AuthService {
     } catch (e) {
       return AuthResponse(
         success: false,
-        error: ErrorData(
-          code: 'UNKNOWN_ERROR',
-          message: e.toString(),
-        ),
+        error: ErrorData(code: 'UNKNOWN_ERROR', message: e.toString()),
       );
     }
   }
@@ -137,9 +136,12 @@ class AuthService {
     return token != null;
   }
 
-  // Get current user (placeholder - would need a /me endpoint)
+  // Get current user from storage
   Future<UserModel?> getCurrentUser() async {
-    final userId = await StorageService.getUserId();
-    return userId != null ? null : null; // TODO: Implement when /me endpoint is available
+    final userData = await StorageService.getUserData();
+    if (userData != null) {
+      return UserModel.fromJson(userData);
+    }
+    return null;
   }
 }

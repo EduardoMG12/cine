@@ -16,19 +16,11 @@ class AuthState {
   final bool isLoading;
   final String? errorMessage;
 
-  AuthState({
-    this.user,
-    this.isLoading = false,
-    this.errorMessage,
-  });
+  AuthState({this.user, this.isLoading = false, this.errorMessage});
 
   bool get isAuthenticated => user != null;
 
-  AuthState copyWith({
-    UserModel? user,
-    bool? isLoading,
-    String? errorMessage,
-  }) {
+  AuthState copyWith({UserModel? user, bool? isLoading, String? errorMessage}) {
     return AuthState(
       user: user ?? this.user,
       isLoading: isLoading ?? this.isLoading,
@@ -49,11 +41,22 @@ class AuthNotifier extends Notifier<AuthState> {
 
   // Check if user is already logged in
   Future<void> _checkAuthStatus() async {
+    print('🔍 [AUTH_PROVIDER] Checking auth status...');
     final isLoggedIn = await _authService.isLoggedIn();
+
     if (isLoggedIn) {
-      // TODO: Fetch user data when /me endpoint is available
-      // For now, just mark as authenticated with null user
-      state = state.copyWith(user: null);
+      print('✅ [AUTH_PROVIDER] User is logged in, loading user data...');
+      final user = await _authService.getCurrentUser();
+
+      if (user != null) {
+        print('✅ [AUTH_PROVIDER] User data loaded: ${user.username}');
+        state = state.copyWith(user: user);
+      } else {
+        print('⚠️ [AUTH_PROVIDER] No user data found, clearing session...');
+        await _authService.logout();
+      }
+    } else {
+      print('ℹ️ [AUTH_PROVIDER] No active session found');
     }
   }
 
@@ -69,14 +72,15 @@ class AuthNotifier extends Notifier<AuthState> {
         password: password,
       );
 
-      print('🟡 [AUTH_PROVIDER] Response recebida: success=${response.success}');
+      print(
+        '🟡 [AUTH_PROVIDER] Response recebida: success=${response.success}',
+      );
 
       if (response.success && response.data != null) {
-        print('✅ [AUTH_PROVIDER] Login bem-sucedido! Usuário: ${response.data!.user.username}');
-        state = state.copyWith(
-          user: response.data!.user,
-          isLoading: false,
+        print(
+          '✅ [AUTH_PROVIDER] Login bem-sucedido! Usuário: ${response.data!.user.username}',
         );
+        state = state.copyWith(user: response.data!.user, isLoading: false);
         return true;
       } else {
         print('❌ [AUTH_PROVIDER] Login falhou: ${response.error?.message}');
@@ -88,10 +92,7 @@ class AuthNotifier extends Notifier<AuthState> {
       }
     } catch (e) {
       print('❌ [AUTH_PROVIDER] Exceção no login: $e');
-      state = state.copyWith(
-        isLoading: false,
-        errorMessage: e.toString(),
-      );
+      state = state.copyWith(isLoading: false, errorMessage: e.toString());
       return false;
     }
   }
@@ -115,10 +116,7 @@ class AuthNotifier extends Notifier<AuthState> {
       );
 
       if (response.success && response.data != null) {
-        state = state.copyWith(
-          user: response.data!.user,
-          isLoading: false,
-        );
+        state = state.copyWith(user: response.data!.user, isLoading: false);
         return true;
       } else {
         state = state.copyWith(
@@ -128,10 +126,7 @@ class AuthNotifier extends Notifier<AuthState> {
         return false;
       }
     } catch (e) {
-      state = state.copyWith(
-        isLoading: false,
-        errorMessage: e.toString(),
-      );
+      state = state.copyWith(isLoading: false, errorMessage: e.toString());
       return false;
     }
   }
@@ -147,4 +142,3 @@ class AuthNotifier extends Notifier<AuthState> {
     state = state.copyWith(errorMessage: null);
   }
 }
-
