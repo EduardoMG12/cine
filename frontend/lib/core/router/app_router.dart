@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -16,29 +17,65 @@ import '../../features/movies/presentation/pages/watched_movies_page.dart';
 import '../../features/social/presentation/pages/friends_page.dart';
 import '../../features/match/presentation/pages/match_page.dart';
 
+/// Helper class to refresh router when auth state changes
+class GoRouterRefreshStream extends ChangeNotifier {
+  GoRouterRefreshStream(Stream<AuthState> stream) {
+    notifyListeners();
+    _subscription = stream.asBroadcastStream().listen((_) {
+      notifyListeners();
+    });
+  }
+
+  late final StreamSubscription<AuthState> _subscription;
+
+  @override
+  void dispose() {
+    _subscription.cancel();
+    super.dispose();
+  }
+}
+
 /// Router configuration
 final routerProvider = Provider<GoRouter>((ref) {
+  final authState = ref.watch(authStateProvider);
+
   return GoRouter(
     initialLocation: '/',
+    refreshListenable: GoRouterRefreshStream(
+      ref.watch(authStateProvider.notifier).stream,
+    ),
     redirect: (context, state) {
-      // Read authState - this only runs on manual navigation
-      final authState = ref.read(authStateProvider);
       final isLoggedIn = authState.isAuthenticated && authState.user != null;
-      
-      print('🔄 [ROUTER] Redirect check - isLoggedIn: $isLoggedIn, user: ${authState.user?.username}, location: ${state.matchedLocation}');
+
+      print(
+        '🔄 [ROUTER] Redirect check - isLoggedIn: $isLoggedIn, user: ${authState.user?.username}, location: ${state.matchedLocation}',
+      );
 
       final isAuthRoute = state.matchedLocation.startsWith('/auth');
+      final isRootRoute = state.matchedLocation == '/';
 
-      // If user is logged in and on auth routes, redirect to home
-      if (isLoggedIn && isAuthRoute) {
-        print('🔄 [ROUTER] Usuário logado em rota de auth, redirecionando para /home');
+      // If user is logged in and on root route, redirect to private home
+      if (isLoggedIn && isRootRoute) {
+        print(
+          '🔄 [ROUTER] Usuário logado na rota raiz, redirecionando para /home',
+        );
         return '/home';
       }
 
-      // If user is NOT logged in and trying to access protected routes, redirect to login
+      // If user is logged in and on auth routes, redirect to home
+      if (isLoggedIn && isAuthRoute) {
+        print(
+          '🔄 [ROUTER] Usuário logado em rota de auth, redirecionando para /home',
+        );
+        return '/home';
+      }
+
+      // If user is NOT logged in and trying to access protected routes, redirect to root
       if (!isLoggedIn && !isAuthRoute && state.matchedLocation != '/') {
-        print('🔄 [ROUTER] Usuário não logado tentando acessar rota protegida, redirecionando para /auth/login');
-        return '/auth/login';
+        print(
+          '🔄 [ROUTER] Usuário não logado tentando acessar rota protegida, redirecionando para /',
+        );
+        return '/';
       }
 
       // Allow navigation
