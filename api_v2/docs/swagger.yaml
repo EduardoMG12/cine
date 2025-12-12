@@ -548,6 +548,30 @@ paths:
       summary: Search movies
       tags:
       - movies
+  /api/v1/movies/trending:
+    get:
+      description: Get a shuffled list of trending/popular movies from the local database
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/dto.APIResponse'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/dto.MovieDTO'
+                  type: array
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.APIResponse'
+      summary: Get trending movies
+      tags:
+      - movies
   /api/v1/omdb/{imdbId}:
     get:
       consumes:

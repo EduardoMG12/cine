@@ -207,6 +207,44 @@ func (r *movieRepository) SearchMovies(queryText string, limit int) ([]*domain.M
 	return movies, nil
 }
 
+// GetRandomMovies returns N random movies from the database
+func (r *movieRepository) GetRandomMovies(limit int) ([]*domain.Movie, error) {
+	var movies []*domain.Movie
+
+	query := `
+		SELECT id, external_api_id, title, overview, release_date, poster_url,
+			   backdrop_url, genres, runtime, vote_average, vote_count, adult,
+			   cache_expires_at, created_at, updated_at
+		FROM movies
+		ORDER BY RANDOM()
+		LIMIT $1
+	`
+
+	err := r.db.Select(&movies, query, limit)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get random movies: %w", err)
+	}
+
+	return movies, nil
+}
+
+// CountMovies returns the total number of valid (non-expired) movies in the database
+func (r *movieRepository) CountMovies() (int, error) {
+	var count int
+
+	query := `
+		SELECT COUNT(*)
+		FROM movies
+	`
+
+	err := r.db.Get(&count, query)
+	if err != nil {
+		return 0, fmt.Errorf("failed to count movies: %w", err)
+	}
+
+	return count, nil
+}
+
 // Helper function to convert []string to pq.StringArray for database operations
 func StringSliceToArray(s []string) pq.StringArray {
 	return pq.StringArray(s)

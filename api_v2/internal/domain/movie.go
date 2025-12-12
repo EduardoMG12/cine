@@ -4,26 +4,27 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/lib/pq"
 )
 
 type Movie struct {
-	ID             uuid.UUID  `db:"id" json:"id"`
-	ExternalAPIID  string     `db:"external_api_id" json:"external_api_id"`
-	Provider       string     `db:"provider" json:"provider"` // "omdb", "tmdb", "internal"
-	Title          string     `db:"title" json:"title"`
-	Overview       *string    `db:"overview" json:"overview,omitempty"`
-	ReleaseDate    *time.Time `db:"release_date" json:"release_date,omitempty"`
-	PosterURL      *string    `db:"poster_url" json:"poster_url,omitempty"`
-	BackdropURL    *string    `db:"backdrop_url" json:"backdrop_url,omitempty"`
-	Genres         []string   `db:"genres" json:"genres"`
-	Runtime        *int       `db:"runtime" json:"runtime,omitempty"` // minutes
-	VoteAverage    *float64   `db:"vote_average" json:"vote_average,omitempty"`
-	VoteCount      *int       `db:"vote_count" json:"vote_count,omitempty"`
-	Adult          bool       `db:"adult" json:"adult"`
-	LastSyncAt     *time.Time `db:"last_sync_at" json:"last_sync_at,omitempty"`
-	CacheExpiresAt time.Time  `db:"cache_expires_at" json:"-"`
-	CreatedAt      time.Time  `db:"created_at" json:"created_at"`
-	UpdatedAt      time.Time  `db:"updated_at" json:"updated_at"`
+	ID             uuid.UUID      `db:"id" json:"id"`
+	ExternalAPIID  string         `db:"external_api_id" json:"external_api_id"`
+	Provider       string         `db:"provider" json:"provider"` // "omdb", "tmdb", "internal"
+	Title          string         `db:"title" json:"title"`
+	Overview       *string        `db:"overview" json:"overview,omitempty"`
+	ReleaseDate    *time.Time     `db:"release_date" json:"release_date,omitempty"`
+	PosterURL      *string        `db:"poster_url" json:"poster_url,omitempty"`
+	BackdropURL    *string        `db:"backdrop_url" json:"backdrop_url,omitempty"`
+	Genres         pq.StringArray `db:"genres" json:"genres"`
+	Runtime        *int           `db:"runtime" json:"runtime,omitempty"` // minutes
+	VoteAverage    *float64       `db:"vote_average" json:"vote_average,omitempty"`
+	VoteCount      *int           `db:"vote_count" json:"vote_count,omitempty"`
+	Adult          bool           `db:"adult" json:"adult"`
+	LastSyncAt     *time.Time     `db:"last_sync_at" json:"last_sync_at,omitempty"`
+	CacheExpiresAt time.Time      `db:"cache_expires_at" json:"-"`
+	CreatedAt      time.Time      `db:"created_at" json:"created_at"`
+	UpdatedAt      time.Time      `db:"updated_at" json:"updated_at"`
 }
 
 type Genre struct {
@@ -40,4 +41,6 @@ type MovieRepository interface {
 	GetRandomMovie() (*Movie, error)
 	GetRandomMovieByGenre(genre string) (*Movie, error)
 	SearchMovies(query string, limit int) ([]*Movie, error)
+	GetRandomMovies(limit int) ([]*Movie, error)
+	CountMovies() (int, error)
 }

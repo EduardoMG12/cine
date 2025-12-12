@@ -41,7 +41,7 @@ Isso permite que você troque facilmente entre OMDb, TMDb ou qualquer outro prov
 Sua chave do OMDb (`83a81446`) está configurada no arquivo `.env`:
 
 ```bash
-OMDB_API_KEY=83a81446
+OMDB_API_KEY=000000
 OMDB_BASE_URL=http://www.omdbapi.com/
 ```
 

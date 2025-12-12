@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/EduardoMG12/cine/api_v2/internal/domain"
+	"github.com/lib/pq"
 )
 
 // MovieFetcher defines the interface for fetching movies from different sources
@@ -129,6 +130,7 @@ func (o *OMDbMovieFetcher) Search(query string, page int) ([]*domain.Movie, erro
 			Provider:      "omdb",
 			Title:         item.Title,
 			LastSyncAt:    timePtr(time.Now()),
+			Genres:        pq.StringArray{}, // Initialize as empty array
 		}
 
 		if item.Year != "" {
@@ -323,9 +325,9 @@ func NewMovieFetcherChain(omdbService *OMDbService, movieRepo domain.MovieReposi
 }
 
 // Helper function to convert Genre string to slice of strings
-func convertGenreStringToSlice(genreStr string) []string {
+func convertGenreStringToSlice(genreStr string) pq.StringArray {
 	if genreStr == "" || genreStr == "N/A" {
-		return nil
+		return pq.StringArray{}
 	}
 
 	// OMDb returns genres as "Action, Adventure, Sci-Fi"
@@ -339,5 +341,5 @@ func convertGenreStringToSlice(genreStr string) []string {
 		}
 	}
 
-	return result
+	return pq.StringArray(result)
 }

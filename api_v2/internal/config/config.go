@@ -84,7 +84,7 @@ func Load() (*Config, error) {
 			Issuer:         getEnv("JWT_ISSUER", "cineverse-api"),
 		},
 		OMDb: OMDbConfig{
-			APIKey:  getEnv("OMDB_API_KEY", "83a81446"),
+			APIKey:  getEnv("OMDB_API_KEY", ""),
 			BaseURL: getEnv("OMDB_BASE_URL", "http://www.omdbapi.com/"),
 		},
 		Redis: RedisConfig{

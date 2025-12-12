@@ -122,6 +122,7 @@ func (s *Server) setupHTTPServer() {
 	getRandomMovieUC := movie.NewGetRandomMovieUseCase(movieRepo)
 	getRandomMovieByGenreUC := movie.NewGetRandomMovieByGenreUseCase(movieRepo)
 	searchMoviesUC := movie.NewSearchMoviesUseCase(movieFetcher)
+	getTrendingMoviesUC := movie.NewGetTrendingMoviesUseCase(movieRepo, movieFetcher)
 
 	// Initialize handlers
 	systemHandler := httpHandler.NewSystemHandler()
@@ -131,6 +132,7 @@ func (s *Server) setupHTTPServer() {
 		getRandomMovieUC,
 		getRandomMovieByGenreUC,
 		searchMoviesUC,
+		getTrendingMoviesUC,
 	)
 	omdbHandler := httpHandler.NewOMDbHandler(omdbService)
 
@@ -160,10 +162,11 @@ func (s *Server) setupHTTPServer() {
 
 		// Movie routes (all public)
 		r.Route("/movies", func(r chi.Router) {
-			r.Get("/{id}", movieHandler.GetMovieByID)
+			r.Get("/trending", movieHandler.GetTrendingMovies)
 			r.Get("/random", movieHandler.GetRandomMovie)
 			r.Get("/random-by-genre", movieHandler.GetRandomMovieByGenre)
 			r.Get("/search", movieHandler.SearchMovies)
+			r.Get("/{id}", movieHandler.GetMovieByID)
 		})
 
 		// OMDb routes (test and search)

@@ -13,6 +13,7 @@ type MovieHandler struct {
 	getRandomUC        *movie.GetRandomMovieUseCase
 	getRandomByGenreUC *movie.GetRandomMovieByGenreUseCase
 	searchMoviesUC     *movie.SearchMoviesUseCase
+	getTrendingUC      *movie.GetTrendingMoviesUseCase
 }
 
 func NewMovieHandler(
@@ -20,12 +21,14 @@ func NewMovieHandler(
 	getRandomUC *movie.GetRandomMovieUseCase,
 	getRandomByGenreUC *movie.GetRandomMovieByGenreUseCase,
 	searchMoviesUC *movie.SearchMoviesUseCase,
+	getTrendingUC *movie.GetTrendingMoviesUseCase,
 ) *MovieHandler {
 	return &MovieHandler{
 		getMovieByIDUC:     getMovieByIDUC,
 		getRandomUC:        getRandomUC,
 		getRandomByGenreUC: getRandomByGenreUC,
 		searchMoviesUC:     searchMoviesUC,
+		getTrendingUC:      getTrendingUC,
 	}
 }
 
@@ -169,11 +172,11 @@ func (h *MovieHandler) SearchMovies(w http.ResponseWriter, r *http.Request) {
 // - Ensure the user always sees a varied list of movies on the home screen
 // - Pre-populate genre data that OMDb doesn't provide in search results
 func (h *MovieHandler) GetTrendingMovies(w http.ResponseWriter, r *http.Request) {
-	// TODO: Implement trending movies logic
-	// This will require:
-	// 1. A repository method to get N random movies from database
-	// 2. Logic to populate database from seeds if needed
-	// 3. A way to save movies with genre data from our seeds
+	result, err := h.getTrendingUC.Execute()
+	if err != nil {
+		sendErrorResponse(w, http.StatusInternalServerError, "TRENDING_FAILED", err.Error())
+		return
+	}
 
-	sendErrorResponse(w, http.StatusNotImplemented, "NOT_IMPLEMENTED", "Trending movies feature is under development")
+	sendSuccessResponse(w, http.StatusOK, "Trending movies retrieved", result)
 }
