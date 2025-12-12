@@ -13,27 +13,3 @@ class MovieDetailPage extends StatelessWidget {
     );
   }
 }
-
-class WatchLaterPage extends StatelessWidget {
-  const WatchLaterPage({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Watch Later')),
-      body: const Center(child: Text('Watch Later List')),
-    );
-  }
-}
-
-class WatchedMoviesPage extends StatelessWidget {
-  const WatchedMoviesPage({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Watched Movies')),
-      body: const Center(child: Text('Watched Movies List')),
-    );
-  }
-}
