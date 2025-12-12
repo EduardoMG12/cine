@@ -1,4 +1,3 @@
-import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -17,33 +16,12 @@ import '../../features/movies/presentation/pages/watched_movies_page.dart';
 import '../../features/social/presentation/pages/friends_page.dart';
 import '../../features/match/presentation/pages/match_page.dart';
 
-/// Helper class to refresh router when auth state changes
-class GoRouterRefreshStream extends ChangeNotifier {
-  GoRouterRefreshStream(Stream<AuthState> stream) {
-    notifyListeners();
-    _subscription = stream.asBroadcastStream().listen((_) {
-      notifyListeners();
-    });
-  }
-
-  late final StreamSubscription<AuthState> _subscription;
-
-  @override
-  void dispose() {
-    _subscription.cancel();
-    super.dispose();
-  }
-}
-
 /// Router configuration
 final routerProvider = Provider<GoRouter>((ref) {
   final authState = ref.watch(authStateProvider);
 
   return GoRouter(
     initialLocation: '/',
-    refreshListenable: GoRouterRefreshStream(
-      ref.watch(authStateProvider.notifier).stream,
-    ),
     redirect: (context, state) {
       final isLoggedIn = authState.isAuthenticated && authState.user != null;
 
