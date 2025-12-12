@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 class MovieDetailPage extends StatelessWidget {
   final String movieId;
-  
+
   const MovieDetailPage({super.key, required this.movieId});
 
   @override

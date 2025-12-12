@@ -134,3 +134,46 @@ func (h *MovieHandler) SearchMovies(w http.ResponseWriter, r *http.Request) {
 
 	sendSuccessResponse(w, http.StatusOK, "Movies found", result)
 }
+
+// GetTrendingMovies godoc
+// @Summary Get trending movies
+// @Description Get a shuffled list of trending/popular movies from the local database
+// @Tags movies
+// @Produce json
+// @Success 200 {object} dto.APIResponse{data=[]dto.MovieDTO}
+// @Failure 500 {object} dto.APIResponse
+// @Router /api/v1/movies/trending [get]
+//
+// ROUTE LOGIC EXPLANATION:
+// The OMDb API does not provide any official endpoint for trending or popular movies.
+// Therefore, this route simulates a "trending movies" feature using the local database.
+//
+// FLOW:
+//  1. First, it attempts to retrieve 100 movies directly from the database.
+//  2. If the database already contains 100 or more movies, the route returns them
+//     in random order so the user never sees the same sequence twice.
+//  3. If the database does not contain enough movies (< 100), the handler must:
+//     a) Iterate through an internal array containing around 300 initial movie name seeds
+//     (e.g. "Matrix", "Transformers", "Avatar"…) organized by genre categories.
+//     b) For each movie seed, call the existing SearchMoviesUseCase to fetch movie data
+//     from OMDb API.
+//     c) Each successful search result is saved into the database with the predefined
+//     genres from our seed data (since OMDb search doesn't return genres).
+//     d) After populating the database with search results, another fetch is performed
+//     to gather 100 movies.
+//  4. Finally, the route returns these movies shuffled to simulate a "trending" catalog.
+//
+// PURPOSE:
+// - Build a local movie catalog progressively
+// - Provide consistent results without depending on a real "trending" API
+// - Ensure the user always sees a varied list of movies on the home screen
+// - Pre-populate genre data that OMDb doesn't provide in search results
+func (h *MovieHandler) GetTrendingMovies(w http.ResponseWriter, r *http.Request) {
+	// TODO: Implement trending movies logic
+	// This will require:
+	// 1. A repository method to get N random movies from database
+	// 2. Logic to populate database from seeds if needed
+	// 3. A way to save movies with genre data from our seeds
+
+	sendErrorResponse(w, http.StatusNotImplemented, "NOT_IMPLEMENTED", "Trending movies feature is under development")
+}
