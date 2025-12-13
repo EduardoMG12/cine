@@ -31,10 +31,8 @@ class _MovieDetailPageState extends ConsumerState<MovieDetailPage> {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(result['message'] ?? 'Status atualizado'),
-            backgroundColor: result['added'] == true
-                ? Colors.green
-                : Colors.orange,
+            content: Text('✓ ${result['message'] ?? 'Status atualizado'}'),
+            backgroundColor: Colors.red,
           ),
         );
       }
@@ -67,10 +65,8 @@ class _MovieDetailPageState extends ConsumerState<MovieDetailPage> {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(result['message'] ?? 'Status atualizado'),
-            backgroundColor: result['added'] == true
-                ? Colors.green
-                : Colors.orange,
+            content: Text('✓ ${result['message'] ?? 'Status atualizado'}'),
+            backgroundColor: Colors.red,
           ),
         );
       }
