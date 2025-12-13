@@ -16,12 +16,46 @@ definitions:
       success:
         type: boolean
     type: object
+  dto.AddFavoriteMovieRequest:
+    properties:
+      movie_id:
+        type: string
+    required:
+    - movie_id
+    type: object
+  dto.AddWatchedMovieRequest:
+    properties:
+      movie_id:
+        type: string
+    required:
+    - movie_id
+    type: object
   dto.AuthResponseDTO:
     properties:
       token:
         type: string
       user:
         $ref: '#/definitions/dto.UserDTO'
+    type: object
+  dto.FavoriteMovieDTO:
+    properties:
+      created_at:
+        type: string
+      favorited_at:
+        type: string
+      id:
+        type: string
+      movie_id:
+        type: string
+      user_id:
+        type: string
+    type: object
+  dto.FavoriteMovieWithDetailsDTO:
+    properties:
+      favorite_movie:
+        $ref: '#/definitions/dto.FavoriteMovieDTO'
+      movie:
+        $ref: '#/definitions/dto.MovieDTO'
     type: object
   dto.LoginRequestDTO:
     properties:
@@ -126,6 +160,32 @@ definitions:
       total_results:
         type: integer
     type: object
+  dto.ToggleResponse:
+    properties:
+      added:
+        type: boolean
+      message:
+        type: string
+    type: object
+  dto.UpdateUserRequest:
+    properties:
+      bio:
+        maxLength: 500
+        type: string
+      display_name:
+        maxLength: 100
+        minLength: 2
+        type: string
+      is_private:
+        type: boolean
+      profile_picture_url:
+        type: string
+      theme:
+        enum:
+        - light
+        - dark
+        type: string
+    type: object
   dto.UserDTO:
     properties:
       bio:
@@ -150,6 +210,51 @@ definitions:
         type: string
       username:
         type: string
+    type: object
+  dto.UserProfileResponse:
+    properties:
+      bio:
+        type: string
+      created_at:
+        type: string
+      display_name:
+        type: string
+      email:
+        type: string
+      email_verified:
+        type: boolean
+      id:
+        type: string
+      is_private:
+        type: boolean
+      profile_picture_url:
+        type: string
+      theme:
+        type: string
+      updated_at:
+        type: string
+      username:
+        type: string
+    type: object
+  dto.WatchedMovieDTO:
+    properties:
+      created_at:
+        type: string
+      id:
+        type: string
+      movie_id:
+        type: string
+      user_id:
+        type: string
+      watched_at:
+        type: string
+    type: object
+  dto.WatchedMovieWithDetailsDTO:
+    properties:
+      movie:
+        $ref: '#/definitions/dto.MovieDTO'
+      watched_movie:
+        $ref: '#/definitions/dto.WatchedMovieDTO'
     type: object
   infrastructure.MovieDetails:
     properties:
@@ -417,6 +522,81 @@ paths:
       summary: Register a new user
       tags:
       - auth
+  /api/v1/favorites:
+    get:
+      description: Get all movies in the authenticated user's favorites list with
+        full movie details
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of favorite movies retrieved successfully
+          schema:
+            allOf:
+            - $ref: '#/definitions/dto.APIResponse'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/dto.FavoriteMovieWithDetailsDTO'
+                  type: array
+              type: object
+        "401":
+          description: User not authenticated
+          schema:
+            $ref: '#/definitions/dto.APIResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/dto.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: Get user's favorite movies
+      tags:
+      - user-movies
+    post:
+      consumes:
+      - application/json
+      description: Add or remove a movie from the authenticated user's favorites list
+      parameters:
+      - description: Movie ID to toggle in favorites
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.AddFavoriteMovieRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Movie toggled in favorites successfully
+          schema:
+            allOf:
+            - $ref: '#/definitions/dto.APIResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.ToggleResponse'
+              type: object
+        "400":
+          description: Invalid request body
+          schema:
+            $ref: '#/definitions/dto.APIResponse'
+        "401":
+          description: User not authenticated
+          schema:
+            $ref: '#/definitions/dto.APIResponse'
+        "404":
+          description: Movie not found
+          schema:
+            $ref: '#/definitions/dto.APIResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/dto.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: Toggle movie in favorites
+      tags:
+      - user-movies
   /api/v1/movies/{id}:
     get:
       description: Get detailed information about a specific movie
@@ -740,6 +920,122 @@ paths:
       summary: Get movie by title from OMDb
       tags:
       - OMDb
+  /api/v1/users/me:
+    patch:
+      consumes:
+      - application/json
+      description: Update the authenticated user's profile information
+      parameters:
+      - description: User update data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.UpdateUserRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/dto.APIResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.UserProfileResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.APIResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/dto.APIResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: Update user profile
+      tags:
+      - users
+  /api/v1/watched:
+    get:
+      description: Get all movies in the authenticated user's watched list with full
+        movie details
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of watched movies retrieved successfully
+          schema:
+            allOf:
+            - $ref: '#/definitions/dto.APIResponse'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/dto.WatchedMovieWithDetailsDTO'
+                  type: array
+              type: object
+        "401":
+          description: User not authenticated
+          schema:
+            $ref: '#/definitions/dto.APIResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/dto.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: Get user's watched movies
+      tags:
+      - user-movies
+    post:
+      consumes:
+      - application/json
+      description: Add or remove a movie from the authenticated user's watched list
+      parameters:
+      - description: Movie ID to toggle in watched list
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.AddWatchedMovieRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Movie toggled in watched list successfully
+          schema:
+            allOf:
+            - $ref: '#/definitions/dto.APIResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.ToggleResponse'
+              type: object
+        "400":
+          description: Invalid request body
+          schema:
+            $ref: '#/definitions/dto.APIResponse'
+        "401":
+          description: User not authenticated
+          schema:
+            $ref: '#/definitions/dto.APIResponse'
+        "404":
+          description: Movie not found
+          schema:
+            $ref: '#/definitions/dto.APIResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/dto.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: Toggle movie in watched list
+      tags:
+      - user-movies
   /health:
     get:
       description: Check if the API is running and healthy
