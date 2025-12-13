@@ -25,7 +25,7 @@ class _HomePublicPageState extends ConsumerState<HomePublicPage> {
 
   void _onSearchChanged(String query) {
     if (_debounce?.isActive ?? false) _debounce!.cancel();
-    
+
     _debounce = Timer(const Duration(milliseconds: 500), () {
       ref.read(searchQueryProvider.notifier).setQuery(query);
       ref.read(searchPageProvider.notifier).reset();
@@ -37,10 +37,12 @@ class _HomePublicPageState extends ConsumerState<HomePublicPage> {
     final moviesAsync = ref.watch(trendingMoviesProvider);
     final searchQuery = ref.watch(searchQueryProvider);
     final currentPage = ref.watch(searchPageProvider);
-    
+
     // Só busca se tiver query
-    final searchResults = searchQuery.isNotEmpty 
-        ? ref.watch(searchMoviesProvider((query: searchQuery, page: currentPage)))
+    final searchResults = searchQuery.isNotEmpty
+        ? ref.watch(
+            searchMoviesProvider((query: searchQuery, page: currentPage)),
+          )
         : const AsyncValue<List<MovieModel>>.data([]);
 
     return Scaffold(
@@ -81,24 +83,30 @@ class _HomePublicPageState extends ConsumerState<HomePublicPage> {
               ),
             ),
           ),
-          
+
           // Resultados
           Expanded(
             child: searchQuery.isNotEmpty
                 ? _buildSearchResults(context, searchResults)
                 : moviesAsync.when(
                     data: (movies) => _buildMovieCarousels(context, movies),
-                    loading: () => const Center(child: CircularProgressIndicator()),
+                    loading: () =>
+                        const Center(child: CircularProgressIndicator()),
                     error: (error, stack) => Center(
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          const Icon(Icons.error_outline, size: 48, color: Colors.red),
+                          const Icon(
+                            Icons.error_outline,
+                            size: 48,
+                            color: Colors.red,
+                          ),
                           const SizedBox(height: 16),
                           Text('Erro ao carregar filmes: $error'),
                           const SizedBox(height: 16),
                           ElevatedButton(
-                            onPressed: () => ref.refresh(trendingMoviesProvider),
+                            onPressed: () =>
+                                ref.refresh(trendingMoviesProvider),
                             child: const Text('Tentar Novamente'),
                           ),
                         ],
@@ -106,7 +114,7 @@ class _HomePublicPageState extends ConsumerState<HomePublicPage> {
                     ),
                   ),
           ),
-          
+
           // Paginação (só aparece durante pesquisa)
           if (searchQuery.isNotEmpty)
             Container(
@@ -118,14 +126,19 @@ class _HomePublicPageState extends ConsumerState<HomePublicPage> {
                     icon: const Icon(Icons.arrow_back),
                     onPressed: currentPage > 1
                         ? () {
-                            ref.read(searchPageProvider.notifier).previousPage();
+                            ref
+                                .read(searchPageProvider.notifier)
+                                .previousPage();
                           }
                         : null,
                   ),
                   const SizedBox(width: 16),
                   Text(
                     'Página $currentPage',
-                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                   const SizedBox(width: 16),
                   IconButton(
@@ -142,7 +155,10 @@ class _HomePublicPageState extends ConsumerState<HomePublicPage> {
     );
   }
 
-  Widget _buildSearchResults(BuildContext context, AsyncValue<List<MovieModel>> searchResults) {
+  Widget _buildSearchResults(
+    BuildContext context,
+    AsyncValue<List<MovieModel>> searchResults,
+  ) {
     return searchResults.when(
       data: (movies) {
         if (movies.isEmpty) {
@@ -160,7 +176,7 @@ class _HomePublicPageState extends ConsumerState<HomePublicPage> {
             ),
           );
         }
-        
+
         return GridView.builder(
           padding: const EdgeInsets.all(16),
           gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
@@ -216,27 +232,24 @@ class _HomePublicPageState extends ConsumerState<HomePublicPage> {
             movie.title,
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
-            style: const TextStyle(
-              fontWeight: FontWeight.w600,
-              fontSize: 13,
-            ),
+            style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
           ),
           if (movie.overview.isNotEmpty)
             Text(
               movie.overview,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                fontSize: 11,
-                color: Colors.grey[400],
-              ),
+              style: TextStyle(fontSize: 11, color: Colors.grey[400]),
             ),
         ],
       ),
     );
   }
 
-  Widget _buildMovieCarousels(BuildContext context, List<MovieModel> allMovies) {
+  Widget _buildMovieCarousels(
+    BuildContext context,
+    List<MovieModel> allMovies,
+  ) {
     // Divide os filmes em diferentes carroseis
     final recentMovies = allMovies.take(10).toList();
     final popularMovies = allMovies.skip(10).take(10).toList();
@@ -269,9 +282,9 @@ class _HomePublicPageState extends ConsumerState<HomePublicPage> {
                 Text(
                   'Bem-vindo ao CineVerse',
                   style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                      ),
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
                 const SizedBox(height: 8),
                 const Text(
@@ -295,31 +308,19 @@ class _HomePublicPageState extends ConsumerState<HomePublicPage> {
 
           // Carrossel: Filmes Recentes
           if (recentMovies.isNotEmpty)
-            _buildMovieCarousel(
-              context,
-              'Filmes em Alta',
-              recentMovies,
-            ),
+            _buildMovieCarousel(context, 'Filmes em Alta', recentMovies),
 
           const SizedBox(height: 24),
 
           // Carrossel: Filmes Populares
           if (popularMovies.isNotEmpty)
-            _buildMovieCarousel(
-              context,
-              'Populares',
-              popularMovies,
-            ),
+            _buildMovieCarousel(context, 'Populares', popularMovies),
 
           const SizedBox(height: 24),
 
           // Carrossel: Mais Filmes
           if (moreMovies.isNotEmpty)
-            _buildMovieCarousel(
-              context,
-              'Descubra Mais',
-              moreMovies,
-            ),
+            _buildMovieCarousel(context, 'Descubra Mais', moreMovies),
 
           const SizedBox(height: 24),
         ],
@@ -339,9 +340,9 @@ class _HomePublicPageState extends ConsumerState<HomePublicPage> {
           padding: const EdgeInsets.symmetric(horizontal: 16),
           child: Text(
             title,
-            style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
+            style: Theme.of(
+              context,
+            ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
           ),
         ),
         const SizedBox(height: 12),
@@ -395,10 +396,7 @@ class _HomePublicPageState extends ConsumerState<HomePublicPage> {
               movie.title,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: const TextStyle(
-                fontWeight: FontWeight.w600,
-                fontSize: 12,
-              ),
+              style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 12),
             ),
             // Ano
             if (movie.overview.isNotEmpty)
@@ -406,16 +404,14 @@ class _HomePublicPageState extends ConsumerState<HomePublicPage> {
                 movie.overview,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  fontSize: 10,
-                  color: Colors.grey[400],
-                ),
+                style: TextStyle(fontSize: 10, color: Colors.grey[400]),
               ),
           ],
         ),
       ),
     );
   }
+
   Widget _buildPlaceholder() {
     return Container(
       height: 195,
@@ -424,11 +420,7 @@ class _HomePublicPageState extends ConsumerState<HomePublicPage> {
         color: Colors.grey[800],
         borderRadius: BorderRadius.circular(8),
       ),
-      child: const Icon(
-        Icons.movie,
-        size: 48,
-        color: Colors.grey,
-      ),
+      child: const Icon(Icons.movie, size: 48, color: Colors.grey),
     );
   }
 }

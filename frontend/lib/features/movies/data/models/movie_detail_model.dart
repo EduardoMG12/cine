@@ -2,10 +2,7 @@ class MovieRating {
   final String source;
   final String value;
 
-  MovieRating({
-    required this.source,
-    required this.value,
-  });
+  MovieRating({required this.source, required this.value});
 
   factory MovieRating.fromJson(Map<String, dynamic> json) {
     return MovieRating(
@@ -15,10 +12,7 @@ class MovieRating {
   }
 
   Map<String, dynamic> toJson() {
-    return {
-      'source': source,
-      'value': value,
-    };
+    return {'source': source, 'value': value};
   }
 }
 
@@ -97,7 +91,8 @@ class MovieDetailModel {
       imdbRating: json['imdb_rating'] ?? '',
       imdbVotes: json['imdb_votes'] ?? '',
       metascore: json['metascore'] ?? '',
-      ratings: (json['ratings'] as List<dynamic>?)
+      ratings:
+          (json['ratings'] as List<dynamic>?)
               ?.map((r) => MovieRating.fromJson(r))
               .toList() ??
           [],

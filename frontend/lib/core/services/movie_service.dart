@@ -3,7 +3,6 @@ import 'api_service.dart';
 import '../../features/movies/data/models/movie_model.dart';
 import '../../features/movies/data/models/movie_detail_model.dart';
 
-
 class MovieService {
   static final Dio _dio = ApiService.dio;
 
@@ -11,7 +10,7 @@ class MovieService {
   static Future<List<MovieModel>> getTrendingMovies() async {
     try {
       final response = await _dio.get('/movies/trending');
-      
+
       if (response.data['success'] == true) {
         final List<dynamic> data = response.data['data'];
         return data.map((json) => MovieModel.fromJson(json)).toList();
@@ -28,7 +27,7 @@ class MovieService {
   static Future<MovieDetailModel> getMovieDetails(String imdbId) async {
     try {
       final response = await _dio.get('/omdb/$imdbId');
-      
+
       return MovieDetailModel.fromJson(response.data);
     } on DioException catch (e) {
       print('Error fetching movie details: ${e.message}');
@@ -37,16 +36,16 @@ class MovieService {
   }
 
   /// Busca filmes por query de pesquisa
-  static Future<List<MovieModel>> searchMovies(String query, {int page = 1}) async {
+  static Future<List<MovieModel>> searchMovies(
+    String query, {
+    int page = 1,
+  }) async {
     try {
       final response = await _dio.get(
         '/movies/search',
-        queryParameters: {
-          'q': query,
-          'page': page,
-        },
+        queryParameters: {'q': query, 'page': page},
       );
-      
+
       if (response.data['success'] == true) {
         final List<dynamic> data = response.data['data'];
         return data.map((json) => MovieModel.fromJson(json)).toList();
