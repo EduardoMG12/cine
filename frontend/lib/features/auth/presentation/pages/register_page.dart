@@ -34,8 +34,6 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
   Widget build(BuildContext context) {
     final authState = ref.watch(authStateProvider);
 
-    // REMOVIDO: listener que causava navegação automática
-
     return Scaffold(
       body: SafeArea(
         child: Center(
@@ -264,16 +262,11 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
 
   Future<void> _handleRegister() async {
     if (!_formKey.currentState!.validate()) {
-      print('🔴 [REGISTER_PAGE] Validação do formulário falhou');
       return;
     }
 
-    print('🟢 [REGISTER_PAGE] Formulário validado, iniciando registro...');
-    
-    // Clear previous errors
     ref.read(authStateProvider.notifier).clearError();
     
-    // Call register
     final success = await ref.read(authStateProvider.notifier).register(
       username: _usernameController.text.trim(),
       email: _emailController.text.trim(),
@@ -283,11 +276,7 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
     
     if (!mounted) return;
     
-    // Check result and act accordingly
     if (success) {
-      // SUCCESS: Token saved, navigate to home
-      print('✅ [REGISTER_PAGE] Registro bem-sucedido! Navegando para /home');
-      
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('✅ Conta criada com sucesso!'),
@@ -296,14 +285,10 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
         ),
       );
       
-      // Navigate to home
       context.go('/home');
     } else {
-      // ERROR: Stay on page, show error
       final authState = ref.read(authStateProvider);
       final errorMessage = authState.errorMessage ?? 'Registro falhou';
-      
-      print('❌ [REGISTER_PAGE] Registro falhou: $errorMessage - FICANDO NA PÁGINA');
       
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -312,8 +297,6 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
           duration: const Duration(seconds: 4),
         ),
       );
-      
-      // DO NOT NAVIGATE - stay on register page
     }
   }
 }

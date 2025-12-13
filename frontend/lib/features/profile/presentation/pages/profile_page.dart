@@ -5,41 +5,29 @@ import '../../../../core/services/user_service.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../auth/domain/models/user_model.dart';
 
-// Provider for user profile
 final userProfileProvider = FutureProvider<UserModel>((ref) async {
   try {
-    print('🔍 ProfileProvider: Fetching user profile...');
     final response = await UserService.getMe();
-    print('🔍 ProfileProvider: Raw response: $response');
 
     if (response == null) {
       throw Exception('Response is null');
     }
 
-    // Try to get user data from response
     dynamic userData;
 
-    // Check if response has 'data' key
     if (response.containsKey('data')) {
-      print('🔍 ProfileProvider: Response has data key');
       final data = response['data'];
 
       if (data == null) {
         throw Exception('Data is null');
       }
 
-      // Check if data has 'user' key
       if (data is Map && data.containsKey('user')) {
-        print('🔍 ProfileProvider: Data has user key');
         userData = data['user'];
       } else {
-        // Maybe the user data is directly in 'data'
-        print('🔍 ProfileProvider: Using data directly as user');
         userData = data;
       }
     } else {
-      // Maybe the response is the user data directly
-      print('🔍 ProfileProvider: Using response directly as user');
       userData = response;
     }
 
@@ -47,11 +35,8 @@ final userProfileProvider = FutureProvider<UserModel>((ref) async {
       throw Exception('User data is null');
     }
 
-    print('🔍 ProfileProvider: User data: $userData');
     return UserModel.fromJson(userData as Map<String, dynamic>);
   } catch (e, stack) {
-    print('❌ ProfileProvider: Error - $e');
-    print('❌ ProfileProvider: Stack - $stack');
     rethrow;
   }
 });

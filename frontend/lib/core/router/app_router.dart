@@ -25,40 +25,22 @@ final routerProvider = Provider<GoRouter>((ref) {
     redirect: (context, state) {
       final isLoggedIn = authState.isAuthenticated && authState.user != null;
 
-      print(
-        '🔄 [ROUTER] Redirect check - isLoggedIn: $isLoggedIn, user: ${authState.user?.username}, location: ${state.matchedLocation}',
-      );
-
       final isAuthRoute = state.matchedLocation.startsWith('/auth');
       final isRootRoute = state.matchedLocation == '/';
       final isMovieRoute = state.matchedLocation.startsWith('/movie/');
 
-      // If user is logged in and on root route, redirect to private home
       if (isLoggedIn && isRootRoute) {
-        print(
-          '🔄 [ROUTER] Usuário logado na rota raiz, redirecionando para /home',
-        );
         return '/home';
       }
 
-      // If user is logged in and on auth routes, redirect to home
       if (isLoggedIn && isAuthRoute) {
-        print(
-          '🔄 [ROUTER] Usuário logado em rota de auth, redirecionando para /home',
-        );
         return '/home';
       }
 
-      // If user is NOT logged in and trying to access protected routes, redirect to root
-      // BUT allow public routes (root, auth routes, and movie details)
       if (!isLoggedIn && !isAuthRoute && !isRootRoute && !isMovieRoute) {
-        print(
-          '🔄 [ROUTER] Usuário não logado tentando acessar rota protegida, redirecionando para /',
-        );
         return '/';
       }
 
-      // Allow navigation
       return null;
     },
     routes: [
@@ -69,7 +51,6 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/movie/:id',
         builder: (context, state) {
           final movieId = state.pathParameters['id']!;
-          // Extrai externalApiId dos query params se disponível
           final externalApiId = state.uri.queryParameters['externalApiId'];
           return MovieDetailPage(
             movieId: movieId,

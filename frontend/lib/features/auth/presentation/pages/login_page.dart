@@ -141,15 +141,10 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                   ),
                   const SizedBox(height: 8),
 
-                  // Forgot Password
                   Align(
                     alignment: Alignment.centerRight,
                     child: TextButton(
-                      onPressed: authState.isLoading
-                          ? null
-                          : () {
-                              // TODO: Implement forgot password
-                            },
+                      onPressed: authState.isLoading ? null : () {},
                       child: const Text('Forgot Password?'),
                     ),
                   ),
@@ -200,27 +195,18 @@ class _LoginPageState extends ConsumerState<LoginPage> {
 
   Future<void> _handleLogin() async {
     if (!_formKey.currentState!.validate()) {
-      print('🔴 [LOGIN_PAGE] Validação do formulário falhou');
       return;
     }
 
-    print('🟢 [LOGIN_PAGE] Formulário validado, iniciando login...');
-
-    // Clear previous errors
     ref.read(authStateProvider.notifier).clearError();
 
-    // Call login
     final success = await ref
         .read(authStateProvider.notifier)
         .login(_emailController.text.trim(), _passwordController.text);
 
     if (!mounted) return;
 
-    // Check result and act accordingly
     if (success) {
-      // SUCCESS: Token saved, navigate to home
-      print('✅ [LOGIN_PAGE] Login bem-sucedido! Navegando para /home');
-
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('✅ Login bem-sucedido!'),
@@ -229,14 +215,10 @@ class _LoginPageState extends ConsumerState<LoginPage> {
         ),
       );
 
-      // Navigate to home
       context.go('/home');
     } else {
-      // ERROR: Stay on page, show error
       final authState = ref.read(authStateProvider);
       final errorMessage = authState.errorMessage ?? 'Login falhou';
-
-      print('❌ [LOGIN_PAGE] Login falhou: $errorMessage - FICANDO NA PÁGINA');
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -245,8 +227,6 @@ class _LoginPageState extends ConsumerState<LoginPage> {
           duration: const Duration(seconds: 4),
         ),
       );
-
-      // DO NOT NAVIGATE - stay on login page
     }
   }
 }

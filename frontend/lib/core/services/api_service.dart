@@ -22,24 +22,16 @@ class ApiService {
     _dio.interceptors.add(
       InterceptorsWrapper(
         onRequest: (options, handler) async {
-          // Add auth token to requests
           final token = await StorageService.getToken();
           if (token != null) {
             options.headers['Authorization'] = 'Bearer $token';
           }
-          print('API Request: ${options.method} ${options.uri}');
-          print('API Request Data: ${options.data}');
           return handler.next(options);
         },
         onResponse: (response, handler) {
-          print('API Response: ${response.statusCode}');
-          print('API Response Data: ${response.data}');
           return handler.next(response);
         },
         onError: (error, handler) async {
-          print('API Error: ${error.response?.statusCode}');
-          print('API Error Data: ${error.response?.data}');
-          print('API Error Message: ${error.message}');
           // Handle 401 unauthorized
           if (error.response?.statusCode == 401) {
             await StorageService.clearAll();

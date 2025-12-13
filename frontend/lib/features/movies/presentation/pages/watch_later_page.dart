@@ -4,7 +4,6 @@ import 'package:go_router/go_router.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../../core/services/user_movie_service.dart';
 
-// Provider para buscar filmes favoritos
 final favoriteMoviesProvider = FutureProvider<List<dynamic>>((ref) async {
   return await UserMovieService.getFavoriteMovies();
 });
@@ -91,19 +90,12 @@ class WatchLaterPage extends ConsumerWidget {
   }
 
   Widget _buildMovieCard(BuildContext context, dynamic data) {
-    print('⭐ Building favorite movie card: $data');
-
-    // Os dados do filme estão dentro do objeto 'movie'
     final movie = data['movie'] ?? {};
 
     final movieId = movie['id'] ?? '';
     final externalApiId = movie['external_api_id'] ?? '';
     final title = movie['title'] ?? 'Sem título';
     final posterUrl = movie['poster_url'] ?? '';
-
-    print('⭐ Movie ID: $movieId, External: $externalApiId');
-    print('⭐ Title: $title');
-    print('⭐ Poster URL: $posterUrl');
 
     return GestureDetector(
       onTap: () {
