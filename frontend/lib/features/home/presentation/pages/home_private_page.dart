@@ -411,22 +411,28 @@ class _HomePrivatePageState extends ConsumerState<HomePrivatePage> {
             },
           ),
           const Divider(),
-          ListTile(
-            leading: const Icon(Icons.people),
-            title: const Text('Amigos'),
-            onTap: () {
-              Navigator.pop(context);
-              context.go('/friends');
-            },
+          const Padding(
+            padding: EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+            child: Text(
+              'Funcionalidades Futuras',
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: Colors.grey,
+              ),
+            ),
           ),
           ListTile(
-            leading: const Icon(Icons.favorite),
-            title: const Text('Match de Filmes'),
-            onTap: () {
-              Navigator.pop(context);
-              context.go('/match');
-            },
+            leading: const Icon(Icons.people, color: Colors.grey),
+            title: const Text('Amigos', style: TextStyle(color: Colors.grey)),
+            enabled: false,
           ),
+          ListTile(
+            leading: const Icon(Icons.favorite, color: Colors.grey),
+            title: const Text('Match de Filmes', style: TextStyle(color: Colors.grey)),
+            enabled: false,
+          ),
+          const Divider(),
           ListTile(
             leading: const Icon(Icons.person),
             title: const Text('Perfil'),
