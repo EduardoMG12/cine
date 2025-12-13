@@ -31,6 +31,7 @@ final routerProvider = Provider<GoRouter>((ref) {
 
       final isAuthRoute = state.matchedLocation.startsWith('/auth');
       final isRootRoute = state.matchedLocation == '/';
+      final isMovieRoute = state.matchedLocation.startsWith('/movie/');
 
       // If user is logged in and on root route, redirect to private home
       if (isLoggedIn && isRootRoute) {
@@ -49,7 +50,8 @@ final routerProvider = Provider<GoRouter>((ref) {
       }
 
       // If user is NOT logged in and trying to access protected routes, redirect to root
-      if (!isLoggedIn && !isAuthRoute && state.matchedLocation != '/') {
+      // BUT allow public routes (root, auth routes, and movie details)
+      if (!isLoggedIn && !isAuthRoute && !isRootRoute && !isMovieRoute) {
         print(
           '🔄 [ROUTER] Usuário não logado tentando acessar rota protegida, redirecionando para /',
         );
