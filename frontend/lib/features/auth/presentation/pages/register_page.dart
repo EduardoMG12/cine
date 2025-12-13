@@ -54,10 +54,7 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                   const SizedBox(height: 16),
                   const Text(
                     'Join CineVerse',
-                    style: TextStyle(
-                      fontSize: 32,
-                      fontWeight: FontWeight.bold,
-                    ),
+                    style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold),
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 48),
@@ -197,7 +194,8 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                         ),
                         onPressed: () {
                           setState(() {
-                            _isConfirmPasswordVisible = !_isConfirmPasswordVisible;
+                            _isConfirmPasswordVisible =
+                                !_isConfirmPasswordVisible;
                           });
                         },
                       ),
@@ -244,9 +242,11 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                     children: [
                       const Text('Already have an account?'),
                       TextButton(
-                        onPressed: authState.isLoading ? null : () {
-                          context.go('/auth/login');
-                        },
+                        onPressed: authState.isLoading
+                            ? null
+                            : () {
+                                context.go('/auth/login');
+                              },
                         child: const Text('Login'),
                       ),
                     ],
@@ -266,16 +266,18 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
     }
 
     ref.read(authStateProvider.notifier).clearError();
-    
-    final success = await ref.read(authStateProvider.notifier).register(
-      username: _usernameController.text.trim(),
-      email: _emailController.text.trim(),
-      password: _passwordController.text,
-      displayName: _displayNameController.text.trim(),
-    );
-    
+
+    final success = await ref
+        .read(authStateProvider.notifier)
+        .register(
+          username: _usernameController.text.trim(),
+          email: _emailController.text.trim(),
+          password: _passwordController.text,
+          displayName: _displayNameController.text.trim(),
+        );
+
     if (!mounted) return;
-    
+
     if (success) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -284,12 +286,12 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
           duration: Duration(seconds: 2),
         ),
       );
-      
+
       context.go('/home');
     } else {
       final authState = ref.read(authStateProvider);
       final errorMessage = authState.errorMessage ?? 'Registro falhou';
-      
+
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('❌ $errorMessage'),
