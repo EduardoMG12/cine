@@ -208,7 +208,8 @@ class _HomePublicPageState extends ConsumerState<HomePublicPage> {
 
   Widget _buildSearchMovieCard(BuildContext context, MovieModel movie) {
     return GestureDetector(
-      onTap: () => context.go('/movie/${movie.externalApiId}'),
+      onTap: () =>
+          context.go('/movie/${movie.id}?externalApiId=${movie.externalApiId}'),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -365,8 +366,8 @@ class _HomePublicPageState extends ConsumerState<HomePublicPage> {
   Widget _buildMovieCard(BuildContext context, MovieModel movie) {
     return GestureDetector(
       onTap: () {
-        // Navega para a página de detalhes usando o external_api_id
-        context.go('/movie/${movie.externalApiId}');
+        // Navega para a página de detalhes passando UUID e externalApiId
+        context.go('/movie/${movie.id}?externalApiId=${movie.externalApiId}');
       },
       child: Container(
         width: 140,

@@ -69,7 +69,12 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/movie/:id',
         builder: (context, state) {
           final movieId = state.pathParameters['id']!;
-          return MovieDetailPage(movieId: movieId);
+          // Extrai externalApiId dos query params se disponível
+          final externalApiId = state.uri.queryParameters['externalApiId'];
+          return MovieDetailPage(
+            movieId: movieId,
+            externalApiId: externalApiId,
+          );
         },
       ),
 

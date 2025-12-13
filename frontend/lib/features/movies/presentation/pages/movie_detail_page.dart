@@ -4,15 +4,99 @@ import 'package:go_router/go_router.dart';
 import '../providers/movie_detail_provider.dart';
 import '../../data/models/movie_detail_model.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
+import '../../../../core/services/user_movie_service.dart';
 
-class MovieDetailPage extends ConsumerWidget {
-  final String movieId;
+class MovieDetailPage extends ConsumerStatefulWidget {
+  final String movieId; // UUID do filme no banco de dados
+  final String? externalApiId; // ID da API externa (OMDB/TMDB)
 
-  const MovieDetailPage({super.key, required this.movieId});
+  const MovieDetailPage({super.key, required this.movieId, this.externalApiId});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final movieDetailAsync = ref.watch(movieDetailProvider(movieId));
+  ConsumerState<MovieDetailPage> createState() => _MovieDetailPageState();
+}
+
+class _MovieDetailPageState extends ConsumerState<MovieDetailPage> {
+  bool _isTogglingWatched = false;
+  bool _isTogglingFavorite = false;
+
+  Future<void> _toggleWatched(BuildContext context) async {
+    setState(() {
+      _isTogglingWatched = true;
+    });
+
+    try {
+      final result = await UserMovieService.toggleWatchedMovie(widget.movieId);
+
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(result['message'] ?? 'Status atualizado'),
+            backgroundColor: result['added'] == true
+                ? Colors.green
+                : Colors.orange,
+          ),
+        );
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Erro ao atualizar: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isTogglingWatched = false;
+        });
+      }
+    }
+  }
+
+  Future<void> _toggleFavorite(BuildContext context) async {
+    setState(() {
+      _isTogglingFavorite = true;
+    });
+
+    try {
+      final result = await UserMovieService.toggleFavoriteMovie(widget.movieId);
+
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(result['message'] ?? 'Status atualizado'),
+            backgroundColor: result['added'] == true
+                ? Colors.green
+                : Colors.orange,
+          ),
+        );
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Erro ao atualizar: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isTogglingFavorite = false;
+        });
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    // Usa externalApiId para buscar detalhes, ou fallback para movieId
+    final apiId = widget.externalApiId ?? widget.movieId;
+    final movieDetailAsync = ref.watch(movieDetailProvider(apiId));
     final authState = ref.watch(authStateProvider);
 
     return Scaffold(
@@ -35,7 +119,8 @@ class MovieDetailPage extends ConsumerWidget {
                 Text('Erro ao carregar detalhes: $error'),
                 const SizedBox(height: 16),
                 ElevatedButton(
-                  onPressed: () => ref.refresh(movieDetailProvider(movieId)),
+                  onPressed: () =>
+                      ref.refresh(movieDetailProvider(widget.movieId)),
                   child: const Text('Tentar Novamente'),
                 ),
               ],
@@ -143,6 +228,62 @@ class MovieDetailPage extends ConsumerWidget {
                     );
                   }).toList(),
                 ),
+
+                // Action Buttons (Watched and Favorite) - Only for authenticated users
+                if (isLoggedIn) ...[
+                  const SizedBox(height: 24),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: ElevatedButton.icon(
+                          onPressed: _isTogglingWatched
+                              ? null
+                              : () => _toggleWatched(context),
+                          icon: _isTogglingWatched
+                              ? const SizedBox(
+                                  width: 20,
+                                  height: 20,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                  ),
+                                )
+                              : const Icon(Icons.check_circle_outline),
+                          label: const Text('Assistido'),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.green.withOpacity(0.2),
+                            foregroundColor: Colors.green,
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: ElevatedButton.icon(
+                          onPressed: _isTogglingFavorite
+                              ? null
+                              : () => _toggleFavorite(context),
+                          icon: _isTogglingFavorite
+                              ? const SizedBox(
+                                  width: 20,
+                                  height: 20,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                  ),
+                                )
+                              : const Icon(Icons.favorite_border),
+                          label: const Text('Favorito'),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(
+                              0xFFE50914,
+                            ).withOpacity(0.2),
+                            foregroundColor: const Color(0xFFE50914),
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
 
                 const SizedBox(height: 24),
 

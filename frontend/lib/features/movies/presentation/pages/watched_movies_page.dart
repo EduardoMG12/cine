@@ -2,12 +2,20 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
+import '../../../../core/services/user_movie_service.dart';
+
+// Provider para buscar filmes assistidos
+final watchedMoviesProvider = FutureProvider<List<dynamic>>((ref) async {
+  return await UserMovieService.getWatchedMovies();
+});
 
 class WatchedMoviesPage extends ConsumerWidget {
   const WatchedMoviesPage({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final watchedAsync = ref.watch(watchedMoviesProvider);
+
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
@@ -16,6 +24,10 @@ class WatchedMoviesPage extends ConsumerWidget {
         ),
         title: const Text('Assistidos'),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            onPressed: () => ref.refresh(watchedMoviesProvider),
+          ),
           Builder(
             builder: (context) => IconButton(
               icon: const Icon(Icons.menu),
@@ -25,7 +37,122 @@ class WatchedMoviesPage extends ConsumerWidget {
         ],
       ),
       endDrawer: _buildDrawer(context, ref),
-      body: const Center(child: Text('Watched Movies List')),
+      body: watchedAsync.when(
+        data: (watched) {
+          if (watched.isEmpty) {
+            return const Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.check_circle_outline,
+                    size: 64,
+                    color: Colors.grey,
+                  ),
+                  SizedBox(height: 16),
+                  Text(
+                    'Nenhum filme assistido ainda',
+                    style: TextStyle(fontSize: 18, color: Colors.grey),
+                  ),
+                ],
+              ),
+            );
+          }
+
+          return GridView.builder(
+            padding: const EdgeInsets.all(16),
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 2,
+              childAspectRatio: 0.7,
+              crossAxisSpacing: 16,
+              mainAxisSpacing: 16,
+            ),
+            itemCount: watched.length,
+            itemBuilder: (context, index) {
+              final movie = watched[index];
+              return _buildMovieCard(context, movie);
+            },
+          );
+        },
+        loading: () => const Center(child: CircularProgressIndicator()),
+        error: (error, stack) => Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(Icons.error_outline, size: 48, color: Colors.red),
+              const SizedBox(height: 16),
+              Text('Erro ao carregar assistidos: $error'),
+              const SizedBox(height: 16),
+              ElevatedButton(
+                onPressed: () => ref.refresh(watchedMoviesProvider),
+                child: const Text('Tentar Novamente'),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMovieCard(BuildContext context, dynamic data) {
+    print('🎬 Building watched movie card: $data');
+
+    // Os dados do filme estão dentro do objeto 'movie'
+    final movie = data['movie'] ?? {};
+
+    final movieId = movie['id'] ?? '';
+    final externalApiId = movie['external_api_id'] ?? '';
+    final title = movie['title'] ?? 'Sem título';
+    final posterUrl = movie['poster_url'] ?? '';
+
+    print('🎬 Movie ID: $movieId, External: $externalApiId');
+    print('🎬 Title: $title');
+    print('🎬 Poster URL: $posterUrl');
+
+    return GestureDetector(
+      onTap: () {
+        if (movieId.isNotEmpty) {
+          context.go('/movie/$movieId?externalApiId=$externalApiId');
+        }
+      },
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          ClipRRect(
+            borderRadius: BorderRadius.circular(8),
+            child: posterUrl.isNotEmpty
+                ? Image.network(
+                    posterUrl,
+                    height: 195,
+                    width: double.infinity,
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) {
+                      return _buildPlaceholder();
+                    },
+                  )
+                : _buildPlaceholder(),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            title,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 12),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPlaceholder() {
+    return Container(
+      height: 195,
+      width: double.infinity,
+      color: Colors.grey[800],
+      child: const Center(
+        child: Icon(Icons.movie, size: 50, color: Colors.grey),
+      ),
     );
   }
 
