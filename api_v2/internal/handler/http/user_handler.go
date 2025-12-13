@@ -27,10 +27,10 @@ func NewUserHandler(updateUserUC *user.UpdateUserUseCase) *UserHandler {
 // @Produce json
 // @Security BearerAuth
 // @Param request body dto.UpdateUserRequest true "User update data"
-// @Success 200 {object} dto.APIResponse{data=dto.UserProfileResponse}
-// @Failure 400 {object} dto.APIResponse
-// @Failure 401 {object} dto.APIResponse
-// @Failure 500 {object} dto.APIResponse
+// @Success 200 {object} dto.APIResponse{data=dto.UserProfileResponse} "User profile updated successfully"
+// @Failure 400 {object} dto.APIResponse "Invalid request body"
+// @Failure 401 {object} dto.APIResponse "User not authenticated"
+// @Failure 500 {object} dto.APIResponse "Internal server error"
 // @Router /api/v1/users/me [patch]
 func (h *UserHandler) UpdateUser(w http.ResponseWriter, r *http.Request) {
 	userID, ok := middleware.GetUserIDFromContext(r.Context())

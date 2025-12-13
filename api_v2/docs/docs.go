@@ -939,7 +939,7 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "OK",
+                        "description": "User profile updated successfully",
                         "schema": {
                             "allOf": [
                                 {
@@ -957,19 +957,19 @@ const docTemplate = `{
                         }
                     },
                     "400": {
-                        "description": "Bad Request",
+                        "description": "Invalid request body",
                         "schema": {
                             "$ref": "#/definitions/dto.APIResponse"
                         }
                     },
                     "401": {
-                        "description": "Unauthorized",
+                        "description": "User not authenticated",
                         "schema": {
                             "$ref": "#/definitions/dto.APIResponse"
                         }
                     },
                     "500": {
-                        "description": "Internal Server Error",
+                        "description": "Internal server error",
                         "schema": {
                             "$ref": "#/definitions/dto.APIResponse"
                         }
