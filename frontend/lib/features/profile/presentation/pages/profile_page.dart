@@ -8,11 +8,6 @@ import '../../../auth/domain/models/user_model.dart';
 final userProfileProvider = FutureProvider<UserModel>((ref) async {
   try {
     final response = await UserService.getMe();
-
-    if (response == null) {
-      throw Exception('Response is null');
-    }
-
     dynamic userData;
 
     if (response.containsKey('data')) {
@@ -36,7 +31,7 @@ final userProfileProvider = FutureProvider<UserModel>((ref) async {
     }
 
     return UserModel.fromJson(userData as Map<String, dynamic>);
-  } catch (e, stack) {
+  } catch (e) {
     rethrow;
   }
 });
