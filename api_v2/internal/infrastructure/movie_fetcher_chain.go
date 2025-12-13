@@ -317,14 +317,11 @@ func NewMovieFetcherChain(omdbService *OMDbService, movieRepo domain.MovieReposi
 	omdbFetcher := NewOMDbMovieFetcher(omdbService, movieRepo, autoSave)
 	dbFetcher := NewDatabaseMovieFetcher(movieRepo)
 
-	// Build chain: OMDb -> Database
 	omdbFetcher.SetNext(dbFetcher)
 
-	log.Println("[MovieFetcher] Chain created: OMDb -> Database (Local Cache)")
 	return omdbFetcher
 }
 
-// Helper function to convert Genre string to slice of strings
 func convertGenreStringToSlice(genreStr string) pq.StringArray {
 	if genreStr == "" || genreStr == "N/A" {
 		return pq.StringArray{}

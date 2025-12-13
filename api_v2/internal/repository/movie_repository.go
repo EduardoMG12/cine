@@ -245,7 +245,6 @@ func (r *movieRepository) CountMovies() (int, error) {
 	return count, nil
 }
 
-// Helper function to convert []string to pq.StringArray for database operations
 func StringSliceToArray(s []string) pq.StringArray {
 	return pq.StringArray(s)
 }

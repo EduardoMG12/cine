@@ -167,8 +167,6 @@ func (h *OMDbHandler) TestConnection(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-// Helper functions
-
 func respondWithJSON(w http.ResponseWriter, statusCode int, payload interface{}) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(statusCode)
