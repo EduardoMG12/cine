@@ -22,6 +22,8 @@ import (
 	"github.com/EduardoMG12/cine/api_v2/internal/repository"
 	"github.com/EduardoMG12/cine/api_v2/internal/usecase/auth"
 	"github.com/EduardoMG12/cine/api_v2/internal/usecase/movie"
+	"github.com/EduardoMG12/cine/api_v2/internal/usecase/user"
+	"github.com/EduardoMG12/cine/api_v2/internal/usecase/user_movie"
 )
 
 type Server struct {
@@ -106,6 +108,8 @@ func (s *Server) setupHTTPServer() {
 	userRepo := repository.NewUserRepository(s.db)
 	sessionRepo := repository.NewSessionRepository(s.db)
 	movieRepo := repository.NewMovieRepository(s.db)
+	watchedMovieRepo := repository.NewWatchedMovieRepository(s.db)
+	favoriteMovieRepo := repository.NewFavoriteMovieRepository(s.db)
 
 	// Initialize movie fetcher chain: OMDb -> Database (with auto-save enabled)
 	movieFetcher := infrastructure.NewMovieFetcherChain(omdbService, movieRepo, true)
@@ -124,6 +128,15 @@ func (s *Server) setupHTTPServer() {
 	searchMoviesUC := movie.NewSearchMoviesUseCase(movieFetcher)
 	getTrendingMoviesUC := movie.NewGetTrendingMoviesUseCase(movieRepo, movieFetcher)
 
+	// Initialize user movie use cases
+	toggleWatchedMovieUC := user_movie.NewToggleWatchedMovieUseCase(watchedMovieRepo, movieRepo)
+	getWatchedMoviesUC := user_movie.NewGetWatchedMoviesUseCase(watchedMovieRepo, movieRepo)
+	toggleFavoriteMovieUC := user_movie.NewToggleFavoriteMovieUseCase(favoriteMovieRepo, movieRepo)
+	getFavoriteMoviesUC := user_movie.NewGetFavoriteMoviesUseCase(favoriteMovieRepo, movieRepo)
+
+	// Initialize user use cases
+	updateUserUC := user.NewUpdateUserUseCase(userRepo)
+
 	// Initialize handlers
 	systemHandler := httpHandler.NewSystemHandler()
 	authHandler := httpHandler.NewAuthHandler(registerUC, loginUC, getMeUC, logoutUC, logoutAllUC)
@@ -135,6 +148,9 @@ func (s *Server) setupHTTPServer() {
 		getTrendingMoviesUC,
 	)
 	omdbHandler := httpHandler.NewOMDbHandler(omdbService)
+	watchedMovieHandler := httpHandler.NewWatchedMovieHandler(toggleWatchedMovieUC, getWatchedMoviesUC)
+	favoriteMovieHandler := httpHandler.NewFavoriteMovieHandler(toggleFavoriteMovieUC, getFavoriteMoviesUC)
+	userHandler := httpHandler.NewUserHandler(updateUserUC)
 
 	// System routes
 	r.Get("/", systemHandler.Root)
@@ -167,6 +183,26 @@ func (s *Server) setupHTTPServer() {
 			r.Get("/random-by-genre", movieHandler.GetRandomMovieByGenre)
 			r.Get("/search", movieHandler.SearchMovies)
 			r.Get("/{id}", movieHandler.GetMovieByID)
+		})
+
+		// Watched movies routes (protected)
+		r.Route("/watched", func(r chi.Router) {
+			r.Use(authMiddleware)
+			r.Get("/", watchedMovieHandler.GetWatchedMovies)
+			r.Post("/", watchedMovieHandler.ToggleWatchedMovie)
+		})
+
+		// Favorite movies routes (protected)
+		r.Route("/favorites", func(r chi.Router) {
+			r.Use(authMiddleware)
+			r.Get("/", favoriteMovieHandler.GetFavoriteMovies)
+			r.Post("/", favoriteMovieHandler.ToggleFavoriteMovie)
+		})
+
+		// User routes (protected)
+		r.Route("/users", func(r chi.Router) {
+			r.Use(authMiddleware)
+			r.Patch("/me", userHandler.UpdateUser)
 		})
 
 		// OMDb routes (test and search)
@@ -223,10 +259,16 @@ func (s *Server) printRoutes() {
 	publicRoutes := []RouteInfo{}
 	protectedRoutes := []RouteInfo{}
 	movieRoutes := []RouteInfo{}
+	userMovieRoutes := []RouteInfo{}
+	userRoutes := []RouteInfo{}
 
 	for _, route := range routes {
 		if strings.Contains(route.Path, "/movies") {
 			movieRoutes = append(movieRoutes, route)
+		} else if strings.Contains(route.Path, "/watched") || strings.Contains(route.Path, "/favorites") {
+			userMovieRoutes = append(userMovieRoutes, route)
+		} else if strings.Contains(route.Path, "/users") {
+			userRoutes = append(userRoutes, route)
 		} else if strings.Contains(route.Path, "/auth/me") ||
 			strings.Contains(route.Path, "/auth/logout") {
 			protectedRoutes = append(protectedRoutes, route)
@@ -254,6 +296,22 @@ func (s *Server) printRoutes() {
 	if len(movieRoutes) > 0 {
 		fmt.Println("  🎬 Movie Routes:")
 		for _, route := range movieRoutes {
+			fmt.Printf("    %-7s %s\n", colorizeMethod(route.Method), route.Path)
+		}
+		fmt.Println()
+	}
+
+	if len(userMovieRoutes) > 0 {
+		fmt.Println("  ⭐ User Movie Lists (require JWT):")
+		for _, route := range userMovieRoutes {
+			fmt.Printf("    %-7s %s\n", colorizeMethod(route.Method), route.Path)
+		}
+		fmt.Println()
+	}
+
+	if len(userRoutes) > 0 {
+		fmt.Println("  👤 User Profile (require JWT):")
+		for _, route := range userRoutes {
 			fmt.Printf("    %-7s %s\n", colorizeMethod(route.Method), route.Path)
 		}
 		fmt.Println()
