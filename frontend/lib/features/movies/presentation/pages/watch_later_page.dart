@@ -215,7 +215,10 @@ class WatchLaterPage extends ConsumerWidget {
           ),
           ListTile(
             leading: const Icon(Icons.favorite, color: Colors.grey),
-            title: const Text('Match de Filmes', style: TextStyle(color: Colors.grey)),
+            title: const Text(
+              'Match de Filmes',
+              style: TextStyle(color: Colors.grey),
+            ),
             enabled: false,
           ),
           const Divider(),

@@ -429,7 +429,10 @@ class _HomePrivatePageState extends ConsumerState<HomePrivatePage> {
           ),
           ListTile(
             leading: const Icon(Icons.favorite, color: Colors.grey),
-            title: const Text('Match de Filmes', style: TextStyle(color: Colors.grey)),
+            title: const Text(
+              'Match de Filmes',
+              style: TextStyle(color: Colors.grey),
+            ),
             enabled: false,
           ),
           const Divider(),
