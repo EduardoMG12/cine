@@ -351,7 +351,18 @@ docker-compose up -d
 4. **Run migrations**
 ```bash
 docker-compose exec api psql -U cineverse -d cineverse -f /app/migrations/001_clean_initial_schema.sql
+
 docker-compose exec api psql -U cineverse -d cineverse -f /app/migrations/002_add_provider_and_sync.sql
+
+docker-compose exec api psql -U cineverse -d cineverse -f /app/migrations/003_add_watched_and_favorite_movies.sql
+
+// or
+
+docker-compose exec -T postgres psql -U cineverse -d cineverse -f /docker-entrypoint-initdb.d/001_clean_initial_schema.sql
+
+docker-compose exec -T postgres psql -U cineverse -d cineverse -f /docker-entrypoint-initdb.d/002_add_provider_and_sync.sql
+
+docker-compose exec -T postgres psql -U cineverse -d cineverse -f /docker-entrypoint-initdb.d/003_add_watched_and_favorite_movies.sql
 ```
 
 5. **Access the API**
